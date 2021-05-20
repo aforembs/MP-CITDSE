@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <string>
+#include <execution>
 #include <algorithm>
 #include "H5Cpp.h"
 #include "wigner6j.h"
@@ -39,10 +40,11 @@ class DMX2e {
     int sort_L(en_L &Lif, uint N_sz);
 
   public:
+    DMX2e(std::string cpot, char gau, uint L_max, uint N_max);
 
 
 };
 
-int calculate_2edmx(uint L_max, uint Ni_sz, uint Nf_sz);
+// int calculate_2edmx(uint L_max, uint Ni_sz, uint Nf_sz);
 
 #endif // DMX_CALC_H_
