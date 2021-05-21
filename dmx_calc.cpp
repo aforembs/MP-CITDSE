@@ -21,13 +21,23 @@ int DMX2e::sort_L(en_L &Lif, uint N_sz) {
   std::string outfile_name;
   H5::DataSet e1, ei;
   H5::H5File file;
-  H5::H5File *outfile;
+  H5::H5File *outfile=nullptr;
   std::vector<double> en12(N_sz*2);
   std::vector<double> en_strd;
   en_strd.reserve(N_sz);
   hsize_t write_sz[] = {N_sz};
   en_data en_d;
   int num_l_pairs = Lif.l_pair.size();
+
+  H5::DataSpace e_space;
+  hsize_t offset[1], count[1], stride[1], block[1];
+  hsize_t dimms[1];
+  offset[0]=0;
+  count[0] =N_sz;
+  stride[0]=1;
+  block[0] =1;
+  dimms[0] =N_sz;
+  H5::DataSpace memspace(1, dimms, NULL);
 
   uint t_sz=0;
   for(auto i=0; i<num_l_pairs; ++i) {
@@ -47,7 +57,9 @@ int DMX2e::sort_L(en_L &Lif, uint N_sz) {
       filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
       file.openFile(filename, H5F_ACC_RDONLY);
       e1 = file.openDataSet("e_i");
-      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE);
+      e_space = e1.getSpace();
+      e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
       file.close();
 
       double ent;
@@ -64,13 +76,16 @@ int DMX2e::sort_L(en_L &Lif, uint N_sz) {
       filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
       file.openFile(filename, H5F_ACC_RDONLY);
       e1 = file.openDataSet("e_i");
-      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE);
+      e_space = e1.getSpace();
+      e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
       file.close();
 
       filename = pot + std::to_string(l2)+std::to_string(l2+1) + gauge + ".h5";
       file.openFile(filename, H5F_ACC_RDONLY);
-      e1 = file.openDataSet("e_i");
-      e1.read(&en12[N_sz], H5::PredType::NATIVE_DOUBLE);
+      e_space = e1.getSpace();
+      e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+      e1.read(&en12[N_sz], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
       file.close();
 
       double ent;
@@ -97,7 +112,8 @@ int DMX2e::sort_L(en_L &Lif, uint N_sz) {
 
   for(auto i : Lif.en_dat) {
     en_strd.emplace_back(i.en);
-    //std::cout << std::setprecision(15) << i.en << ", " << i.n1 << ", " << i.l1 << ", " << i.n2 << ", " << i.l2 << "\n";
+    // if (Lif.L==0)
+    //   std::cout << std::setprecision(15) << i.en << ", " << i.n1 << ", " << i.l1 << ", " << i.n2 << ", " << i.l2 << "\n";
   }
 
   outfile_name = pot + "2_" + std::to_string(Lif.L) + std::to_string(Lif.L+1) + gauge + ".h5";
