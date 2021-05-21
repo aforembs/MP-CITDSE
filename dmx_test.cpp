@@ -3,7 +3,7 @@
 
 int main() {
 
-  DMX2e DMXcalculate("he", 'v', 5, 1000);
+  DMX2e DMXcalculate("he", 'v', 3, 1000);
 
   return 0;
 }
