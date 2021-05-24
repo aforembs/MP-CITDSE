@@ -37,7 +37,7 @@ class DMX2e {
     std::string pot;
 
     en_L make_enL(uint L);
-    int sort_L(en_L &Lif, uint N_sz);
+    int sort_L(uint L_max, uint N_sz);
 
   public:
     DMX2e(std::string cpot, char gau, uint L_max, uint N_max);
