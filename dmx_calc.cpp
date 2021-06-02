@@ -2,14 +2,29 @@
 #include <iostream>
 #include <iomanip>
 
-en_L DMX2e::make_enL(uint L) {
-  int sz = (L+2)/2;
+en_L DMX2e::make_enL(uint L, uint l1e_max) {
+  int sz; 
   uint mn;
-  auto lp = std::vector<l_ab>(sz);
-  for(auto i=0; i<sz; ++i) {
-    lp[i].l1=i;
-    lp[i].l2=L-i;
+  std::vector<l_ab> lp;
+  l_ab l_pair;
+
+  if(L==0) {
+    sz = l1e_max+1;
+    lp.reserve(sz);
+    for(auto i=0; i<sz; ++i) {
+      l_pair = {i,i};
+      lp.emplace_back(l_pair);
+    }
+  } else if(L%2==0 && L!=0) {
+    sz = ;//?
+    lp.reserve(sz);
+    l_pair = {0,L};
+
+
+  } else if(L%2==1) {
+    
   }
+
   auto en_vec = std::vector<en_data>();
   en_L Len = {L,mn,lp,en_vec};
   return Len;
