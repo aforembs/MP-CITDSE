@@ -25,7 +25,6 @@ struct en_data {
 
 struct en_L {
   uint L;
-  uint max_n;
   std::vector<l_ab> l_pair;
   std::vector<en_data> en_dat;
 };
@@ -37,11 +36,11 @@ class DMX2e {
     char gauge;
     std::string pot;
 
-    en_L make_enL(uint L);
-    int sort_L(uint L_max, uint N_sz);
+    en_L make_enL(uint L, uint l1e_max);
+    int sort_L(uint L_max, std::vector<uint> &N_sz);
 
   public:
-    DMX2e(std::string cpot, char gau, uint L_max, uint N_max);
+    DMX2e(std::string cpot, char gau, uint L_max, std::vector<uint> &N_max);
 
 
 };

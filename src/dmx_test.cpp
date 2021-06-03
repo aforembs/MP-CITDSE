@@ -3,7 +3,9 @@
 
 int main() {
 
-  DMX2e DMXcalculate("he", 'v', 3, 1000);
+  std::vector<uint> N_maxs = {100, 100, 60, 60};
+
+  DMX2e DMXcalculate("he", 'v', 3, N_maxs);
 
   return 0;
 }
