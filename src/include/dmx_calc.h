@@ -8,28 +8,9 @@
 #include <algorithm>
 #include <fstream>
 #include "H5Cpp.h"
+#include "dmx_typ.h"
 #include "wigner6j.h"
 
-struct l_ab {
-  uint l1;
-  uint l2;
-};
-
-struct en_data {
-  double en;
-  uint n1;
-  uint l1;
-  uint n2;
-  uint l2;
-};
-
-struct en_L {
-  uint L;
-  std::vector<l_ab> l_pair;
-  std::vector<en_data> en_dat;
-};
-
-// Create a 2eDMX class!
 class DMX2e {
   private:
     /* Class Variables */

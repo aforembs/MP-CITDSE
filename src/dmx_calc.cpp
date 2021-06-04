@@ -66,9 +66,11 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
   H5::H5File file;
   H5::H5File *outfile=nullptr;
   std::vector<double> en12, en_srtd;
+  std::vector<idx4> idx_data;
   uint max_Nsz = *std::max_element(std::begin(N_sz), std::end(N_sz));
   en12.reserve(max_Nsz*2);
   en_data en_d;
+  idx4 idx_elm;
 
   en_L Li = make_enL(0, L_max);
   en_L Lf = make_enL(1, L_max);
@@ -97,7 +99,9 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
   }
   Li.en_dat.reserve(t_sz);
   en_srtd.reserve(t_sz);
+  idx_data.reserve(t_sz);
   hsize_t write_sz[] = {t_sz};
+  hsize_t idx_sz[] = {t_sz*4};
 
   for(auto i=0; i<num_l_pairs; ++i) {
     l1=Li.l_pair[i].l1;
@@ -163,18 +167,26 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 
   for(auto i : Li.en_dat) {
     en_srtd.emplace_back(i.en);
-    //   std::cout << std::setprecision(15) << i.en << ", " << i.n1 << ", " << i.l1 << ", " << i.n2 << ", " << i.l2 << "\n";
+    idx_elm = {i.n1,i.l1,i.n2,i.l2};
+    idx_data.emplace_back(idx_elm);
   }
 
   outfile_name = pot + "2_" + std::to_string(Li.L) + std::to_string(Li.L+1) + gauge + ".h5";
   outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
   ei = outfile->createDataSet("e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz));
   ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+  outfile->close();
 
   en_srtd.clear();
 
-  // write indices to file!
+  // write indices to file
+  outfile_name = pot + std::to_string(Li.L) + "idx.h5";
+  outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
+  ei = outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz));
+  ei.write(&idx_data[0], H5::PredType::NATIVE_UINT32);
+  outfile->close();
 
+  idx_data.clear();
 
   // L final sort & save
   t_sz=0;
@@ -190,7 +202,9 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
   }
   Lf.en_dat.reserve(t_sz);
   en_srtd.reserve(t_sz);
+  idx_data.reserve(t_sz);
   write_sz[0]=t_sz;
+  idx_sz[0]=t_sz*4;
 
   for(auto i=0; i<num_l_pairs; ++i) {
     l1=Lf.l_pair[i].l1;
@@ -256,10 +270,21 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 
   for(auto i : Lf.en_dat) {
     en_srtd.emplace_back(i.en);
+    idx_elm = {i.n1,i.l1,i.n2,i.l2};
+    idx_data.emplace_back(idx_elm);
   }
 
+  outfile_name = pot + "2_" + std::to_string(Li.L) + std::to_string(Li.L+1) + gauge + ".h5";
+  outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
   ei = outfile->createDataSet("e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz));
   ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+  outfile->close();
+
+  // write indices to file
+  outfile_name = pot + std::to_string(Lf.L) + "idx.h5";
+  outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
+  ei = outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz));
+  ei.write(&idx_data[0], H5::PredType::NATIVE_UINT32);
   outfile->close();
 
   // Loop
@@ -272,6 +297,7 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
     ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
 
     en_srtd.clear();
+    idx_data.clear();
 
     Lf = make_enL(L_itr+1, L_max);
 
@@ -289,6 +315,7 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
     Lf.en_dat.reserve(t_sz);
     en_srtd.reserve(t_sz);
     write_sz[0]=t_sz;
+    idx_sz[0]=t_sz*4;
 
     for(auto i=0; i<num_l_pairs; ++i) {
       l1=Lf.l_pair[i].l1;
@@ -354,12 +381,19 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 
     for(auto i : Lf.en_dat) {
       en_srtd.emplace_back(i.en);
-      if (Lf.L==L_max)
-        std::cout << std::setprecision(15) << i.en << ", " << i.n1 << ", " << i.l1 << ", " << i.n2 << ", " << i.l2 << "\n";
+      // if (Lf.L==L_max)
+      //   std::cout << std::setprecision(15) << i.en << ", " << i.n1 << ", " << i.l1 << ", " << i.n2 << ", " << i.l2 << "\n";
     }
 
     ei = outfile->createDataSet("e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz));
     ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+    outfile->close();
+
+    // write indices to file
+    outfile_name = pot + std::to_string(Lf.L) + "idx.h5";
+    outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
+    ei = outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz));
+    ei.write(&idx_data[0], H5::PredType::NATIVE_UINT32);
     outfile->close();
 
     Li=Lf;
