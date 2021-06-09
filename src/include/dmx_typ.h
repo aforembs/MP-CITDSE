@@ -29,4 +29,9 @@ struct en_L {
   std::vector<en_data> en_dat;
 };
 
+struct dmx_dim {
+  uint row;
+  uint col;
+};
+
 #endif // DMX_TYP_H_
