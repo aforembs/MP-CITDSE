@@ -403,18 +403,23 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 }
 
 int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
+  uint id1=0, id2=0, idsti=0, idstf=0;
+  uint l1i=0, l2i=0, l1f=0, l2f=0;
+  uint Li_sz=0;
+  uint Lf_sz=0;
+  double Lsq=0.0;
   std::string filename;
   std::string outfile_name;
   H5::H5File file;
   H5::H5File *outfile=nullptr;
-  H5::DataSet dmx;
+  H5::DataSet dmx, L_set;
   H5::DataSpace dmx_space;
   hsize_t offset[2], count[2], stride[2], block[2];
-  hsize_t dimms[2];
+  hsize_t dimms[2], T_dimms[2];
   offset[0]=0;
   offset[1]=0;
   // count[0] =Nf_sz; // no. rows
-  // count[1] =Ni_sz;  // no. coumns
+  // count[1] =Ni_sz;  // no. columns
   stride[0]=1;
   stride[1]=1;
   block[0] =1;
@@ -427,6 +432,11 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   std::vector<dmx_dim> D_dim(L_max);
   std::vector<double> D_data;
   std::vector<double*> D(L_max);
+  std::vector<double> T;
+
+  std::vector<idx4> Lif_idx;
+  uint maxL_sz = *std::max_element(N_max.begin(), N_max.end());
+  Lif_idx.reserve(2*maxL_sz);
 
   uint tot_sz=0;
   uint sz_i=0;
@@ -441,10 +451,10 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
 
   D_data.reserve(tot_sz);
 
-  D[0] = &D_data[0];
-  for(uint i=1; i<L_max; ++i) {
-    D[i] = &D_data[dmx_sz[i-1]];
-  }
+  // D[0] = &D_data[0];
+  // for(uint i=1; i<L_max; ++i) {
+  //   D[i] = &D_data[dmx_sz[i-1]];
+  // }
 
   // Read all 1e dipoles
   for(uint i=0; i<L_max; ++i) {
@@ -453,17 +463,123 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
     dimms[0] = D_dim[i].row;
     dimms[1] = D_dim[i].col;
 
-    filename = pot + std::to_string(lb) + std::to_string(ld) + gauge + ".h5";
+    filename = pot + std::to_string(i) + std::to_string(i+1) + gauge + ".h5";
     file.openFile(filename, H5F_ACC_RDONLY);
     dmx = file.openDataSet("d_if");
     dmx_space = dmx.getSpace();
     dmx_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     memspace.setExtentSimple(1, dimms, NULL);
-	  dmx.read(D[i], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
+	  dmx.read(&D_data[i], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
     file.close();
   }
 
-  // calculate and save 2e dipoles
+  // for loop over L's
+  uint L=0;
+  uint Lf_i=1;
+
+  // read L indices
+  filename = pot + std::to_string(L) + "idx.h5";
+  file.openFile(filename, H5F_ACC_RDONLY);
+  L_set = file.openDataSet("idx");
+  Li_sz = L_set.getSpace().getSimpleExtentNpoints()/4;
+  L_set.read(&Lif_idx[0], H5::PredType::NATIVE_UINT32);
+  file.close();
+
+  filename = pot + std::to_string(Lf_i) + "idx.h5";
+  file.openFile(filename, H5F_ACC_RDONLY);
+  L_set = file.openDataSet("idx");
+  Lf_sz = L_set.getSpace().getSimpleExtentNpoints()/4;
+  L_set.read(&Lif_idx[maxL_sz], H5::PredType::NATIVE_UINT32);
+  file.close();
+
+  T.reserve(Li_sz*Lf_sz);
+  T_dimms[0]=Lf_sz;
+  T_dimms[1]=Li_sz;
+
+  // calculate 2e dipoles
+  Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
+  for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
+    // Parallelise this loop
+    for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
+      id2=maxL_sz+idLf;
+      l1i=Lif_idx[idLi].l1;
+      l2i=Lif_idx[idLi].l2;
+      l1f=Lif_idx[id2].l1;
+      l2f=Lif_idx[id2].l2;
+      if(l1i+1==l1f && l2i==l2f) {
+        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i)*wigner_6j_2e(L,l1f,l1i,l2i)*
+              D[l1i][Lif_idx[idLi].n1+D_dim[l1i].col*Lif_idx[id2].n1];
+      } else if(l2i+1==l2f && l1i==l1f) {
+        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i)*wigner_6j_2e(L,l2f,l2i,l1i)*
+              D[l2i][Lif_idx[idLi].n2+D_dim[l2i].col*Lif_idx[id2].n2];
+      } else {T[idLi+Li_sz*idLf]=0.0;}
+    }
+  }
+
+  // Save TL1;L2
+  outfile_name = pot + "2_" + std::to_string(L) + std::to_string(Lf_i) + gauge + ".h5";
+  outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
+  dmx = outfile->createDataSet("d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms));
+  dmx.write(&T[0], H5::PredType::NATIVE_DOUBLE);
+  outfile->close();
+
+  T.clear();
+
+  int buf_Li=1;
+  int buf_Lf=0;
+  Li_sz = Lf_sz;
+
+  for(L=1; L<L_max; ++L) {
+    Lf_i=L+1;
+    idsti=buf_Li*maxL_sz;
+    idstf=buf_Lf*maxL_sz;
+
+    // read L indices
+    filename = pot + std::to_string(Lf_i) + "idx.h5";
+    file.openFile(filename, H5F_ACC_RDONLY);
+    L_set = file.openDataSet("idx");
+    Lf_sz = L_set.getSpace().getSimpleExtentNpoints()/4;
+    L_set.read(&Lif_idx[idstf], H5::PredType::NATIVE_UINT32);
+    file.close();
+
+    T.reserve(Li_sz*Lf_sz);
+    T_dimms[0]=Lf_sz;
+    T_dimms[1]=Li_sz;
+
+    // calculate 2e dipoles
+    Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
+    for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
+      // Parallelise this loop
+      for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
+        id1=idsti+idLi;
+        id2=idstf+idLf;
+        l1i=Lif_idx[id1].l1;
+        l2i=Lif_idx[id1].l2;
+        l1f=Lif_idx[id2].l1;
+        l2f=Lif_idx[id2].l2;
+        if(l1i+1==l1f && l2i==l2f) {
+          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i)*wigner_6j_2e(L,l1f,l1i,l2i)*
+                D[l1i][Lif_idx[id1].n1+D_dim[l1i].col*Lif_idx[id2].n1];
+        } else if(l2i+1==l2f && l1i==l1f) {
+          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i)*wigner_6j_2e(L,l2f,l2i,l1i)*
+                D[l2i][Lif_idx[id1].n2+D_dim[l2i].col*Lif_idx[id2].n2];
+        } else {T[idLi+Li_sz*idLf]=0.0;}
+      }
+    }
+
+    outfile_name = pot + "2_" + std::to_string(L) + std::to_string(Lf_i) + gauge + ".h5";
+    outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
+    dmx = outfile->createDataSet("d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms));
+    dmx.write(&T[0], H5::PredType::NATIVE_DOUBLE);
+    outfile->close();
+
+    T.clear();
+
+    buf_Li = buf_Lf;
+    buf_Lf = 1 - buf_Lf;
+    Li_sz = Lf_sz;
+  }
+  return 0;
 }
 
 DMX2e::DMX2e(std::string cpot, char gau, uint L_max, std::vector<uint> &N_max) {
@@ -472,6 +588,7 @@ DMX2e::DMX2e(std::string cpot, char gau, uint L_max, std::vector<uint> &N_max) {
 
   sort_L(L_max, N_max);
 
+  calc_dmx(L_max, N_max);
 }
 
 // int calculate_2edmx(uint L_max, uint Ni_sz, uint Nf_sz) {

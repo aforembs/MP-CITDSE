@@ -19,6 +19,7 @@ class DMX2e {
 
     en_L make_enL(uint L, uint l1e_max);
     int sort_L(uint L_max, std::vector<uint> &N_sz);
+    int calc_dmx(uint L_max, std::vector<uint> &N_max);
 
   public:
     DMX2e(std::string cpot, char gau, uint L_max, std::vector<uint> &N_max);
