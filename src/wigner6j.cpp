@@ -14,7 +14,7 @@ unsigned int fact(unsigned int x) {
 }
 
 double triangle(unsigned int a, unsigned int b, unsigned int c) {
-  double res = sqrt((fact(a-b+c)*fact(a+b-c)*fact(-a+b+c))/(double)fact(a+c+b+1));
+  double res = sqrt(fact(a-b+c)*fact(a+b-c)*fact(-a+b+c)/(double)fact(a+c+b+1));
   return res;
 }
 

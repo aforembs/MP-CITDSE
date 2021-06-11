@@ -62,8 +62,8 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
   uint l2=0;
   std::string filename;
   std::string outfile_name;
-  H5::DataSet e1, ei;
-  H5::H5File file;
+  H5::DataSet *e1, *ei;
+  H5::H5File *file=nullptr;
   H5::H5File *outfile=nullptr;
   std::vector<double> en12, en_srtd;
   std::vector<idx4> idx_data;
@@ -112,12 +112,13 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
       filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
-      file.openFile(filename, H5F_ACC_RDONLY);
-      e1 = file.openDataSet("e_i");
-      e_space = e1.getSpace();
+      file = new H5::H5File(filename, H5F_ACC_RDONLY);
+      e1 = new H5::DataSet(file->openDataSet("e_i"));
+      e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-      file.close();
+      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+      delete e1;
+      delete file;
 
       double ent;
       for(uint n1=0; n1<N_sz[l1]; ++n1) {
@@ -133,23 +134,25 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
       filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
-      file.openFile(filename, H5F_ACC_RDONLY);
-      e1 = file.openDataSet("e_i");
-      e_space = e1.getSpace();
+      file = new H5::H5File(filename, H5F_ACC_RDONLY);
+      e1 = new H5::DataSet(file->openDataSet("e_i"));
+      e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-      file.close();
+      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+      delete e1;
+      delete file;
 
       count[0]=N_sz[l2];
       dimms[0]=N_sz[l2];
       memspace.setExtentSimple(1, dimms, NULL);
       filename = pot + std::to_string(l2)+std::to_string(l2+1) + gauge + ".h5";
-      file.openFile(filename, H5F_ACC_RDONLY);
-      e1 = file.openDataSet("e_i");
-      e_space = e1.getSpace();
+      file = new H5::H5File(filename, H5F_ACC_RDONLY);
+      e1 = new H5::DataSet(file->openDataSet("e_i"));
+      e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-      e1.read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-      file.close();
+      e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+      delete e1;
+      delete file;
 
       double ent;
       for(uint n1=0; n1<N_sz[l1]; ++n1) {
@@ -173,18 +176,20 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 
   outfile_name = pot + "2_" + std::to_string(Li.L) + std::to_string(Li.L+1) + gauge + ".h5";
   outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-  ei = outfile->createDataSet("e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz));
-  ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
-  outfile->close();
+  ei = new H5::DataSet(outfile->createDataSet("e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz)));
+  ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+  delete ei;
+  delete outfile;
 
   en_srtd.clear();
 
   // write indices to file
   outfile_name = pot + std::to_string(Li.L) + "idx.h5";
   outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-  ei = outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz));
-  ei.write(&idx_data[0], H5::PredType::NATIVE_UINT32);
-  outfile->close();
+  ei = new H5::DataSet(outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz)));
+  ei->write(&idx_data[0], H5::PredType::NATIVE_UINT32);
+  delete ei;
+  delete outfile;
 
   idx_data.clear();
 
@@ -215,12 +220,13 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
       filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
-      file.openFile(filename, H5F_ACC_RDONLY);
-      e1 = file.openDataSet("e_i");
-      e_space = e1.getSpace();
+      file = new H5::H5File(filename, H5F_ACC_RDONLY);
+      e1 = new H5::DataSet(file->openDataSet("e_i"));
+      e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-      file.close();
+      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+      delete e1;
+      delete file;
 
       double ent;
       for(uint n1=0; n1<N_sz[l1]; ++n1) {
@@ -236,23 +242,25 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
       filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
-      file.openFile(filename, H5F_ACC_RDONLY);
-      e1 = file.openDataSet("e_i");
-      e_space = e1.getSpace();
+      file = new H5::H5File(filename, H5F_ACC_RDONLY);
+      e1 = new H5::DataSet(file->openDataSet("e_i"));
+      e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-      e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-      file.close();
+      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+      delete e1;
+      delete file;
 
       count[0]=N_sz[l2];
       dimms[0]=N_sz[l2];
       memspace.setExtentSimple(1, dimms, NULL);
       filename = pot + std::to_string(l2)+std::to_string(l2+1) + gauge + ".h5";
-      file.openFile(filename, H5F_ACC_RDONLY);
-      e1 = file.openDataSet("e_i");
-      e_space = e1.getSpace();
+      file = new H5::H5File(filename, H5F_ACC_RDONLY);
+      e1 = new H5::DataSet(file->openDataSet("e_i"));
+      e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-      e1.read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-      file.close();
+      e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+      delete e1;
+      delete file;
 
       double ent;
       for(uint n1=0; n1<N_sz[l1]; ++n1) {
@@ -276,16 +284,18 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 
   outfile_name = pot + "2_" + std::to_string(Li.L) + std::to_string(Li.L+1) + gauge + ".h5";
   outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-  ei = outfile->createDataSet("e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz));
-  ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
-  outfile->close();
+  ei = new H5::DataSet(outfile->createDataSet("e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz)));
+  ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+  delete ei;
+  delete outfile;
 
   // write indices to file
   outfile_name = pot + std::to_string(Lf.L) + "idx.h5";
   outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-  ei = outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz));
-  ei.write(&idx_data[0], H5::PredType::NATIVE_UINT32);
-  outfile->close();
+  ei = new H5::DataSet(outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz)));
+  ei->write(&idx_data[0], H5::PredType::NATIVE_UINT32);
+  delete ei;
+  delete outfile;
 
   // Loop
   Li = Lf;
@@ -293,8 +303,9 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
   for(uint L_itr=1; L_itr<L_max; ++L_itr) {
     outfile_name = pot + "2_" + std::to_string(Li.L) + std::to_string(Li.L+1) + gauge + ".h5";
     outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-    ei = outfile->createDataSet("e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz));
-    ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+    ei = new H5::DataSet(outfile->createDataSet("e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz)));
+    ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+    delete ei;
 
     en_srtd.clear();
     idx_data.clear();
@@ -314,6 +325,7 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
     }
     Lf.en_dat.reserve(t_sz);
     en_srtd.reserve(t_sz);
+    idx_data.reserve(t_sz);
     write_sz[0]=t_sz;
     idx_sz[0]=t_sz*4;
 
@@ -326,12 +338,13 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
         dimms[0]=N_sz[l1];
         memspace.setExtentSimple(1, dimms, NULL);
         filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
-        file.openFile(filename, H5F_ACC_RDONLY);
-        e1 = file.openDataSet("e_i");
-        e_space = e1.getSpace();
+        file = new H5::H5File(filename, H5F_ACC_RDONLY);
+        e1 = new H5::DataSet(file->openDataSet("e_i"));
+        e_space = e1->getSpace();
         e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-        e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-        file.close();
+        e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+        delete e1;
+        delete file;
 
         double ent;
         for(uint n1=0; n1<N_sz[l1]; ++n1) {
@@ -347,23 +360,25 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
         dimms[0]=N_sz[l1];
         memspace.setExtentSimple(1, dimms, NULL);
         filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
-        file.openFile(filename, H5F_ACC_RDONLY);
-        e1 = file.openDataSet("e_i");
-        e_space = e1.getSpace();
+        file = new H5::H5File(filename, H5F_ACC_RDONLY);
+        e1 = new H5::DataSet(file->openDataSet("e_i"));
+        e_space = e1->getSpace();
         e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-        e1.read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-        file.close();
+        e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+        delete e1;
+        delete file;
 
         count[0]=N_sz[l2];
         dimms[0]=N_sz[l2];
         memspace.setExtentSimple(1, dimms, NULL);
         filename = pot + std::to_string(l2)+std::to_string(l2+1) + gauge + ".h5";
-        file.openFile(filename, H5F_ACC_RDONLY);
-        e1 = file.openDataSet("e_i");
-        e_space = e1.getSpace();
+        file = new H5::H5File(filename, H5F_ACC_RDONLY);
+        e1 = new H5::DataSet(file->openDataSet("e_i"));
+        e_space = e1->getSpace();
         e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-        e1.read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
-        file.close();
+        e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace, e_space);
+        delete e1;
+        delete file;
 
         double ent;
         for(uint n1=0; n1<N_sz[l1]; ++n1) {
@@ -381,20 +396,24 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 
     for(auto i : Lf.en_dat) {
       en_srtd.emplace_back(i.en);
+      idx_elm = {i.n1,i.l1,i.n2,i.l2};
+      idx_data.emplace_back(idx_elm);
       // if (Lf.L==L_max)
       //   std::cout << std::setprecision(15) << i.en << ", " << i.n1 << ", " << i.l1 << ", " << i.n2 << ", " << i.l2 << "\n";
     }
 
-    ei = outfile->createDataSet("e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz));
-    ei.write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
-    outfile->close();
+    ei = new H5::DataSet(outfile->createDataSet("e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz)));
+    ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+    delete ei;
+    delete outfile;
 
     // write indices to file
     outfile_name = pot + std::to_string(Lf.L) + "idx.h5";
     outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-    ei = outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz));
-    ei.write(&idx_data[0], H5::PredType::NATIVE_UINT32);
-    outfile->close();
+    ei = new H5::DataSet(outfile->createDataSet("idx", H5::PredType::NATIVE_UINT32, H5::DataSpace(1, idx_sz)));
+    ei->write(&idx_data[0], H5::PredType::NATIVE_UINT32);
+    delete ei;
+    delete outfile;
 
     Li=Lf;
   }
@@ -403,16 +422,15 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
 }
 
 int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
-  uint id1=0, id2=0, idsti=0, idstf=0;
   uint l1i=0, l2i=0, l1f=0, l2f=0;
   uint Li_sz=0;
   uint Lf_sz=0;
   double Lsq=0.0;
   std::string filename;
   std::string outfile_name;
-  H5::H5File file;
+  H5::H5File *file=nullptr;
   H5::H5File *outfile=nullptr;
-  H5::DataSet dmx, L_set;
+  H5::DataSet *dmx=nullptr, *L_set=nullptr;
   H5::DataSpace dmx_space;
   hsize_t offset[2], count[2], stride[2], block[2];
   hsize_t dimms[2], T_dimms[2];
@@ -434,9 +452,11 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   std::vector<double*> D(L_max);
   std::vector<double> T;
 
-  std::vector<idx4> Lif_idx;
-  uint maxL_sz = *std::max_element(N_max.begin(), N_max.end());
-  Lif_idx.reserve(2*maxL_sz);
+  uint max_Ldim = *std::max_element(N_max.begin(), N_max.end());
+  uint max_Lsz = max_Ldim*max_Ldim;
+  idx4 Li_idx[max_Lsz*L_max];
+  idx4 Lf_idx[max_Lsz*L_max];
+  std::vector<idx4*> buffs(2);
 
   uint tot_sz=0;
   uint sz_i=0;
@@ -451,10 +471,10 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
 
   D_data.reserve(tot_sz);
 
-  // D[0] = &D_data[0];
-  // for(uint i=1; i<L_max; ++i) {
-  //   D[i] = &D_data[dmx_sz[i-1]];
-  // }
+  D[0] = &D_data[0];
+  for(uint i=1; i<L_max; ++i) {
+    D[i] = &D_data[dmx_sz[i-1]];
+  }
 
   // Read all 1e dipoles
   for(uint i=0; i<L_max; ++i) {
@@ -464,13 +484,14 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
     dimms[1] = D_dim[i].col;
 
     filename = pot + std::to_string(i) + std::to_string(i+1) + gauge + ".h5";
-    file.openFile(filename, H5F_ACC_RDONLY);
-    dmx = file.openDataSet("d_if");
-    dmx_space = dmx.getSpace();
+    file = new H5::H5File(filename, H5F_ACC_RDONLY);
+    dmx = new H5::DataSet(file->openDataSet("d_if"));
+    dmx_space = dmx->getSpace();
     dmx_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    memspace.setExtentSimple(1, dimms, NULL);
-	  dmx.read(&D_data[i], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
-    file.close();
+    memspace.setExtentSimple(2, dimms, NULL);
+	  dmx->read(D[i], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
+    delete dmx;
+    delete file;
   }
 
   // for loop over L's
@@ -479,18 +500,20 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
 
   // read L indices
   filename = pot + std::to_string(L) + "idx.h5";
-  file.openFile(filename, H5F_ACC_RDONLY);
-  L_set = file.openDataSet("idx");
-  Li_sz = L_set.getSpace().getSimpleExtentNpoints()/4;
-  L_set.read(&Lif_idx[0], H5::PredType::NATIVE_UINT32);
-  file.close();
+  file = new H5::H5File(filename, H5F_ACC_RDONLY);
+  L_set = new H5::DataSet(file->openDataSet("idx"));
+  Li_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+  L_set->read(&Li_idx[0], H5::PredType::NATIVE_UINT32);
+  delete L_set;
+  delete file;
 
   filename = pot + std::to_string(Lf_i) + "idx.h5";
-  file.openFile(filename, H5F_ACC_RDONLY);
-  L_set = file.openDataSet("idx");
-  Lf_sz = L_set.getSpace().getSimpleExtentNpoints()/4;
-  L_set.read(&Lif_idx[maxL_sz], H5::PredType::NATIVE_UINT32);
-  file.close();
+  file = new H5::H5File(filename, H5F_ACC_RDONLY);
+  L_set = new H5::DataSet(file->openDataSet("idx"));
+  Lf_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+  L_set->read(&Lf_idx[0], H5::PredType::NATIVE_UINT32);
+  delete L_set;
+  delete file;
 
   T.reserve(Li_sz*Lf_sz);
   T_dimms[0]=Lf_sz;
@@ -501,17 +524,16 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
     // Parallelise this loop
     for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
-      id2=maxL_sz+idLf;
-      l1i=Lif_idx[idLi].l1;
-      l2i=Lif_idx[idLi].l2;
-      l1f=Lif_idx[id2].l1;
-      l2f=Lif_idx[id2].l2;
+      l1i=Li_idx[idLi].l1;
+      l2i=Li_idx[idLi].l2;
+      l1f=Lf_idx[idLf].l1;
+      l2f=Lf_idx[idLf].l2;
       if(l1i+1==l1f && l2i==l2f) {
         T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i)*wigner_6j_2e(L,l1f,l1i,l2i)*
-              D[l1i][Lif_idx[idLi].n1+D_dim[l1i].col*Lif_idx[id2].n1];
+              D[l1i][Li_idx[idLi].n1+D_dim[l1i].col*Lf_idx[idLf].n1];
       } else if(l2i+1==l2f && l1i==l1f) {
         T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i)*wigner_6j_2e(L,l2f,l2i,l1i)*
-              D[l2i][Lif_idx[idLi].n2+D_dim[l2i].col*Lif_idx[id2].n2];
+              D[l2i][Li_idx[idLi].n2+D_dim[l2i].col*Lf_idx[idLf].n2];
       } else {T[idLi+Li_sz*idLf]=0.0;}
     }
   }
@@ -519,28 +541,30 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   // Save TL1;L2
   outfile_name = pot + "2_" + std::to_string(L) + std::to_string(Lf_i) + gauge + ".h5";
   outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-  dmx = outfile->createDataSet("d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms));
-  dmx.write(&T[0], H5::PredType::NATIVE_DOUBLE);
-  outfile->close();
+  dmx = new H5::DataSet(outfile->createDataSet("d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms)));
+  dmx->write(&T[0], H5::PredType::NATIVE_DOUBLE);
+  delete dmx;
+  delete outfile;
 
   T.clear();
 
   int buf_Li=1;
   int buf_Lf=0;
   Li_sz = Lf_sz;
+  buffs[0] = &Li_idx[0];
+  buffs[1] = &Lf_idx[0];
 
   for(L=1; L<L_max; ++L) {
     Lf_i=L+1;
-    idsti=buf_Li*maxL_sz;
-    idstf=buf_Lf*maxL_sz;
 
     // read L indices
     filename = pot + std::to_string(Lf_i) + "idx.h5";
-    file.openFile(filename, H5F_ACC_RDONLY);
-    L_set = file.openDataSet("idx");
-    Lf_sz = L_set.getSpace().getSimpleExtentNpoints()/4;
-    L_set.read(&Lif_idx[idstf], H5::PredType::NATIVE_UINT32);
-    file.close();
+    file = new H5::H5File(filename, H5F_ACC_RDONLY);
+    L_set = new H5::DataSet(file->openDataSet("idx"));
+    Lf_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+    L_set->read(buffs.at(buf_Lf), H5::PredType::NATIVE_UINT32);
+    delete L_set;
+    delete file;
 
     T.reserve(Li_sz*Lf_sz);
     T_dimms[0]=Lf_sz;
@@ -551,27 +575,26 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
     for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
       // Parallelise this loop
       for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
-        id1=idsti+idLi;
-        id2=idstf+idLf;
-        l1i=Lif_idx[id1].l1;
-        l2i=Lif_idx[id1].l2;
-        l1f=Lif_idx[id2].l1;
-        l2f=Lif_idx[id2].l2;
+        l1i=buffs.at(buf_Li)[idLi].l1;
+        l2i=buffs.at(buf_Li)[idLi].l2;
+        l1f=buffs.at(buf_Lf)[idLf].l1;
+        l2f=buffs.at(buf_Lf)[idLf].l2;
         if(l1i+1==l1f && l2i==l2f) {
           T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i)*wigner_6j_2e(L,l1f,l1i,l2i)*
-                D[l1i][Lif_idx[id1].n1+D_dim[l1i].col*Lif_idx[id2].n1];
+                D[l1i][buffs.at(buf_Li)[idLi].n1+D_dim[l1i].col*buffs.at(buf_Lf)[idLf].n1];
         } else if(l2i+1==l2f && l1i==l1f) {
           T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i)*wigner_6j_2e(L,l2f,l2i,l1i)*
-                D[l2i][Lif_idx[id1].n2+D_dim[l2i].col*Lif_idx[id2].n2];
+                D[l2i][buffs.at(buf_Li)[idLi].n2+D_dim[l2i].col*buffs.at(buf_Lf)[idLf].n2];
         } else {T[idLi+Li_sz*idLf]=0.0;}
       }
     }
 
     outfile_name = pot + "2_" + std::to_string(L) + std::to_string(Lf_i) + gauge + ".h5";
     outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-    dmx = outfile->createDataSet("d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms));
-    dmx.write(&T[0], H5::PredType::NATIVE_DOUBLE);
-    outfile->close();
+    dmx = new H5::DataSet(outfile->createDataSet("d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms)));
+    dmx->write(&T[0], H5::PredType::NATIVE_DOUBLE);
+    delete dmx;
+    delete outfile;
 
     T.clear();
 
