@@ -523,6 +523,7 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
   for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
     // Parallelise this loop
+    #pragma omp parallel for private(l1i,l2i,l1f,l2f)
     for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
       l1i=Li_idx[idLi].l1;
       l2i=Li_idx[idLi].l2;
@@ -574,6 +575,7 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
     Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
     for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
       // Parallelise this loop
+      #pragma omp parallel for private(l1i,l2i,l1f,l2f)
       for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
         l1i=buffs.at(buf_Li)[idLi].l1;
         l2i=buffs.at(buf_Li)[idLi].l2;
