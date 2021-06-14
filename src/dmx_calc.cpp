@@ -9,22 +9,22 @@ en_L DMX2e::make_enL(uint L, uint l1e_max) {
   uint l2=0;
   std::vector<l_ab> lp;
   l_ab l_pair;
-
-  if(L==0) {
+  
+  if(L==0) { // For L=0, l1=l2
     sz = l1e_max+1;
     lp.reserve(sz);
     for(uint i=0; i<sz; ++i) {
       l_pair = {i,i};
       lp.emplace_back(l_pair);
     }
-  } else if(L==1) {
+  } else if(L==1) { // For L=1, l2=l1+1
     sz = l1e_max;
     lp.reserve(sz);
     for(uint i=0; i<sz; ++i) {
       l_pair = {i, i+1};
       lp.emplace_back(l_pair);
     }
-  } else if(L%2==0 && L!=0) {
+  } else if(L%2==0 && L!=0) { // L>=2, L even
     sz = l1e_max*2;
     lp.reserve(sz);
     l_pair = {0,L};
@@ -37,7 +37,7 @@ en_L DMX2e::make_enL(uint L, uint l1e_max) {
         lp.emplace_back(l_pair);
       }
     }
-  } else if(L%2==1 && L!=1) {
+  } else if(L%2==1 && L!=1) { // L>=3, L odd 
     sz = l1e_max*2;
     lp.reserve(sz);
     l_pair = {0,L};
@@ -107,7 +107,7 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
     l1=Li.l_pair[i].l1;
     l2=Li.l_pair[i].l2;
 
-    if(l1==l2) {
+    if(l1==l2) { // Calculate energies if l1=l2
       count[0]=N_sz[l1];
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
@@ -129,7 +129,7 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
         }
       }
 
-    } else {
+    } else { // Calculate energies if l1!=l2
       count[0]=N_sz[l1];
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
@@ -165,15 +165,18 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
     }
   }
 
+  // Sort the energies in parallel using C++17 built in parallel sort
   std::sort(std::execution::par_unseq, Li.en_dat.begin(), Li.en_dat.end(), 
         [](en_data const &a, en_data const &b) { return a.en < b.en; });
 
+  // Separate the sorted energies from the sorted indices
   for(auto i : Li.en_dat) {
     en_srtd.emplace_back(i.en);
     idx_elm = {i.n1,i.l1,i.n2,i.l2};
     idx_data.emplace_back(idx_elm);
   }
 
+  // write the energies to a file
   outfile_name = pot + "2_" + std::to_string(Li.L) + std::to_string(Li.L+1) + gauge + ".h5";
   outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
   ei = new H5::DataSet(outfile->createDataSet("e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz)));
@@ -215,7 +218,7 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
     l1=Lf.l_pair[i].l1;
     l2=Lf.l_pair[i].l2;
 
-    if(l1==l2) {
+    if(l1==l2) { // Calculate energies if l1=l2
       count[0]=N_sz[l1];
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
@@ -237,7 +240,7 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
         }
       }
 
-    } else {
+    } else { // Calculate energies if l1!=l2
       count[0]=N_sz[l1];
       dimms[0]=N_sz[l1];
       memspace.setExtentSimple(1, dimms, NULL);
@@ -398,8 +401,6 @@ int DMX2e::sort_L(uint L_max, std::vector<uint> &N_sz) {
       en_srtd.emplace_back(i.en);
       idx_elm = {i.n1,i.l1,i.n2,i.l2};
       idx_data.emplace_back(idx_elm);
-      // if (Lf.L==L_max)
-      //   std::cout << std::setprecision(15) << i.en << ", " << i.n1 << ", " << i.l1 << ", " << i.n2 << ", " << i.l2 << "\n";
     }
 
     ei = new H5::DataSet(outfile->createDataSet("e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz)));
@@ -436,14 +437,10 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   hsize_t dimms[2], T_dimms[2];
   offset[0]=0;
   offset[1]=0;
-  // count[0] =Nf_sz; // no. rows
-  // count[1] =Ni_sz;  // no. columns
   stride[0]=1;
   stride[1]=1;
   block[0] =1;
   block[1] =1;
-  // dimms[0] =Nf_sz;
-  // dimms[1] =Ni_sz;
   H5::DataSpace memspace;
 
   std::vector<uint> dmx_sz(L_max);
@@ -454,13 +451,14 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
 
   uint max_Ldim = *std::max_element(N_max.begin(), N_max.end());
   uint max_Lsz = max_Ldim*max_Ldim;
-  idx4 Li_idx[max_Lsz*L_max];
-  idx4 Lf_idx[max_Lsz*L_max];
+  std::vector<idx4> Li_idx(max_Lsz*L_max);
+  std::vector<idx4> Lf_idx(max_Lsz*L_max);
   std::vector<idx4*> buffs(2);
 
   uint tot_sz=0;
   uint sz_i=0;
   dmx_dim dim_i;
+  // Caluclate the sizes of the 1e dmx subblocks
   for(uint i=0; i<L_max; ++i) {
     dim_i = {N_max[i+1],N_max[i]};
     sz_i = N_max[i]*N_max[i+1];
@@ -502,7 +500,7 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   filename = pot + std::to_string(L) + "idx.h5";
   file = new H5::H5File(filename, H5F_ACC_RDONLY);
   L_set = new H5::DataSet(file->openDataSet("idx"));
-  Li_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+  Li_sz = L_set->getSpace().getSimpleExtentNpoints()/4; // get the size of L
   L_set->read(&Li_idx[0], H5::PredType::NATIVE_UINT32);
   delete L_set;
   delete file;
@@ -510,7 +508,7 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   filename = pot + std::to_string(Lf_i) + "idx.h5";
   file = new H5::H5File(filename, H5F_ACC_RDONLY);
   L_set = new H5::DataSet(file->openDataSet("idx"));
-  Lf_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+  Lf_sz = L_set->getSpace().getSimpleExtentNpoints()/4; // get the size of L+1
   L_set->read(&Lf_idx[0], H5::PredType::NATIVE_UINT32);
   delete L_set;
   delete file;
@@ -522,7 +520,6 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   // calculate 2e dipoles
   Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
   for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
-    // Parallelise this loop
     #pragma omp parallel for private(l1i,l2i,l1f,l2f)
     for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
       l1i=Li_idx[idLi].l1;
@@ -549,12 +546,14 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
 
   T.clear();
 
+  // Set L=1, L+1=2 and change index buffer pointers
   int buf_Li=1;
   int buf_Lf=0;
   Li_sz = Lf_sz;
   buffs[0] = &Li_idx[0];
   buffs[1] = &Lf_idx[0];
 
+  // Loop for L>0 
   for(L=1; L<L_max; ++L) {
     Lf_i=L+1;
 
@@ -574,7 +573,6 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
     // calculate 2e dipoles
     Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
     for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
-      // Parallelise this loop
       #pragma omp parallel for private(l1i,l2i,l1f,l2f)
       for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
         l1i=buffs.at(buf_Li)[idLi].l1;
@@ -615,152 +613,3 @@ DMX2e::DMX2e(std::string cpot, char gau, uint L_max, std::vector<uint> &N_max) {
 
   calc_dmx(L_max, N_max);
 }
-
-// int calculate_2edmx(uint L_max, uint Ni_sz, uint Nf_sz) {
-//   uint la=0,lb=0, lc=0, ld=1;
-//   uint L=la+lb;
-//   double min_sq=0;
-//   double L_coeff_ac=0;
-//   double L_coeff_bd=0;
-//   int dsz=Ni_sz*Nf_sz;
-//   char gauge='v';
-//   std::string pot="he";
-//   std::string filename;
-//   std::string outfile_name;
-//   std::string setname;
-
-//   H5::DataSet dmx;
-//   H5::DataSpace dmx_space;
-//   hsize_t offset[2], count[2], stride[2], block[2];
-//   hsize_t dimms[2];
-//   offset[0]=0;
-//   offset[1]=0;
-//   count[0] =Nf_sz; // no. rows
-//   count[1] =Ni_sz;  // no. coumns
-//   stride[0]=1;
-//   stride[1]=1;
-//   block[0] =1;
-//   block[1] =1;
-//   dimms[0] =Nf_sz;
-//   dimms[1] =Ni_sz;
-//   H5::DataSpace memspace(2, dimms, NULL);
-//   std::vector<double> Dac(dsz);
-//   std::vector<double> Dbd(dsz);
-//   std::vector<double> T;
-//   T.reserve();
-//   H5::H5File file;
-//   H5::H5File *outfile;
-//   H5::DataSet T_abcd;
-
-//   min_sq = 2*pow(-1,L+1)*sqrt(L+1); // 2 for antisymmetrisation
-
-//   // by L
-//   filename = pot + std::to_string(lb) + std::to_string(ld) + gauge + ".h5";
-//   file.openFile(filename, H5F_ACC_RDONLY);
-//   dmx = file.openDataSet("d_if");
-//   dmx_space = dmx.getSpace();
-//   dmx_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-// 	dmx.read(&Dbd[0], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
-
-//   for(L=1; L<L_max; ++L) {
-//     if ()
-//     for (lb=0; lb<)
-//     for (la=0; la<=lb; ++la) {
-
-//     }
-//   }
-
-
-
-
-//   // need to iterate over L not la lb
-//   for(la=0; la<la_max; ++la) {
-//     lb=la;
-//     L=la+lb;
-//     lc=la;
-//     ld=lb+1;
-//     min_sq = 2*pow(-1,L+1)*sqrt(L+1); // 2 for antisymmetrisation
-
-//     // Read Dbd
-//     filename = pot + std::to_string(lb) + std::to_string(ld) + gauge + ".h5";
-//     file.openFile(filename, H5F_ACC_RDONLY);
-//     dmx = file.openDataSet("d_if");
-//     dmx_space = dmx.getSpace();
-//     dmx_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-// 		dmx.read(&Dbd[0], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
-
-//     // wigner
-//     L_coeff_bd = min_sq*sqrt((2*lb+1)*(2*ld+1)/ld)*wigner_6j_2e(L,ld,lb,la);
-//     // dbd only
-//     for(int n=0; n<dsz; ++n) {
-//       T[n] = L_coeff_bd*Dbd[n];
-//     }
-
-//     // save Tab;cd to file
-//     setname = pot + std::to_string(la) + std::to_string(lb) + 
-//               "-" + std::to_string(lc) + std::to_string(ld);
-//     outfile_name = setname + ".h5";
-//     outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-//     T_abcd = outfile->createDataSet(setname, H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, count));
-//     T_abcd.write(&T[0], H5::PredType::NATIVE_DOUBLE);
-//     outfile->close();
-
-//     for(lb=la+1; lb<lb_max; ++lb) {
-//       lc=la;
-//       ld=lb+1;
-//       L=la+lb;
-//       min_sq = 2*pow(-1,L+1)*sqrt(L+1);
-
-//       // Read Dbd
-//       filename = pot + std::to_string(lb) + std::to_string(ld) + gauge + ".h5";
-//       file.openFile(filename, H5F_ACC_RDONLY);
-//       dmx = file.openDataSet("d_if");
-//       dmx_space = dmx.getSpace();
-//       dmx_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-// 		  dmx.read(&Dbd[0], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
-
-//       // wigner
-//       L_coeff_bd = min_sq*sqrt((2*lb+1)*(2*ld+1)/ld)*wigner_6j_2e(L,ld,lb,la);
-//       // dbd only
-//       for(int n=0; n<dsz; ++n) {
-//         T[n] = L_coeff_bd*Dbd[n];
-//       }
-
-//       // save Tab;cd to file
-//       setname = pot + std::to_string(la) + std::to_string(lb) + 
-//                 "-" + std::to_string(lc) + std::to_string(ld);
-//       outfile_name = setname + ".h5";
-//       outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-//       T_abcd = outfile->createDataSet(setname, H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, count));
-//       T_abcd.write(&T[0], H5::PredType::NATIVE_DOUBLE);
-//       outfile->close();
-
-//       lc=la+1;
-//       ld-=1;
-//       // Read Dac
-//       filename = pot + std::to_string(la) + std::to_string(lc) + gauge + ".h5";
-//       file.openFile(filename, H5F_ACC_RDONLY);
-//       dmx = file.openDataSet("d_if");
-//       dmx_space = dmx.getSpace();
-//       dmx_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-// 		  dmx.read(&Dac[0], H5::PredType::NATIVE_DOUBLE, memspace, dmx_space);
-
-//       // wigner
-//       L_coeff_ac = min_sq*sqrt((2*la+1)*(2*lc+1)/lb)*wigner_6j_2e(L,lc,la,lb);
-//       // dac + dbd
-//       for(int n=0; n<dsz; ++n) {
-//         T[n] = L_coeff_ac*Dac[n];
-//       }
-
-//       // save Tab;cd to file
-//       setname = pot + std::to_string(la) + std::to_string(lb) + 
-//                 "-" + std::to_string(lc) + std::to_string(ld);
-//       outfile_name = setname + ".h5";
-//       outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-//       T_abcd = outfile->createDataSet(setname, H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, count));
-//       T_abcd.write(&T[0], H5::PredType::NATIVE_DOUBLE);
-//       outfile->close();
-//     }
-//   }
-//   return 0;
-// }
