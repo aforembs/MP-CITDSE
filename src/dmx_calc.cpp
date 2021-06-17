@@ -518,7 +518,7 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   T_dimms[1]=Li_sz;
 
   // calculate 2e dipoles
-  Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
+  Lsq = 2*sqrt(Lf_i);
   for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
     #pragma omp parallel for private(l1i,l2i,l1f,l2f)
     for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
@@ -527,13 +527,11 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
       l1f=Lf_idx[idLf].l1;
       l2f=Lf_idx[idLf].l2;
       if(l1i+1==l1f && l2i==l2f) {
-        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i)*sqrt((2*l1i+1)*(2*l1f+1))*wigner_6j_2e(L,l1f,l1i,l2i)*
-              D[l1i][Li_idx[idLi].n1+D_dim[l1i].col*Lf_idx[idLf].n1]/
-              pow(l1f, 0.75)/pow(l1i/(4*l1f*l1f-1),0.25);
+        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
+              D[l1i][Li_idx[idLi].n1+D_dim[l1i].col*Lf_idx[idLf].n1]/sqrt(l1f);
       } else if(l2i+1==l2f && l1i==l1f) {
-        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i)*sqrt((2*l2i+1)*(2*l2f+1))*wigner_6j_2e(L,l2f,l2i,l1i)*
-              D[l2i][Li_idx[idLi].n2+D_dim[l2i].col*Lf_idx[idLf].n2]/
-              pow(l2f, 0.75)/pow(l2i/(4*l2f*l2f-1),0.25);
+        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
+              D[l2i][Li_idx[idLi].n2+D_dim[l2i].col*Lf_idx[idLf].n2]/sqrt(l2f);
       } else {T[idLi+Li_sz*idLf]=0.0;}
     }
   }
@@ -573,7 +571,7 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
     T_dimms[1]=Li_sz;
 
     // calculate 2e dipoles
-    Lsq = 2*pow(-1,Lf_i)*sqrt(Lf_i);
+    Lsq = 2*sqrt(Lf_i);
     for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
       #pragma omp parallel for private(l1i,l2i,l1f,l2f)
       for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
@@ -582,13 +580,11 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
         l1f=buffs.at(buf_Lf)[idLf].l1;
         l2f=buffs.at(buf_Lf)[idLf].l2;
         if(l1i+1==l1f && l2i==l2f) {
-          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i)*wigner_6j_2e(L,l1f,l1i,l2i)*
-                D[l1i][buffs.at(buf_Li)[idLi].n1+D_dim[l1i].col*buffs.at(buf_Lf)[idLf].n1]/
-              pow(l1f, 0.75)/pow(l1i/(4*l1f*l1f-1),0.25);
+          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
+              D[l1i][buffs.at(buf_Li)[idLi].n1+D_dim[l1i].col*buffs.at(buf_Lf)[idLf].n1]/sqrt(l1f);
         } else if(l2i+1==l2f && l1i==l1f) {
-          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i)*wigner_6j_2e(L,l2f,l2i,l1i)*
-                D[l2i][buffs.at(buf_Li)[idLi].n2+D_dim[l2i].col*buffs.at(buf_Lf)[idLf].n2]/
-              pow(l2f, 0.75)/pow(l2i/(4*l2f*l2f-1),0.25);
+          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
+              D[l2i][buffs.at(buf_Li)[idLi].n2+D_dim[l2i].col*buffs.at(buf_Lf)[idLf].n2]/sqrt(l2f);
         } else {T[idLi+Li_sz*idLf]=0.0;}
       }
     }
