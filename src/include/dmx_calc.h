@@ -9,7 +9,7 @@
 #include <fstream>
 #include "H5Cpp.h"
 #include "dmx_typ.h"
-#include "wigner6j.h"
+#include "wigner_sym.h"
 
 class DMX2e {
   private:

@@ -1,4 +1,4 @@
-#include "wigner6j.h"
+#include "wigner_sym.h"
 
 unsigned int fact(unsigned int x) {
   unsigned int tab[] = {1,1,2,6,24,120,720};
@@ -16,6 +16,25 @@ unsigned int fact(unsigned int x) {
 double triangle(unsigned int a, unsigned int b, unsigned int c) {
   double res = sqrt(fact(a-b+c)*fact(a+b-c)*fact(-a+b+c)/(double)fact(a+c+b+1));
   return res;
+}
+
+double wigner_3j0(unsigned int j1, unsigned int j2, unsigned int j3) {
+  unsigned int t_half = (j1+j2+j3)/2;
+
+  return pow(-1,-t_half)*fact(t_half)*triangle(j1,j3,j2)/fact(t_half-j1)/fact(t_half-j2)/fact(t_half-j3); 
+}
+
+double wigner_6j(unsigned int j1, unsigned int j2, unsigned int j3, 
+                unsigned int j4, unsigned int j5, unsigned int j6) {
+  unsigned int max_z = std::min(std::min(2*j4,j4+j6-j1+j3),std::min(-j2+j4+j6,j4-j5+j3));
+  double aa = fact(j2+j4+j6+1)*fact(j4+j5+j3+1)/fact(j2+j4-j6)/fact(j6-j5+j1)/fact(j6+j5-j1)/fact(-j1+j2+j3)/fact(j1-j2+j3)/fact(j4+j5-j3); 
+  double s0 = 0.0;
+
+  for(unsigned int z=0; z<=max_z; ++z) {
+    s0 += pow(-1,z)*fact(2*j4-z)/fact(z)*fact(j4+j6-j1+j3-z)/fact(-j2+j4+j6-z)*fact(j4+j6+j1+j3+1-z)/
+          fact(j4-j5+j3-z)/fact(j2+j4+j6+1-z)/fact(j4+j5+j3+1-z); 
+  }
+  return pow(-1,j4+j6+j1+j3)*triangle(j2,j4,j6)*triangle(j6,j5,j3)*triangle(j2,j1,j3)*triangle(j4,j5,j3)*aa*s0;
 }
 
 double wigner_6j_2e(unsigned int L, unsigned int la, unsigned int lb, unsigned int lc) {
