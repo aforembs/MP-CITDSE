@@ -24,7 +24,7 @@ en_L DMX2e::make_enL(uint L, uint l1e_max) {
       l_pair = {i, i+1};
       lp.emplace_back(l_pair);
     }
-  } else if(L%2==0 && L!=0) { // L>=2, L even
+  } else if(L ^ 1 == L + 1 && L!=0) { // L>=2, L even
     sz = l1e_max*2;
     lp.reserve(sz);
     l_pair = {0,L};
@@ -37,7 +37,7 @@ en_L DMX2e::make_enL(uint L, uint l1e_max) {
         lp.emplace_back(l_pair);
       }
     }
-  } else if(L%2==1 && L!=1) { // L>=3, L odd 
+  } else if(L & 1 && L!=1) { // L>=3, L odd 
     sz = l1e_max*2;
     lp.reserve(sz);
     l_pair = {0,L};
