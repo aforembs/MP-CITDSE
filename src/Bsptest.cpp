@@ -1,5 +1,11 @@
-#include <boost/math/special_functions/cardinal_b_spline.hpp> //?
+#include <vector>
+#include <algorithm>
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include "H5Cpp.h"
 #include "fastgl.h"
+#include "slatec_f.h"
 
 int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   int n=0;   // no. of points
@@ -15,13 +21,13 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   H5::H5File    *file=nullptr;
   H5::DataSet   *rset=nullptr;
   H5::DataSpace cspace;
-  hsize_t offset[1], count[1], stride[1], block[1];
-  hsize_t dimms[1];
-  offset[0]=0;
-  count[0] =N_sz[0];
-  stride[0]=1;
-  block[0] =1;
-  dimms[0] =N_sz[0];
+  hsize_t offset[2], count[2], stride[2], block[2];
+  hsize_t dimms[2];
+  offset[0]=0; offset[1]=0;
+  count[0] =0;
+  stride[0]=1; stride[1]=1;
+  block[0] =1; block[1]=1;
+  dimms[0] =0;
   H5::DataSpace memspace;
 
   int tot_states = 0;
@@ -36,8 +42,8 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   rset = new H5::DataSet(file->openDataSet("Knots"));
   nkn = rset->getSpace().getSimpleExtentNpoints();
 
-  kkn.reserve(nknots);
-  rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE);
+  kkn.reserve(nkn);
+  rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
   delete rset;
 
   rset = new H5::DataSet(file->openDataSet("En"));
@@ -45,18 +51,22 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   delete rset;
   delete file;
 
-  Cf.reserve(tot_states*nSt);
-  C[0]=&Cf[0];
+  Cf.reserve(tot_states*n);
+  C[0]=&Cf[1];
+  Cf[0]=0.0; Cf[nSt+1] =0.0;
   int nst_prev = 0;
   for(int i=1; i<=l1e_max; ++i) {
     nst_prev += N_max[i-1];
-    C[i] = &Cf[nst_prev*nSt];
+    C[i] = &Cf[nst_prev*n+1];
+    Cf[nst_prev*n]=0.0;
+    Cf[i*n-1]=0.0;
   }
-
+  std::cout << n << " " << nSt << " " << nkn <<"\n";
+  // read coefficients for all l
   for(int l=0; l<=l1e_max; ++l) {
-    count[0] = N_max[l]*nSt;
-    dimms[0] = count[l];
-    memspace.setExtentSimple(1, dimms, NULL);
+    count[0] = N_max[l]; count[1] = nSt;
+    dimms[0] = count[0]; dimms[1] = count[1];
+    memspace.setExtentSimple(2, dimms, NULL);
 
     filename = cpot + std::to_string(l) + ".h5";
     file = new H5::H5File(filename, H5F_ACC_RDONLY);
@@ -68,9 +78,60 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
     delete file;
   }
 
-  std::vector<fastgl::QuadPair> pvec(k);
+  std::vector<double> gl_x(k);
   for(int i=1; i<=k; ++i) {
-    pvec[i-1] = fastgl::GLPair(k, i);
+    gl_x[k-i] = fastgl::GLPair(k, i).x(); // generate GL nodes over B-splines support
   }
 
+  int len = (k+1)*(k+2)/2;
+  std::vector<double> Db(k);
+  std::vector<double> work(len);
+  std::vector<double> Bsplines;
+
+  Bsplines.reserve(nSt*k*k);
+
+  int i1 ;
+  double dl, sl, x;
+             
+  for(auto i=k-1; i<n; ++i){
+    dl = kkn[i+1] - kkn[i];
+    sl = kkn[i+1] + kkn[i];
+
+    for(int p=0; p<k; ++p){
+      x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
+      i1 = i + 1 ;
+      dbspvd_(&kkn[0], k, 1, x, i1, k, &Db[0], &work[0]);
+
+      Bsplines.insert(std::end(Bsplines), std::begin(Db), std::end(Db));
+    }
+  }
+
+  std::ofstream outFile("wfn_ground.dat", std::ofstream::out);
+  // Output ground state wfn
+  int bidx=0;
+  double x_val=0;
+  for(auto i=k-1; i<n; ++i, ++bidx){
+    dl = kkn[i+1] - kkn[i];
+    sl = kkn[i+1] + kkn[i];
+
+    for(int p=0; p<k; ++p){
+      x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
+      x_val = 0;
+
+      for(int j=0; j<k; ++j) {
+        x_val += Cf[i-k+1+j]*Bsplines[j+k*(p+bidx*k)];
+      }
+      outFile << std::setiosflags(std::ios::scientific)
+              << std::setprecision(12) << x << " " << x_val << "\n";
+    }
+  }
+  outFile.close();
+  return 0;
+}
+
+int main() {
+  std::vector<uint> Nm;
+  Nm.push_back(1);
+  bsptest("he", 0, Nm);
+  return 0;
 }

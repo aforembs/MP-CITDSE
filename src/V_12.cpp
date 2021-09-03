@@ -1,6 +1,6 @@
 #include "V_12.h"
 
-int V12(uint L_max) {
+int V12(uint L_max, std::vector<uint> &N_sz) {
   uint min_dir=0, min_exc=0;
   double Y_norm=0.0;
   double F_dir=1.0; // dummy slater integrals
@@ -8,6 +8,15 @@ int V12(uint L_max) {
   double v_mat; // standin for V_12 matrix
   double sum_k=0.0;
   idx4 e12, e12p;
+
+  int n=0;   // no. of points
+  int k=0;   // max B-spline order
+  int nkn=0; // no. of knots
+  int nCf=0; // no. of coefficients
+  int nSt=0; // no. of states
+  std::vector<double> kkn;
+  std::vector<double> Cf;
+  std::vector<double*> C(L_max+1);
 
   uint L_sz=0, v_sz=0;
   std::string filename;
@@ -17,6 +26,92 @@ int V12(uint L_max) {
   std::vector<idx4> idx_data;
   H5::DataSet *L_set=nullptr;
   H5::DataSet *V_set=nullptr;
+  H5::DataSpace cspace;
+  hsize_t offset[2], count[2], stride[2], block[2];
+  hsize_t dimms[2];
+  offset[0]=0; offset[1]=0;
+  count[0] =0;
+  stride[0]=1; stride[1]=1;
+  block[0] =1; block[1]=1;
+  dimms[0] =0;
+  H5::DataSpace memspace;
+
+  int tot_states = 0;
+  for(auto &n : N_sz) {
+    tot_states += n;
+  }
+
+  filename = cpot + std::to_string(0) + ".h5";
+  file = new H5::H5File(filename, H5F_ACC_RDONLY);
+  file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
+  file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &k);
+  rset = new H5::DataSet(file->openDataSet("Knots"));
+  nkn = rset->getSpace().getSimpleExtentNpoints();
+
+  kkn.reserve(nkn);
+  rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
+  delete rset;
+
+  rset = new H5::DataSet(file->openDataSet("En"));
+  nSt = rset->getSpace().getSimpleExtentNpoints();
+  delete rset;
+  delete file;
+
+  Cf.reserve(tot_states*n);
+  C[0]=&Cf[1];
+  Cf[0]=0.0; Cf[nSt+1] =0.0;
+  int nst_prev = 0;
+  for(int i=1; i<=L_max; ++i) {
+    nst_prev += N_max[i-1];
+    C[i] = &Cf[nst_prev*n+1];
+    Cf[nst_prev*n]=0.0;
+    Cf[i*n-1]=0.0;
+  }
+
+  // read coefficients for all l
+  for(int l=0; l<=L_max; ++l) {
+    count[0] = N_max[l]; count[1] = nSt;
+    dimms[0] = count[0]; dimms[1] = count[1];
+    memspace.setExtentSimple(2, dimms, NULL);
+
+    filename = cpot + std::to_string(l) + ".h5";
+    file = new H5::H5File(filename, H5F_ACC_RDONLY);
+    rset = new H5::DataSet(file->openDataSet("Coeff"));
+    cspace = rset->getSpace();
+    cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+    rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
+    delete rset;
+    delete file;
+  }
+
+  std::vector<double> gl_x(k);
+  for(int i=1; i<=k; ++i) {
+    gl_x[k-i] = fastgl::GLPair(k, i).x(); // generate GL nodes over B-splines support
+  }
+
+  // generate B-splines
+  int len = (k+1)*(k+2)/2;
+  std::vector<double> Db(k);
+  std::vector<double> work(len);
+  std::vector<double> Bsplines;
+
+  Bsplines.reserve(nSt*k*k);
+
+  int i1 ;
+  double dl, sl, x;
+             
+  for(auto i=k-1; i<n; ++i){
+    dl = kkn[i+1] - kkn[i];
+    sl = kkn[i+1] + kkn[i];
+
+    for(int p=0; p<k; ++p){
+      x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
+      i1 = i + 1 ;
+      dbspvd_(&kkn[0], k, 1, x, i1, k, &Db[0], &work[0]);
+
+      Bsplines.insert(std::end(Bsplines), std::begin(Db), std::end(Db));
+    }
+  }
 
   filename = pot + std::to_string(Lf_i) + "idx.h5";
   file = new H5::H5File(filename, H5F_ACC_RDONLY);
