@@ -1,5 +1,80 @@
 #include "V_12.h"
 
+double Fsltr(int k, int n, 
+            int na, int la, int nb, int lb,
+            int nc, int lc, int nd, int ld,
+            std::vector<uint> &N_max,
+            std::vector<double> &gl_w, 
+            std::vector<double> &gl_x, 
+            std::vector<double> &kkn,
+            std::vector<double> &Bsp,
+            std::vector<double> &Cf) {
+  int kp1=k+1;
+  double *Cl1i_pt=&Cf[N_max[la]*n];
+  double *Cl1p_pt=&Cf[N_max[lc]*n];
+  double *Cl2i_pt=&Cf[N_max[lb]*n];
+  double *Cl2p_pt=&Cf[N_max[ld]*n];
+  double Pl1=0, Pl2=0;
+
+  // first calculate Qk for all of 0->R
+  double Qk=0;
+  double Jk=0;
+  double Fk=0;
+  int bidx=0;
+  for(auto i=bo-1; i<n; ++i, ++bidx) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    loc_GL=0.0;
+
+    for(int p=0; p<bo; ++p){
+      r2 = dl*gl_x[p] + sl;
+      Pl2i = 0; Pl2p = 0;
+
+      for(int j=0; j<bo; ++j) {
+        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+      }
+      for(int j=0; j<bo; ++j) {
+        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+      }
+      loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
+    }
+    Qk+=dl*loc_GL;
+  }
+
+  for(auto i=bo-1; i<n; ++i, ++bidx) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+
+    for(int p=0; p<bo; ++p){ // need to work around this index for chi calculation
+      r1 = dl*gl_x[p] + sl;
+      Pl1i = 0; Pl1p = 0;
+
+      for(int j=0; j<bo; ++j) {
+        Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+      }
+      for(int j=0; j<bo; ++j) {
+        Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+      }
+      for(int j=0; j<bo; ++j) {
+        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+      }
+      for(int j=0; j<bo; ++j) {
+        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+      }
+      pr2 = Pl2i*Pl2p;
+      // chi(r1)
+      Jk+=dl*gl_w[p]*pow(r1,k)*pr2;
+      Qk-=dl*gl_w[p]*pow(r1,-kp1)*pr2;
+      chi=pow(r1,-kp1)*Jk+pow(r1,k)*Qk;
+
+      // Fk12;1'2'
+      Fk += dl*gl_w[p]*Pl1i*Pl1p*chi;
+    }
+  }
+
+  return Fk;
+}
+
 int V12(uint L_max, std::vector<uint> &N_sz) {
   uint min_dir=0, min_exc=0;
   double Y_norm=0.0;
@@ -37,8 +112,8 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
   H5::DataSpace memspace;
 
   int tot_states = 0;
-  for(auto &n : N_sz) {
-    tot_states += n;
+  for(auto &b : N_sz) {
+    tot_states += b;
   }
 
   filename = cpot + std::to_string(0) + ".h5";
@@ -85,8 +160,12 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
   }
 
   std::vector<double> gl_x(k);
+  std::vector<double> gl_w(k);
+  fastgl::GLPair gl_i;
   for(int i=1; i<=k; ++i) {
-    gl_x[k-i] = fastgl::GLPair(k, i).x(); // generate GL nodes over B-splines support
+    gl_i = fastgl::GLPair(k, i); // generate GL nodes and weights over B-splines support
+    gl_x[k-i] = gl_i.x(); 
+    gl_w[k-i] = gl_i.weight();
   }
 
   // generate B-splines
@@ -151,14 +230,20 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
-            sum_k += pow(-1,min_dir)*F_dir*wigner_3j0(e12.l1,k,e12p.l1)
+            sum_k += pow(-1,min_dir)*Fsltr(k, n, e12.n1, e12.l1, e12.n2, e12.l2,
+                                          e12p.n1, e12p.l1, e12p.n2, e12p.l2,
+                                          N_sz, gl_w, gl_x, kkn, Bsplines, Cf)
+                  *wigner_3j0(e12.l1,k,e12p.l1)
                   *wigner_3j0(e12.l2,k,e12p.l2)*wigner_6j(e12p.l1,e12.l2,L,e12.l2,e12.l1,k);
           }
           min_exc = ((L+e12.l1+e12p.l1) >> 0) & 1;
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
-            sum_k += pow(-1,min_exc)*F_exc*wigner_3j0(e12.l1,k,e12p.l2)
+            sum_k += pow(-1,min_exc)*Fsltr(k, n, e12.n1, e12.l1, e12.n2, e12.l2,
+                                          e12p.n2, e12p.l2, e12p.n1, e12p.l1,
+                                          N_sz, gl_w, gl_x, kkn, Bsplines, Cf)
+                  *wigner_3j0(e12.l1,k,e12p.l2)
                   *wigner_3j0(e12.l2,k,e12p.l1)*wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }

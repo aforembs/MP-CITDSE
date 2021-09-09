@@ -31,8 +31,8 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   H5::DataSpace memspace;
 
   int tot_states = 0;
-  for(auto &n : N_max) {
-    tot_states += n;
+  for(auto &b : N_max) {
+    tot_states += b;
   }
 
   filename = cpot + std::to_string(0) + ".h5";
@@ -94,11 +94,11 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   double dl, sl, x;
              
   for(auto i=k-1; i<n; ++i){
-    dl = kkn[i+1] - kkn[i];
-    sl = kkn[i+1] + kkn[i];
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
 
     for(int p=0; p<k; ++p){
-      x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
+      x = dl*gl_x[p] + sl;    //x-transformation
       i1 = i + 1 ;
       dbspvd_(&kkn[0], k, 1, x, i1, k, &Db[0], &work[0]);
 
@@ -111,11 +111,11 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   int bidx=0;
   double x_val=0;
   for(auto i=k-1; i<n; ++i, ++bidx){
-    dl = kkn[i+1] - kkn[i];
-    sl = kkn[i+1] + kkn[i];
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
 
     for(int p=0; p<k; ++p){
-      x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
+      x = dl*gl_x[p] + sl;    //x-transformation
       x_val = 0;
 
       for(int j=0; j<k; ++j) {
