@@ -1,6 +1,6 @@
 #include "V_12.h"
 
-double Fsltr(int k, int n, 
+double Fsltr(int k, int n, int bo,
             int na, int la, int nb, int lb,
             int nc, int lc, int nd, int ld,
             std::vector<uint> &N_max,
@@ -14,7 +14,8 @@ double Fsltr(int k, int n,
   double *Cl1p_pt=&Cf[N_max[lc]*n];
   double *Cl2i_pt=&Cf[N_max[lb]*n];
   double *Cl2p_pt=&Cf[N_max[ld]*n];
-  double Pl1=0, Pl2=0;
+  double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
+  double dl, sl, loc_GL, r2, r1, pr2, chi;
 
   // first calculate Qk for all of 0->R
   double Qk=0;
@@ -41,6 +42,7 @@ double Fsltr(int k, int n,
     Qk+=dl*loc_GL;
   }
 
+  bidx=0;
   for(auto i=bo-1; i<n; ++i, ++bidx) {
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
@@ -75,19 +77,16 @@ double Fsltr(int k, int n,
   return Fk;
 }
 
-int V12(uint L_max, std::vector<uint> &N_sz) {
+int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   uint min_dir=0, min_exc=0;
   double Y_norm=0.0;
-  double F_dir=1.0; // dummy slater integrals
-  double F_exc=F_dir;
-  double v_mat; // standin for V_12 matrix
+  std::vector<double> v_mat; // standin for V_12 matrix
   double sum_k=0.0;
   idx4 e12, e12p;
 
   int n=0;   // no. of points
-  int k=0;   // max B-spline order
+  int bo=0;   // max B-spline order
   int nkn=0; // no. of knots
-  int nCf=0; // no. of coefficients
   int nSt=0; // no. of states
   std::vector<double> kkn;
   std::vector<double> Cf;
@@ -98,12 +97,13 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
   std::string outfile_name;
   H5::H5File *file=nullptr;
   H5::H5File *outfile=nullptr;
-  std::vector<idx4> idx_data;
+  std::vector<idx4> L_idx;
   H5::DataSet *L_set=nullptr;
   H5::DataSet *V_set=nullptr;
+  H5::DataSet *rset=nullptr;
   H5::DataSpace cspace;
   hsize_t offset[2], count[2], stride[2], block[2];
-  hsize_t dimms[2];
+  hsize_t dimms[2], v_dim[1];
   offset[0]=0; offset[1]=0;
   count[0] =0;
   stride[0]=1; stride[1]=1;
@@ -119,7 +119,7 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
   filename = cpot + std::to_string(0) + ".h5";
   file = new H5::H5File(filename, H5F_ACC_RDONLY);
   file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
-  file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &k);
+  file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &bo);
   rset = new H5::DataSet(file->openDataSet("Knots"));
   nkn = rset->getSpace().getSimpleExtentNpoints();
 
@@ -137,7 +137,7 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
   Cf[0]=0.0; Cf[nSt+1] =0.0;
   int nst_prev = 0;
   for(int i=1; i<=L_max; ++i) {
-    nst_prev += N_max[i-1];
+    nst_prev += N_sz[i-1];
     C[i] = &Cf[nst_prev*n+1];
     Cf[nst_prev*n]=0.0;
     Cf[i*n-1]=0.0;
@@ -145,7 +145,7 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
 
   // read coefficients for all l
   for(int l=0; l<=L_max; ++l) {
-    count[0] = N_max[l]; count[1] = nSt;
+    count[0] = N_sz[l]; count[1] = nSt;
     dimms[0] = count[0]; dimms[1] = count[1];
     memspace.setExtentSimple(2, dimms, NULL);
 
@@ -159,55 +159,38 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
     delete file;
   }
 
-  std::vector<double> gl_x(k);
-  std::vector<double> gl_w(k);
-  fastgl::GLPair gl_i;
-  for(int i=1; i<=k; ++i) {
-    gl_i = fastgl::GLPair(k, i); // generate GL nodes and weights over B-splines support
-    gl_x[k-i] = gl_i.x(); 
-    gl_w[k-i] = gl_i.weight();
+  std::vector<double> gl_x(bo);
+  std::vector<double> gl_w(bo);
+  fastgl::QuadPair gl_i;
+  for(int i=1; i<=bo; ++i) {
+    gl_i = fastgl::GLPair(bo, i); // generate GL nodes and weights over B-splines support
+    gl_x[bo-i] = gl_i.x(); 
+    gl_w[bo-i] = gl_i.weight;
   }
 
   // generate B-splines
-  int len = (k+1)*(k+2)/2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
   std::vector<double> Bsplines;
+  Bsplines.reserve(nSt*bo*bo);
+  bsplines(nSt, bo, gl_x, kkn, Bsplines);
 
-  Bsplines.reserve(nSt*k*k);
-
-  int i1 ;
-  double dl, sl, x;
-             
-  for(auto i=k-1; i<n; ++i){
-    dl = kkn[i+1] - kkn[i];
-    sl = kkn[i+1] + kkn[i];
-
-    for(int p=0; p<k; ++p){
-      x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
-      i1 = i + 1 ;
-      dbspvd_(&kkn[0], k, 1, x, i1, k, &Db[0], &work[0]);
-
-      Bsplines.insert(std::end(Bsplines), std::begin(Db), std::end(Db));
-    }
-  }
-
-  filename = pot + std::to_string(Lf_i) + "idx.h5";
+  int L_real_size=0;
+  filename = cpot + std::to_string(0) + "idx.h5";
   file = new H5::H5File(filename, H5F_ACC_RDONLY);
   L_set = new H5::DataSet(file->openDataSet("idx"));
-  L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
-  std::vector<idx4> L_idx(Lidx_sz);
+  L_sz = 2;
+  L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
+  L_idx.resize(L_real_size);
   delete L_set;
   delete file;
 
-  std::vector<double> v_mat;
-
   for(uint L=0; L<=L_max; ++L) {
+    std::cout << "L: " << L << "\n";
     // Read indices n1l1;n2l2
-    filename = pot + std::to_string(L) + "idx.h5";
+    filename = cpot + std::to_string(L) + "idx.h5";
     file = new H5::H5File(filename, H5F_ACC_RDONLY);
     L_set = new H5::DataSet(file->openDataSet("idx"));
-    L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+    L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
+    L_idx.resize(L_real_size);
     L_set->read(&L_idx[0], H5::PredType::NATIVE_UINT32);
     delete L_set;
     delete file;
@@ -218,43 +201,44 @@ int V12(uint L_max, std::vector<uint> &N_sz) {
     for(uint NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
       e12p = L_idx[NL2];
-
+      std::cout << NL2 << "\n";
       for(uint NL1=NL2; NL1<L_sz; ++NL1){
         //set n1l1;n2l2
         e12 = L_idx[NL1];
 
         Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
         sum_k=0.0;
-        for(uint k=0; k<=l1e_max; ++k) {
+        for(uint k=0; k<=L_max; ++k) { // should include l_max!=L_max
           min_dir = ((L+e12.l2+e12p.l1) >> 0) & 1;
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
-            sum_k += pow(-1,min_dir)*Fsltr(k, n, e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_dir)*Fsltr(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n1, e12p.l1, e12p.n2, e12p.l2,
                                           N_sz, gl_w, gl_x, kkn, Bsplines, Cf)
-                  *wigner_3j0(e12.l1,k,e12p.l1)
-                  *wigner_3j0(e12.l2,k,e12p.l2)*wigner_6j(e12p.l1,e12.l2,L,e12.l2,e12.l1,k);
+                  *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
+                  *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
           min_exc = ((L+e12.l1+e12p.l1) >> 0) & 1;
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
-            sum_k += pow(-1,min_exc)*Fsltr(k, n, e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_exc)*Fsltr(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n2, e12p.l2, e12p.n1, e12p.l1,
                                           N_sz, gl_w, gl_x, kkn, Bsplines, Cf)
-                  *wigner_3j0(e12.l1,k,e12p.l2)
-                  *wigner_3j0(e12.l2,k,e12p.l1)*wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
+                  *wigner_3j0(e12.l1,k,e12p.l2)*wigner_3j0(e12.l2,k,e12p.l1)
+                  *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
         // write symmetric V_12 as upper triangular
-        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(l1+l2))*Y_norm*sum_k;
-      }
+        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
+      } 
     }
     // save upper triangular V_12
-    outfile_name = pot + "V12" + std::to_string(L) + ".h5";
+    v_dim[0] = v_sz;
+    outfile_name = cpot + "V12_" + std::to_string(L) + ".h5";
     outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-    V_set = new H5::DataSet(outfile->createDataSet("V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_sz)));
+    V_set = new H5::DataSet(outfile->createDataSet("V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim)));
     V_set->write(&v_mat[0], H5::PredType::NATIVE_DOUBLE);
     delete V_set;
     delete outfile;
