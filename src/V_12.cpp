@@ -8,12 +8,13 @@ double Fsltr(int k, int n, int bo,
             std::vector<double> &gl_x, 
             std::vector<double> &kkn,
             std::vector<double> &Bsp,
+            std::vector<int> &offset,
             std::vector<double> &Cf) {
   int kp1=k+1;
-  double *Cl1i_pt=&Cf[N_max[la]*n];
-  double *Cl1p_pt=&Cf[N_max[lc]*n];
-  double *Cl2i_pt=&Cf[N_max[lb]*n];
-  double *Cl2p_pt=&Cf[N_max[ld]*n];
+  double *Cl1i_pt=&Cf[offset[la]];
+  double *Cl1p_pt=&Cf[offset[lc]];
+  double *Cl2i_pt=&Cf[offset[lb]];
+  double *Cl2p_pt=&Cf[offset[ld]];
   double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
   double dl, sl, loc_GL, r2, r1, pr2, chi;
 
@@ -33,8 +34,6 @@ double Fsltr(int k, int n, int bo,
 
       for(int j=0; j<bo; ++j) {
         Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-      }
-      for(int j=0; j<bo; ++j) {
         Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
       }
       loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
@@ -53,14 +52,8 @@ double Fsltr(int k, int n, int bo,
 
       for(int j=0; j<bo; ++j) {
         Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-      }
-      for(int j=0; j<bo; ++j) {
         Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-      }
-      for(int j=0; j<bo; ++j) {
         Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-      }
-      for(int j=0; j<bo; ++j) {
         Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
       }
       pr2 = Pl2i*Pl2p;
@@ -135,11 +128,14 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   Cf.reserve(tot_states*n);
   C[0]=&Cf[1];
   Cf[0]=0.0; Cf[nSt+1] =0.0;
-  int nst_prev = 0;
+  int nt=0;
+  std::vector<int> nst_prev(L_max+1);
+  nst_prev[0] = nt;
   for(int i=1; i<=L_max; ++i) {
-    nst_prev += N_sz[i-1];
-    C[i] = &Cf[nst_prev*n+1];
-    Cf[nst_prev*n]=0.0;
+    nt += N_sz[i-1];
+    nst_prev[i] = nt*n;
+    C[i] = &Cf[nt*n+1];
+    Cf[nt*n]=0.0;
     Cf[i*n-1]=0.0;
   }
 
@@ -201,21 +197,20 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     for(uint NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
       e12p = L_idx[NL2];
-      std::cout << NL2 << "\n";
       for(uint NL1=NL2; NL1<L_sz; ++NL1){
         //set n1l1;n2l2
         e12 = L_idx[NL1];
 
         Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
         sum_k=0.0;
-        for(uint k=0; k<=L_max; ++k) { // should include l_max!=L_max
+        for(uint k=0; k<=L_max; ++k) { // should include l_max!=L_max ?
           min_dir = ((L+e12.l2+e12p.l1) >> 0) & 1;
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
             sum_k += pow(-1,min_dir)*Fsltr(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n1, e12p.l1, e12p.n2, e12p.l2,
-                                          N_sz, gl_w, gl_x, kkn, Bsplines, Cf)
+                                          N_sz, gl_w, gl_x, kkn, Bsplines, nst_prev, Cf)
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
@@ -225,13 +220,13 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
             sum_k += pow(-1,min_exc)*Fsltr(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n2, e12p.l2, e12p.n1, e12p.l1,
-                                          N_sz, gl_w, gl_x, kkn, Bsplines, Cf)
+                                          N_sz, gl_w, gl_x, kkn, Bsplines, nst_prev, Cf)
                   *wigner_3j0(e12.l1,k,e12p.l2)*wigner_3j0(e12.l2,k,e12p.l1)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
         // write symmetric V_12 as upper triangular
-        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
+        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = 0.5*pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
       } 
     }
     // save upper triangular V_12
