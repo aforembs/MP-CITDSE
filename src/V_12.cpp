@@ -45,10 +45,13 @@ double Fsltr(int k, int n, int bo,
   for(auto i=bo-1; i<n; ++i, ++bidx) {
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
+    loc_GL=0.0;
 
     for(int p=0; p<bo; ++p){ // need to work around this index for chi calculation
       r1 = dl*gl_x[p] + sl;
       Pl1i = 0; Pl1p = 0;
+      Pl2i = 0; Pl2p = 0;
+
 
       for(int j=0; j<bo; ++j) {
         Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
@@ -62,9 +65,88 @@ double Fsltr(int k, int n, int bo,
       Qk-=dl*gl_w[p]*pow(r1,-kp1)*pr2;
       chi=pow(r1,-kp1)*Jk+pow(r1,k)*Qk;
 
+
       // Fk12;1'2'
-      Fk += dl*gl_w[p]*Pl1i*Pl1p*chi;
+      loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
+      if (i==bo-1) {std::cout << Jk << " " << r1 << " " << gl_w[p]*dl
+      << " " << Qk << " " << dl*loc_GL << "\n";}
+      // if(nc==la&&la==lb&&lc==ld&&la==0&&k==0) {
+      //   std::cout << Jk << " " << Qk << " " << chi << " " << dl*loc_GL << "\n";
+      // }
     }
+    Fk+=dl*loc_GL;
+  }
+  std::cout << Fk << '\n';
+  return Fk;
+}
+
+double Fsltr_alt(int k, int n, int bo,
+            int na, int la, int nb, int lb,
+            int nc, int lc, int nd, int ld,
+            std::vector<uint> &N_max,
+            std::vector<double> &gl_w, 
+            std::vector<double> &gl_x, 
+            std::vector<double> &kkn,
+            std::vector<double> &Bsp,
+            std::vector<int> &offset,
+            std::vector<double> &Cf) {
+  int kp1=k+1;
+  double *Cl1i_pt=&Cf[offset[la]];
+  double *Cl1p_pt=&Cf[offset[lc]];
+  double *Cl2i_pt=&Cf[offset[lb]];
+  double *Cl2p_pt=&Cf[offset[ld]];
+  double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
+  double dl, sl, dl2, sl2, loc_GL, r2, r1, pr2, chi;
+
+  // first calculate Qk for all of 0->R
+  double Qk=0;
+  double Jk=0;
+  double Fk=0;
+  int bidx=0; int bidx2=0;
+  for(auto i=bo-1; i<n; ++i, ++bidx) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    loc_GL=0.0;
+
+    for(int p=0; p<bo; ++p){ // need to work around this index for chi calculation
+      r1 = dl*gl_x[p] + sl;
+      Pl1i = 0; Pl1p = 0;
+
+      for(int j=0; j<bo; ++j) {
+        Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+        Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+      }
+
+      bidx2=0;
+      Jk=0; Qk=0;
+      for(auto i2=bo-1; i2<n; ++i2, ++bidx2) {
+      dl2 = (kkn[i2+1] - kkn[i2])*0.5;
+      sl2 = (kkn[i2+1] + kkn[i2])*0.5;
+        for(int p2=0; p2<bo; ++p2){
+          r2 = dl*gl_x[p2] + sl;
+          Pl2i = 0; Pl2p = 0;
+
+          for(int j2=0; j2<bo; ++j2) {
+            Pl2i += Cl2i_pt[nb*n+i2-bo+1+j2]*Bsp[j2+bo*(p2+bidx2*bo)];
+            Pl2p += Cl2p_pt[nd*n+i2-bo+1+j2]*Bsp[j2+bo*(p2+bidx2*bo)];
+          }
+          pr2 = Pl2i*Pl2p;
+          if(r2<=r1) {
+            Jk+=dl2*gl_w[p2]*pow(r2/r1,k)*pr2;
+          } else if (r2>r1) {
+            Qk+=dl2*gl_w[p2]*pow(r1/r2,kp1)*pr2;
+          }
+        }
+      }
+      // chi(r1)
+      chi=Jk+Qk;
+
+      // Fk12;1'2'
+      Fk += dl*gl_w[p]*Pl1i*Pl1p*chi/r1;
+      if (i==bo-1) {std::cout << r1 << " " << Fk << "\n";}
+
+    }
+    //Fk+=dl*loc_GL;
   }
 
   return Fk;
@@ -173,7 +255,7 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   filename = cpot + std::to_string(0) + "idx.h5";
   file = new H5::H5File(filename, H5F_ACC_RDONLY);
   L_set = new H5::DataSet(file->openDataSet("idx"));
-  L_sz = 2;
+  L_sz = 1;
   L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
   L_idx.resize(L_real_size);
   delete L_set;
@@ -214,6 +296,7 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
+          std::cout << sum_k << "\n";
           min_exc = ((L+e12.l1+e12p.l1) >> 0) & 1;
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
@@ -226,7 +309,7 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
           }
         }
         // write symmetric V_12 as upper triangular
-        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = 0.5*pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
+        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
       } 
     }
     // save upper triangular V_12

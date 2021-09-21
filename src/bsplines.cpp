@@ -50,35 +50,35 @@ int bsplinesp(int n, int k,
   return 0;
 }
 
-int bspline_int(int n, int k,
-                std::vector<double> &gl_w,
-                std::vector<double> &gl_x,
-                std::vector<double> &ov,
-                int di, int dj,
-                std::vector<double> &bsp,
-                ModelV &V) {
-  if (di==0 && dj==0) {
-    for() {
+// int bspline_int(int n, int k,
+//                 std::vector<double> &gl_w,
+//                 std::vector<double> &gl_x,
+//                 std::vector<double> &ov,
+//                 int di, int dj,
+//                 std::vector<double> &bsp,
+//                 ModelV &V) {
+//   if (di==0 && dj==0) {
+//     for() {
 
-      for() {
+//       for() {
 
-        for(int p=0; p<k; ++p) {
+//         for(int p=0; p<k; ++p) {
 
-        }
-      } 
-    }
-  } else if (di==1 && dj==1) {
-    for() {
+//         }
+//       } 
+//     }
+//   } else if (di==1 && dj==1) {
+//     for() {
 
-      for() {
+//       for() {
 
-        for(int p=0; p<k; ++p) {
+//         for(int p=0; p<k; ++p) {
         
-        }
-      } 
-    }
-  } else {  
+//         }
+//       } 
+//     }
+//   } else {  
 
-  }  
-  return 0;
-}
+//   }  
+//   return 0;
+// }

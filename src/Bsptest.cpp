@@ -106,10 +106,10 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
     }
   }
 
-  std::ofstream outFile("wfn_ground.dat", std::ofstream::out);
+  std::ofstream outFile("wfn_l1.dat", std::ofstream::out);
   // Output ground state wfn
   int bidx=0;
-  double x_val=0;
+  double x_val=0, x_part=0;
   for(auto i=k-1; i<n; ++i, ++bidx){
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
@@ -119,7 +119,11 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
       x_val = 0;
 
       for(int j=0; j<k; ++j) {
-        x_val += Cf[i-k+1+j]*Bsplines[j+k*(p+bidx*k)];
+        x_part = Cf[n+i-k+1+j]*Bsplines[j+k*(p+bidx*k)];
+        x_val += x_part;//Cf[i-k+1+j]*Bsplines[j+k*(p+bidx*k)];
+        // if (p==4 &&j==3) {
+        // outFile << std::setiosflags(std::ios::scientific)
+        //         << std::setprecision(12) << x << " " << x_part << "\n";}
       }
       outFile << std::setiosflags(std::ios::scientific)
               << std::setprecision(12) << x << " " << x_val << "\n";
@@ -132,6 +136,7 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
 int main() {
   std::vector<uint> Nm;
   Nm.push_back(1);
-  bsptest("he", 0, Nm);
+  Nm.push_back(50);
+  bsptest("he", 1, Nm);
   return 0;
 }
