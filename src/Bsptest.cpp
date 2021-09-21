@@ -6,6 +6,7 @@
 #include "H5Cpp.h"
 #include "fastgl.h"
 #include "slatec_f.h"
+#include "bsplines.h"
 
 int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   int n=0;   // no. of points
@@ -89,24 +90,24 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   std::vector<double> Bsplines;
 
   Bsplines.reserve(nSt*k*k);
-
+  bsplines(n, k, gl_x, kkn, Bsplines);
   int i1 ;
   double dl, sl, x;
              
-  for(auto i=k-1; i<n; ++i){
-    dl = (kkn[i+1] - kkn[i])*0.5;
-    sl = (kkn[i+1] + kkn[i])*0.5;
+  // for(auto i=k-1; i<n; ++i){
+  //   dl = (kkn[i+1] - kkn[i])*0.5;
+  //   sl = (kkn[i+1] + kkn[i])*0.5;
 
-    for(int p=0; p<k; ++p){
-      x = dl*gl_x[p] + sl;    //x-transformation
-      i1 = i + 1 ;
-      dbspvd_(&kkn[0], k, 1, x, i1, k, &Db[0], &work[0]);
+  //   for(int p=0; p<k; ++p){
+  //     x = dl*gl_x[p] + sl;    //x-transformation
+  //     i1 = i + 1 ;
+  //     dbspvd_(&kkn[0], k, 1, x, i1, k, &Db[0], &work[0]);
 
-      Bsplines.insert(std::end(Bsplines), std::begin(Db), std::end(Db));
-    }
-  }
+  //     Bsplines.insert(std::end(Bsplines), std::begin(Db), std::end(Db));
+  //   }
+  // }
 
-  std::ofstream outFile("wfn_l1.dat", std::ofstream::out);
+  std::ofstream outFile("wfn_l0.dat", std::ofstream::out);
   // Output ground state wfn
   int bidx=0;
   double x_val=0, x_part=0;
@@ -119,7 +120,7 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
       x_val = 0;
 
       for(int j=0; j<k; ++j) {
-        x_part = Cf[n+i-k+1+j]*Bsplines[j+k*(p+bidx*k)];
+        x_part = Cf[i-k+1+j]*Bsplines[j+k*(p+bidx*k)];
         x_val += x_part;//Cf[i-k+1+j]*Bsplines[j+k*(p+bidx*k)];
         // if (p==4 &&j==3) {
         // outFile << std::setiosflags(std::ios::scientific)
