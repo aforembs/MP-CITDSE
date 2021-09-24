@@ -65,13 +65,13 @@ double Fsltr(int k, int n, int bo,
       Qk-=dl*gl_w[p]*pow(r1,-kp1)*pr2;
       chi=pow(r1,-kp1)*Jk+pow(r1,k)*Qk;
 
-
       // Fk12;1'2'
       loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
-      if (i==bo-1) {std::cout << Jk << " " << r1 << " " << gl_w[p]*dl
-      << " " << Qk << " " << dl*loc_GL << "\n";}
+      // if (i==bo-1) {std::cout << Jk << " " << r1 << " " << gl_w[p]*dl
+      // << " " << Qk << " " << dl*loc_GL << "\n";}
       // if(nc==la&&la==lb&&lc==ld&&la==0&&k==0) {
-      //   std::cout << Jk << " " << Qk << " " << chi << " " << dl*loc_GL << "\n";
+      //   std::cout << std::setiosflags(std::ios::scientific)
+      //         << std::setprecision(12)<< r1 << " " << Pl1i << "\n";
       // }
     }
     Fk+=dl*loc_GL;
@@ -296,7 +296,6 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
-          std::cout << sum_k << "\n";
           min_exc = ((L+e12.l1+e12p.l1) >> 0) & 1;
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
