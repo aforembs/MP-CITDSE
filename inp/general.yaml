@@ -1,0 +1,6 @@
+Basis_Settings:
+  state_no: 400
+  max_spline_k: 9
+  grid: "linear"
+  potential: "he"
+  l_max: 3

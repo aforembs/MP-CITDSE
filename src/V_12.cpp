@@ -249,7 +249,7 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   // generate B-splines
   std::vector<double> Bsplines;
   Bsplines.reserve(nSt*bo*bo);
-  bsplines(n, bo, gl_x, kkn, Bsplines);
+  bsp::Splines(n, bo, gl_x, kkn, Bsplines);
 
   int L_real_size=0;
   filename = cpot + std::to_string(0) + "idx.h5";

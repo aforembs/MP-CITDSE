@@ -12,8 +12,8 @@ namespace au {
   static constexpr double       a_ = 1.0/c_;            //fine stucture constant
   static constexpr double      to_ = 1.0;               //atomic time unit
   static constexpr double      ao_ = 1.0;               //atomic length unit(Bohr radius)
-  static constexpr double      eo_ = 1./4*M_PI;         //permittivity of vacuum
-  static constexpr double      mo_ = 4*M_PI/(c_*c_);    //permeability of vacuum
+  static constexpr double      eo_ = 1./4*m_pi_;         //permittivity of vacuum
+  static constexpr double      mo_ = 4*m_pi_/(c_*c_);    //permeability of vacuum
   static constexpr double     Ryd_ = 0.5;
   static constexpr double   GEn_H_ =-0.5;
   //note that eo_*mo_*c_*c_=k*k where k depends on the unit system

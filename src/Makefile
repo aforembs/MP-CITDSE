@@ -1,5 +1,5 @@
 CPPC = g++
-EXEC = V12_test#dmx_test
+EXEC = ../bin/V12_test#dmx_test
 
 IDIR = include
 ODIR = obj
