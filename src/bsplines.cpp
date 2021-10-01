@@ -3,76 +3,75 @@
 int bsp::GenKnots(int n, int k, double r_max, 
                   double fkn, char type,
                   std::vector<double> &kkn) {
-  double par=0.0;
+  double par=0.0, lin=0.0;
   static constexpr double PI = 3.141592653589793238463;
   kkn.reserve(n+k);
-  for(int i=0; i<k; ++i) kkn.emplace_back(0.0);
+  for(int i=0; i<k; ++i) {kkn.emplace_back(0.0);}
 
   if(type=='l') {
     par = r_max/(double)(n-k+1);
 
-    for(int i=k; i<n; ++i)
-      kkn.emplace_back{par};
+    for(int i=k; i<n; ++i) {
+      lin+=par;
+      kkn.emplace_back(lin);
+    }
 
   } else if(type=='e') {
     par = log(r_max/fkn)/(double)(n-k+1);
 
-    for(int i=k; i<n; ++i)
-      kkn.emplace_back(fkn*exp((double)(i-k_)*par));
+    for(int i=k; i<n; ++i) {kkn.emplace_back(fkn*exp((double)(i-k)*par));}
 
   } else if(type=='s') {
     par = -log((2./PI)*asin(fkn/r_max))/log((double)(n-k+1));
 
-    for(int i=k; i<n; ++i) 
+    for(int i=k; i<n; ++i) {
       kkn.emplace_back(r_max*sin((PI/2.)
-      *pow((double)(i-k_+1)/(double)(n_-k_+1),par)));
+      *pow((double)(i-k+1)/(double)(n-k+1),par)));}
 
   } else {
     std::cout << "Invalid knot type !\n";
     return 1;
   }
-  for(int i=n; i<n+k; ++i) {
-    kkn.emplace_back(r_max);
-  }
+  for(int i=n; i<n+k; ++i) {kkn.emplace_back(r_max);}
   return 0;
 }
 
-int bsp::GenKnots(int n, int k, 
+int bsp::GenKnots(int n, int k, double r_max,
                   std::string file, char type, 
                   std::vector<double> &kkn) {
-  double pt=0.0;
+  std::string pt;
+  int line_num=0;
   kkn.reserve(n+k);
-  for(int i=0; i<k; ++i) kkn.emplace_back(0.0);
+  for(int i=0; i<k; ++i) {kkn.emplace_back(0.0);}
 
   if(type=='t') {
     std::ifstream fl(file);
 
-    while(fl) {
-      fl >> pt;
-      kkn.emplace_back(pt);
+    while(std::getline(fl, pt)) {
+      ++line_num;
+      kkn.emplace_back(std::stod(pt));
     }
+    //assert(line_num==n);
   } else if(type=='b') {
-    std::ifstream fl(file, sdt::ios::in | std::ios::binary);
+    std::ifstream fl(file, std::ios::in | std::ios::binary);
     fl.unsetf(std::ios::skipws);
 
     kkn.insert(std::end(kkn),
-              std::istream_iterator<double>(file),
+              std::istream_iterator<double>(fl),
               std::istream_iterator<double>());
   } else {
     std::cout << "Invalid knot file type !\n";
     return 1;
   }
 
-  for(int i=n; i<n+k; ++i) {
-    kkn.emplace_back(r_max);
-  }
+  for(int i=n; i<n+k; ++i) {kkn.emplace_back(r_max);}
   return 0;
 }
 
-int WrKnotsH5(int n, int k, double r_max, 
-              double fkn, char type,
-              std::string file,
-              std::vector<double> &kkn) {
+int bsp::WrKnotsH5(int n, int k, double r_max, 
+                  double fkn, char type,
+                  std::string file,
+                  std::vector<double> &kkn) {
   std::string tp_string;
 
   if(type=='l') {
@@ -87,18 +86,32 @@ int WrKnotsH5(int n, int k, double r_max,
 
   H5::H5File *fl = new H5::H5File(file, H5F_ACC_TRUNC);
   // Check if the file was opened
-  if (!file) {
-    cerr << "# H5::H5File:: file couldn't opened: " << outFile.c_str() << "\n";
+  if (!fl) {
+    std::cerr << "# H5::H5File:: file couldn't opened: " << file << "\n";
     exit(-1);
   }
 
-  hsize_t nKnots_d[1] = {kkn.size()};
+  hsize_t nKnots_d[1]  = {kkn.size()};
   hsize_t att_space[1] = {1};
+  hsize_t str_space[1] = {sizeof(tp_string)/sizeof(char)};
+  H5::StrType str_ty(H5::PredType::C_S1, H5T_VARIABLE);
 
-  H5::Attribute N = file->createAttribute("N", H5::PredType::NATIVE_INT32, H5::DataSpace(1, att_space));
-  H5::Attribute K = file->createAttribute("K", H5::PredType::NATIVE_INT32, H5::DataSpace(1, att_space));
-  H5::Attribute R = file->createAttribute("R", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, att_space));
+  H5::Attribute N = fl->createAttribute("N", H5::PredType::NATIVE_INT32, H5::DataSpace(1, att_space));
+  H5::Attribute K = fl->createAttribute("K", H5::PredType::NATIVE_INT32, H5::DataSpace(1, att_space));
+  H5::Attribute R = fl->createAttribute("R", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, att_space));
+  H5::Attribute TP= fl->createAttribute("Type", str_ty, H5::DataSpace(1, str_space));
+  H5::Attribute F = fl->createAttribute("FKN", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, att_space));
 
+  H5::DataSet Knots = fl->createDataSet("Knots", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, nKnots_d));
+
+  N.write(H5::PredType::NATIVE_INT32, &n);
+  K.write(H5::PredType::NATIVE_INT32, &k);
+  R.write(H5::PredType::NATIVE_DOUBLE, &r_max);
+  TP.write(str_ty, &tp_string);
+  F.write(H5::PredType::NATIVE_DOUBLE, &fkn);
+  Knots.write(&kkn[0], H5::PredType::NATIVE_DOUBLE);
+
+  delete fl;
   return 0;
 }
 
@@ -111,6 +124,14 @@ int bsp::Splines(int n, int k,
   int len = (k+1)*(k+2)/2;
   std::vector<double> Db(k);
   std::vector<double> work(len);
+
+  splines.reserve(n*k*k);
+
+  for(int i=0; i<(k-1); ++i) {
+    for(int j=0; j<k*k; ++j) { 
+      {splines.emplace_back(0.0);} 
+    }
+  }
 
   for(auto i=k-1; i<n; ++i){
     dl = knots[i+1] - knots[i];
@@ -137,6 +158,10 @@ int bsp::SplinesP(int n, int k,
   std::vector<double> Db(k*2);
   std::vector<double> work(len);
 
+  splinesp.reserve(n*k*k);
+
+  for(int i=0; i<(k-1)*k*k; ++i) {splinesp.emplace_back(0.0);}
+
   for(auto i=k-1; i<n; ++i){
     dl = knots[i+1] - knots[i];
     sl = knots[i+1] + knots[i];
@@ -158,26 +183,25 @@ int bsp::SplineInt(int n, int k,
                   std::vector<double> &ov,
                   std::vector<double> &spl,
                   std::vector<double> &kkn,
-                  ModelV &Vptr) {
-  int j_max, iv_min, iv_max, ivm1;  
+                  ModelV *Vptr) {
+  int j_max, t_min, t_max, tm1;  
   double ovlp, bsum, gsum, dl, sl, x;
 
   for(int i=0; i<n; ++i) {
-    j_max = min(i+k,n);
+    j_max = std::min(i+k,n);
     for(int j=i; j<j_max; ++j) {
-      iv_min = max(k, j+2);
-      iv_max = min(i+k+1, n);
-      sum_ij=0.0;
+      t_min = std::max(k, j+2);
+      t_max = std::min(i+k+1, n+2);
       ovlp=0.0;
 
-      for(int iv=iv_min; iv<=iv_max; ++iv) {
-        ivm1 = iv-1;
-        dl = (kkn[iv] - kkn[ivm1])*0.5;
-        sl = (kkn[iv] + kkn[ivm1])*0.5;
+      for(int t=t_min; t<=t_max; ++t) {
+        tm1 = t-1;
+        dl = (kkn[t] - kkn[tm1])*0.5;
+        sl = (kkn[t] + kkn[tm1])*0.5;
         bsum = 0.0;
         for(int p=0; p<k; ++p) {
           x=dl*gl_x[p]+sl;
-          bsum += gl_w[p]*spl[i+k*(p+ivm1*k)]*spl[j+k*(p+ivm1*k)]*Vptr.V(x);
+          bsum += gl_w[p]*spl[i+1-t+k+k*(p+(tm1)*k)]*spl[j+1-t+k+k*(p+(tm1)*k)]*Vptr->V(x);
         }
         ovlp += dl*bsum;
       }

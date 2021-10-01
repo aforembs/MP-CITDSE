@@ -248,7 +248,6 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
 
   // generate B-splines
   std::vector<double> Bsplines;
-  Bsplines.reserve(nSt*bo*bo);
   bsp::Splines(n, bo, gl_x, kkn, Bsplines);
 
   int L_real_size=0;

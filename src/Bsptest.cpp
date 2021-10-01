@@ -24,11 +24,12 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   H5::DataSpace cspace;
   hsize_t offset[2], count[2], stride[2], block[2];
   hsize_t dimms[2];
-  offset[0]=0; offset[1]=0;
-  count[0] =0;
-  stride[0]=1; stride[1]=1;
-  block[0] =1; block[1]=1;
-  dimms[0] =0;
+  offset[0]=0; 
+  offset[1]=0;
+  stride[0]=1; 
+  stride[1]=1;
+  block[0] =1; 
+  block[1]=1;
   H5::DataSpace memspace;
 
   int tot_states = 0;
@@ -52,27 +53,32 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   delete rset;
   delete file;
 
-  Cf.reserve(tot_states*nSt);
+  Cf.reserve(tot_states*n);
   C[0]=&Cf[0];
   // Cf[0]=0.0; Cf[n-1] = 0.0;
   int nst_prev = 0;
   for(int i=1; i<=l1e_max; ++i) {
     nst_prev += N_max[i-1];
-    C[i] = &Cf[nst_prev*nSt];
+    C[i] = &Cf[nst_prev*n];
     // Cf[nst_prev*n]=0.0;
     // Cf[i*n-1]=0.0;
   }
   std::cout << n << " " << nSt << " " << nkn <<"\n";
   // read coefficients for all l
   for(int l=0; l<=l1e_max; ++l) {
-    count[0] = N_max[l]; count[1] = nSt;
-    dimms[0] = count[0]; dimms[1] = count[1];
+    count[0] = N_max[l];
+    count[1] = n;
+    dimms[0] = count[0]; 
+    dimms[1] = count[1];
     memspace.setExtentSimple(2, dimms, NULL);
 
     filename = cpot + std::to_string(l) + ".h5";
     file = new H5::H5File(filename, H5F_ACC_RDONLY);
     rset = new H5::DataSet(file->openDataSet("Coeff"));
     cspace = rset->getSpace();
+    hsize_t what_dims[2];
+    cspace.getSimpleExtentDims(what_dims, NULL);
+    std::cout << what_dims[0] << " " << what_dims[1] << "\n";
     cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
     delete rset;
@@ -89,53 +95,15 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   std::vector<double> work(len);
   std::vector<double> Bsplines;
 
-  Bsplines.reserve(nSt*k*k);
   bsp::Splines(n, k, gl_x, kkn, Bsplines);
   int i1 ;
   double dl, sl, x;
-             
-  // for(auto i=k-1; i<n; ++i){
-  //   dl = (kkn[i+1] - kkn[i])*0.5;
-  //   sl = (kkn[i+1] + kkn[i])*0.5;
 
-  //   for(int p=0; p<k; ++p){
-  //     x = dl*gl_x[p] + sl;    //x-transformation
-  //     i1 = i + 1 ;
-  //     dbspvd_(&kkn[0], k, 1, x, i1, k, &Db[0], &work[0]);
-
-  //     Bsplines.insert(std::end(Bsplines), std::begin(Db), std::end(Db));
-  //   }
-  // }
-
-  std::ofstream outFile("wfn_n10l0.dat", std::ofstream::out);
+  std::ofstream outFile("dat/wfn_n10l0.dat", std::ofstream::out);
   // Output ground state wfn
   int bidx=0;
   double x_val=0, x_part=0;
-
-  dl = (kkn[k] - kkn[k-1])*0.5;
-  sl = (kkn[k] + kkn[k-1])*0.5;
-
-  x = dl*gl_x[0] + sl;    //x-transformation
-  x_val = 0;
-
-  for(int j=1; j<k; ++j) {
-    x_val += Cf[j-1]*Bsplines[j];
-  }
-
-  outFile << std::setiosflags(std::ios::scientific)
-          << std::setprecision(12) << x << " " << x_val << "\n";
-
-  for(int p=1; p<k; ++p){
-    x = dl*gl_x[p] + sl;    //x-transformation
-    x_val = 0;
-
-    for(int j=0; j<k; ++j) {
-      x_val += Cf[j-1]*Bsplines[j+k*p];
-    }
-    outFile << x << " " << x_val << "\n";
-  }
-
-  for(auto i=k; i<n-1; ++i, ++bidx){
+  for(auto i=k-1; i<n; ++i, ++bidx){
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
 
@@ -144,32 +112,12 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
       x_val = 0;
 
       for(int j=0; j<k; ++j) {
-        x_part = Bsplines[j+k*(p+bidx*k)];
-        x_val += Cf[i-k+j]*Bsplines[j+k*(p+bidx*k)];
-        // if (i==(n-1)) {
-        // std::cout << std::setprecision(12)<< i-k+1+j << " " << Cf[i-k+1+j] << " " << x_part << "\n";}
+        x_val += Cf[i-k+1+j]*Bsplines[j+k*(p+i*k)];
       }
       outFile << std::setiosflags(std::ios::scientific)
               << std::setprecision(12) << x << " " << x_val << "\n";
     }
   }
-  dl = (kkn[n] - kkn[n-1])*0.5;
-  sl = (kkn[n] + kkn[n-1])*0.5;
-
-  for(int p=0; p<k-1; ++p){
-    x = dl*gl_x[p] + sl;    //x-transformation
-    x_val = 0;
-
-    for(int j=0; j<k; ++j) {
-      x_val += Cf[n-k+j]*Bsplines[j+k*(p+bidx*k)];
-    }
-  }
-  x = dl*gl_x[k-1] + sl;    //x-transformation
-  x_val = 0;
-  for(int j=0; j<k; ++j) {
-    x_val += Cf[n-k+j-1]*Bsplines[j+k*((k-1)+bidx*k)];
-  }
-
   outFile.close();
   return 0;
 }
@@ -178,6 +126,6 @@ int main() {
   std::vector<uint> Nm;
   Nm.push_back(10);
   Nm.push_back(10);
-  bsptest("he", 1, Nm);
+  bsptest("dat/he", 0, Nm);
   return 0;
 }

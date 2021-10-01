@@ -1,24 +1,30 @@
 #include "tise.h"
 
-int tise::WriteHdf5() {
-
-  outFile = outFile + _potential + Global::app(l_) + _tail ;
+// for now same as Lampros', remove knots soon!!!
+int WriteHdf5(int n, int k, int li,
+              double z, double mass,
+              std::string pot, 
+              std::vector<double> &kkn,
+              std::vector<double> &Enl,
+              std::vector<double> &Cnl,
+              std::string outFile) {
+  int nm2=n-2;
+  outFile = outFile + pot + std::to_string(li) + ".h5" ;
 
    // Create and leave in define mode
   H5::H5File *file = new H5::H5File(outFile, H5F_ACC_TRUNC);
 
   // Check if the file was opened
   if (!file) {
-    cerr << "# H5::H5File:: file couldn't opened: " << outFile.c_str() << "\n";
+    std::cerr << "# H5::H5File:: file couldn't opened: " << outFile.c_str() << "\n";
     exit(-1);
   }
 
   // Create dimensions
-  hsize_t n_d[1]       = {n_};
-  hsize_t m_d[1]       = {n_};
-  hsize_t nKnots_d[1]  = {grid.Knots().size()};
+  hsize_t n_d[1]       = {nm2};
+  hsize_t nKnots_d[1]  = {kkn.size()};
   hsize_t att_space[1] = {1};
-  hsize_t sqr_space[2] = {n_, n_};
+  hsize_t sqr_space[2] = {nm2, n};
 
   H5::Attribute Z = file->createAttribute("Z", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, att_space));
   H5::Attribute M = file->createAttribute("M", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, att_space));
@@ -33,38 +39,33 @@ int tise::WriteHdf5() {
   H5::DataSet C_nl = file->createDataSet("Coeff", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, sqr_space));
 
   // Now write in the netCDF file
-  double z, mass ;
-  int k,n ;
   double r ;
-  z = z_ ;
-  mass = mass_ ;
-  k = grid.k() ;
-  n = grid.Knots().size() - grid.k() ;                    // Number of B-splines
-  r = grid.Knots()[grid.Knots().size() - 1] ;
-
-  double * kkn = new double[nKnots_d[0]];
-  for(int i = 0 ; i < nKnots_d[0] ;i++)       kkn[i] = grid.Knots()[i];
+  r = kkn[kkn.size() - 1] ;
 
   Z.write(H5::PredType::NATIVE_DOUBLE, &z);
   M.write(H5::PredType::NATIVE_DOUBLE, &mass);
   N.write(H5::PredType::NATIVE_INT32, &n);
   K.write(H5::PredType::NATIVE_INT32, &k);
   R.write(H5::PredType::NATIVE_DOUBLE, &r);
-  Knots.write(kkn, H5::PredType::NATIVE_DOUBLE);
-  l.write(H5::PredType::NATIVE_INT32, &l_);
-  E_nl.write(Enl, H5::PredType::NATIVE_DOUBLE);
-  C_nl.write(Cnl, H5::PredType::NATIVE_DOUBLE);
+  Knots.write(&kkn[0], H5::PredType::NATIVE_DOUBLE);
+  l.write(H5::PredType::NATIVE_INT32, &li);
+  E_nl.write(&Enl[0], H5::PredType::NATIVE_DOUBLE);
+  C_nl.write(&Cnl[0], H5::PredType::NATIVE_DOUBLE);
 
-  std::cout << "# write:: HDF5 DATA FOR L =  "<< l_ << " STORED IN "<< outFile << '\n' << "\n";
-  delete kkn;
+  std::cout << "# write:: HDF5 DATA FOR L =  "<< li << " STORED IN "<< outFile << "\n\n";
   delete file;
   return 0;
 }
 
-int tise::GenCoeff(
+int tise::GenCoeff(int n, int k, int l_max,
+                  double z, double mass,
+                  std::string pot,
                   std::vector<double> &gl_w, 
                   std::vector<double> &gl_x,
-                  ) {
+                  std::vector<double> &kkn,
+                  std::vector<double> &spl,
+                  std::vector<double> &splp,
+                  std::string outFile) {
   int nm2=n-2;
   int nk=nm2*k;
   int llp1=0, nik=0, ni2=0;
@@ -74,19 +75,19 @@ int tise::GenCoeff(
   ModelV *v_1    = new V_c(1.0);
   ModelV *v_1_r2 = new V_c_r2(1.0);
 
-  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_BB, spl, v_1); // int B_iB_j dr
-  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_dBdB, splp, v_1); // int B_i d/dr^2 B_j dr
-  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_1_r2, spl, v_1_r2); // int B_iB_j/r^2 dr
+  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_BB, spl, kkn, v_1); // int B_iB_j dr
+  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_dBdB, splp, kkn, v_1); // int B_i d/dr^2 B_j dr
+  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_1_r2, spl, kkn, v_1_r2); // int B_iB_j/r^2 dr
 
   ModelV *v  = new  V_1_r(z);
 
-  bsp::SplineInt(n, k, gl_w, gl_x, ov_V, spl, v); // int B_i V(r) B_j dr
+  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_V, spl, kkn, v); // int B_i V(r) B_j dr
 
-  aa.reserve(nk);
+  aa.reserve(nk); // possibly *l and parallel
   Enl.reserve(nm2);
   Cnl_tmp.reserve(nm2*nm2);
 
-  for(int l=0, l<=l_max; ++l) {
+  for(int l=0; l<=l_max; ++l) {
     llp1=l*(l+1);
     for(int ni=0; ni<nm2; ++ni) {
       nik = ni*k;
@@ -104,7 +105,7 @@ int tise::GenCoeff(
                 Cnl_tmp.begin()+ni2+nm2, Cnl.begin()+1+ni*n);
     }
     // Write hdf5 file
-
+    WriteHdf5(n, k, l, z, mass, pot, kkn, Enl, Cnl, outFile);
   }
-
+  return 0;
 }
