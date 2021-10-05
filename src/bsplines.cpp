@@ -61,7 +61,7 @@ int bsp::GenKnots(int n, int k, double r_max,
               std::istream_iterator<double>());
   } else {
     std::cout << "Invalid knot file type !\n";
-    return 1;
+    return -1;
   }
 
   for(int i=n; i<n+k; ++i) {kkn.emplace_back(r_max);}

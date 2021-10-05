@@ -76,9 +76,6 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
     file = new H5::H5File(filename, H5F_ACC_RDONLY);
     rset = new H5::DataSet(file->openDataSet("Coeff"));
     cspace = rset->getSpace();
-    hsize_t what_dims[2];
-    cspace.getSimpleExtentDims(what_dims, NULL);
-    std::cout << what_dims[0] << " " << what_dims[1] << "\n";
     cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
     delete rset;

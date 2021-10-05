@@ -3,15 +3,25 @@
 
 #include <iostream>
 #include <vector>
+#include <string>
 #include <algorithm>
 #include <execution>
 #include "ModelV.h"
 #include "bsplines.h"
 #include "H5Cpp.h"
 #include <lapacke.h>
+#include <yaml-cpp/yaml.h>
 
 
 namespace tise {
+
+int ReadConfig(std::string file,
+              int &n, int &k, int &r_max,
+              std::string &grid,
+              std::string &k_file,
+              std::string &pot,
+              int &l_max, int &z, 
+              double &mass);
 
 int GenCoeff(int n, int k, int l,
             double z, double mass,
