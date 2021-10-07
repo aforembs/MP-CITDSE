@@ -185,7 +185,7 @@ int bsp::SplineInt(int n, int k,
                   std::vector<double> &kkn,
                   ModelV *Vptr) {
   int j_max, t_min, t_max, tm1;  
-  double ovlp, bsum, gsum, dl, sl, x;
+  double ovlp, bsum, dl, sl, x;
 
   for(int i=0; i<n; ++i) {
     j_max = std::min(i+k,n);

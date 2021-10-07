@@ -5,12 +5,12 @@
 #include <vector>
 #include <string>
 #include <algorithm>
-#include <execution>
 #include "ModelV.h"
 #include "bsplines.h"
 #include "H5Cpp.h"
 #include <lapacke.h>
 #include <yaml-cpp/yaml.h>
+#include <omp.h>
 
 
 namespace tise {

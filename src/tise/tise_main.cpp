@@ -9,11 +9,15 @@ namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
-  int n=400, k=9, r_max=200, l_max=4, z=1;
+  auto n=400;
+  auto k=9;
+  auto r_max=200;
+  auto l_max=4;
+  auto z=1;
   std::string grid, k_file, pot;
   double mass=0.5, fkn=0.125;
 
-  std::vector<double> kkn
+  auto kkn = std::vector<double>();
 
   for(;;) {
     switch(getopt(argc, argv, "h")) {
@@ -49,8 +53,8 @@ int main(int argc, char *argv[]) {
   }
 
   // generate GL nodes and weights over B-splines support
-  std::vector<double> gl_x(k);
-  std::vector<double> gl_w(k);
+  auto gl_x = std::vector<double>(k);
+  auto gl_w = std::vector<double>(k);
   fastgl::QuadPair gl_i;
   for(int i=1; i<=k; ++i) {
     gl_i = fastgl::GLPair(k, i);
@@ -59,8 +63,8 @@ int main(int argc, char *argv[]) {
   }
 
   // generate B_i(r) and B'_i(r)
-  std::vector<double> spl;
-  std::vector<double> splp;
+  auto spl  = std::vector<double>();
+  auto splp = std::vector<double>();
   bsp::Splines(n, k, gl_x, kkn, spl);
   bsp::SplinesP(n, k, gl_x, kkn, splp);
 

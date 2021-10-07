@@ -8,11 +8,11 @@ int WriteHdf5(int n, int k, int li,
               std::vector<double> &Enl,
               std::vector<double> &Cnl,
               std::string outFile) {
-  int nm2=n-2;
+  auto nm2=n-2;
   outFile = outFile + pot + std::to_string(li) + ".h5" ;
 
    // Create and leave in define mode
-  H5::H5File *file = new H5::H5File(outFile, H5F_ACC_TRUNC);
+  std::unique_ptr<H5::H5File> file(new H5::H5File(outFile, H5F_ACC_TRUNC));
 
   // Check if the file was opened
   if (!file) {
@@ -39,8 +39,7 @@ int WriteHdf5(int n, int k, int li,
   H5::DataSet C_nl = file->createDataSet("Coeff", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, sqr_space));
 
   // Now write in the netCDF file
-  double r ;
-  r = kkn[kkn.size() - 1] ;
+  double r = kkn[kkn.size() - 1];
 
   Z.write(H5::PredType::NATIVE_DOUBLE, &z);
   M.write(H5::PredType::NATIVE_DOUBLE, &mass);
@@ -53,7 +52,6 @@ int WriteHdf5(int n, int k, int li,
   C_nl.write(&Cnl[0], H5::PredType::NATIVE_DOUBLE);
 
   std::cout << "# write:: HDF5 DATA FOR L =  "<< li << " STORED IN "<< outFile << "\n\n";
-  delete file;
   return 0;
 }
 
@@ -111,9 +109,11 @@ int tise::GenCoeff(int n, int k, int l_max,
   int nm2=n-2;
   int nk=nm2*k;
   int llp1=0, nik=0, ni2=0;
-  std::vector<double> ov_BB(nk), ov_dBdB(nk), ov_1_r2(nk), ov_V(nk), aa;
-  std::vector<double> Enl, Cnl(n*nm2), Cnl_tmp;
+  std::vector<double> ov_BB(nk), ov_dBdB(nk), ov_1_r2(nk), ov_V(nk);//, aa;
+  //std::vector<double> Enl, Cnl(n*nm2), Cnl_tmp;
+  //std::vector<double> w_bb(nk);
 
+  // Change these eventually
   ModelV *v_1    = new V_c(1.0);
   ModelV *v_1_r2 = new V_c_r2(1.0);
 
@@ -125,11 +125,23 @@ int tise::GenCoeff(int n, int k, int l_max,
 
   bsp::SplineInt(nm2, k, gl_w, gl_x, ov_V, spl, kkn, v); // int B_i V(r) B_j dr
 
-  aa.reserve(nk); // possibly *l and parallel
-  Enl.reserve(nm2);
-  Cnl_tmp.reserve(nm2*nm2);
+  delete v_1;
+  delete v_1_r2;
+  delete v;
 
+  // aa.reserve(nk); // possibly *l and parallel
+  // Enl.reserve(nm2);
+  // Cnl_tmp.reserve(nm2*nm2);
+
+  omp_set_num_threads(std::min(l_max+1, omp_get_max_threads()));
+  #pragma omp parallel for private(llp1, nik, ni2)
   for(int l=0; l<=l_max; ++l) {
+    std::vector<double> Enl, Cnl(n*nm2), Cnl_tmp, aa, w_bb;
+    Enl.reserve(nm2);
+    Cnl_tmp.reserve(nm2*nm2);
+    aa.reserve(nk);
+    w_bb.reserve(nk);
+    std::copy( ov_BB.begin(), ov_BB.end(), w_bb.begin());
     llp1=l*(l+1);
     for(int ni=0; ni<nm2; ++ni) {
       nik = ni*k;
@@ -139,16 +151,17 @@ int tise::GenCoeff(int n, int k, int l_max,
     }
 
     LAPACKE_dsbgvd(LAPACK_COL_MAJOR, 'V', 'U', nm2, k-1, k-1, &aa[0],
-                  k, &ov_BB[0], k, &Enl[0], &Cnl_tmp[0], nm2);
+                  k, &w_bb[0], k, &Enl[0], &Cnl_tmp[0], nm2);
 
     // Reshape with zeros at r=0 & r=R
     for(int ni=0; ni<nm2; ++ni) {
       ni2=ni*nm2;
-      std::copy(std::execution::par_unseq, Cnl_tmp.begin()+ni2, 
+      std::copy( Cnl_tmp.begin()+ni2, 
                 Cnl_tmp.begin()+ni2+nm2, Cnl.begin()+1+ni*n);
     }
     // Write hdf5 file
     WriteHdf5(n, k, l, z, mass, pot, kkn, Enl, Cnl, outFile);
   }
+
   return 0;
 }

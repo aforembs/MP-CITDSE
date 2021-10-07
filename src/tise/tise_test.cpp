@@ -4,7 +4,7 @@
 #include "tise.h"
 
 int main() {
-  int n=4000, k=9, r_max=2000;
+  int n=10000, k=9, r_max=5000;
   double z=2.0, mass=0.5;
   int l_max=5;
 
