@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
   auto kkn = std::vector<double>();
 
   for(;;) {
-    switch(getopt(argc, argv, "h")) {
+    switch(getopt(argc, argv, "hf:")) {
       case 'h':
         return -1;
       case 'f':
@@ -39,9 +39,9 @@ int main(int argc, char *argv[]) {
   } else if(grid.compare("sine")==0) {
     bsp::GenKnots(n, k, r_max, fkn, 's', kkn);
   } else if(grid.compare("custom")==0) {
-    if(std::to_string(fs::path(k_file).extension()).compare(".txt")==0) {
+    if(fs::path(k_file).extension().string().compare(".txt")==0) {
       bsp::GenKnots(n, k, r_max, k_file, 't', kkn);
-    } else if (std::to_string(fs::path(k_file).extension()).compare(".bin")==0) {
+    } else if (fs::path(k_file).extension().string().compare(".bin")==0) {
       bsp::GenKnots(n, k, r_max, k_file, 'b', kkn);
     } else {
       std::cout << "Invalid knot file extension, use .txt or .bin\n"; 

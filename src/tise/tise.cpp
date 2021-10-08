@@ -141,7 +141,7 @@ int tise::GenCoeff(int n, int k, int l_max,
     Cnl_tmp.reserve(nm2*nm2);
     aa.reserve(nk);
     w_bb.reserve(nk);
-    std::copy( ov_BB.begin(), ov_BB.end(), w_bb.begin());
+    std::copy(ov_BB.begin(), ov_BB.end(), w_bb.begin());
     llp1=l*(l+1);
     for(int ni=0; ni<nm2; ++ni) {
       nik = ni*k;
@@ -156,10 +156,10 @@ int tise::GenCoeff(int n, int k, int l_max,
     // Reshape with zeros at r=0 & r=R
     for(int ni=0; ni<nm2; ++ni) {
       ni2=ni*nm2;
-      std::copy( Cnl_tmp.begin()+ni2, 
+      std::copy(Cnl_tmp.begin()+ni2, 
                 Cnl_tmp.begin()+ni2+nm2, Cnl.begin()+1+ni*n);
     }
-    // Write hdf5 file
+    // Write hdf5 file // this is not thread safe!!!!!! put outside loop
     WriteHdf5(n, k, l, z, mass, pot, kkn, Enl, Cnl, outFile);
   }
 
