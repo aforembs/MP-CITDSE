@@ -48,8 +48,8 @@ int WriteHdf5(int n, int k, int li,
   R.write(H5::PredType::NATIVE_DOUBLE, &r);
   Knots.write(&kkn[0], H5::PredType::NATIVE_DOUBLE);
   l.write(H5::PredType::NATIVE_INT32, &li);
-  E_nl.write(&Enl[0], H5::PredType::NATIVE_DOUBLE);
-  C_nl.write(&Cnl[0], H5::PredType::NATIVE_DOUBLE);
+  E_nl.write(&Enl[li*nm2], H5::PredType::NATIVE_DOUBLE);
+  C_nl.write(&Cnl[li*nm2*nm2], H5::PredType::NATIVE_DOUBLE);
 
   std::cout << "# write:: HDF5 DATA FOR L =  "<< li << " STORED IN "<< outFile << "\n\n";
   return 0;
@@ -107,9 +107,12 @@ int tise::GenCoeff(int n, int k, int l_max,
                   std::vector<double> &splp,
                   std::string outFile) {
   int nm2=n-2;
+  int lm1=l_max+1;
+  int nm22=nm2*nm2;
   int nk=nm2*k;
-  int llp1=0, nik=0, ni2=0;
+  int llp1=0, nik=0, lnk=0;
   std::vector<double> ov_BB(nk), ov_dBdB(nk), ov_1_r2(nk), ov_V(nk);
+  std::vector<double> Enl, Cnl(lm1*n*nm2), Cnl_tmp, aa, w_bb;
 
   // Change these eventually
   ModelV *v_1    = new V_c(1.0);
@@ -127,49 +130,41 @@ int tise::GenCoeff(int n, int k, int l_max,
   delete v_1_r2;
   delete v;
 
-  omp_lock_t writelock;
-
-  omp_init_lock(&writelock);
-
-  omp_set_num_threads(std::min((l_max+1)*2, omp_get_max_threads()));
-  #pragma omp parallel for private(llp1, nik, ni2)
+  Enl.reserve(lm1*nm2);
+  Cnl_tmp.reserve(lm1*nm22);
+  aa.reserve(lm1*nk);
+  w_bb.reserve(lm1*nk);
+  
   for(int l=0; l<=l_max; ++l) {
-    std::vector<double> Enl, Cnl(n*nm2), Cnl_tmp, aa, w_bb;
-    Enl.reserve(nm2);
-    Cnl_tmp.reserve(nm2*nm2);
-    aa.reserve(nk);
-    w_bb.reserve(nk);
+    std::copy(std::execution::par_unseq, ov_BB.begin(), ov_BB.end(), w_bb.begin()+l*nk);
+  }
 
-    omp_set_lock(&writelock);
-    std::copy(ov_BB.begin(), ov_BB.end(), w_bb.begin());
-    omp_unset_lock(&writelock);
-
+  omp_set_num_threads(std::min(lm1, omp_get_max_threads()));
+  #pragma omp parallel for private(llp1, nik, lnk)
+  for(int l=0; l<=l_max; ++l) {
     llp1=l*(l+1);
+    lnk=l*nk;
     for(int ni=0; ni<nm2; ++ni) {
       nik = ni*k;
       for(int j=0; j<k; ++j) {
-        aa[j+nik] = mass*ov_dBdB[j+nik] - ov_V[j+nik] + mass*llp1*ov_1_r2[j+nik];
+        aa[lnk+j+nik] = mass*ov_dBdB[j+nik] - ov_V[j+nik] + mass*llp1*ov_1_r2[j+nik];
       }
     }
 
-    LAPACKE_dsbgvd(LAPACK_COL_MAJOR, 'V', 'U', nm2, k-1, k-1, &aa[0],
-                  k, &w_bb[0], k, &Enl[0], &Cnl_tmp[0], nm2);
-
+    LAPACKE_dsbgvd(LAPACK_COL_MAJOR, 'V', 'U', nm2, k-1, k-1, &aa[lnk],
+                  k, &w_bb[lnk], k, &Enl[l*nm2], &Cnl_tmp[l*nm22], nm2);
+  }
+  
+  for(int l=0; l<=l_max; ++l) {
     // Reshape with zeros at r=0 & r=R
     for(int ni=0; ni<nm2; ++ni) {
-      ni2=ni*nm2;
-      omp_set_lock(&writelock);
-      std::copy(Cnl_tmp.begin()+ni2, 
-                Cnl_tmp.begin()+ni2+nm2, Cnl.begin()+1+ni*n);
-      omp_unset_lock(&writelock);
+      std::copy_n(std::execution::par_unseq, Cnl_tmp.begin()+l*nm22+ni*nm2, 
+                  nm2, Cnl.begin()+l*n*nm2+1+ni*n);
     }
     
     // Write hdf5 file
-    omp_set_lock(&writelock);
     WriteHdf5(n, k, l, z, mass, pot, kkn, Enl, Cnl, outFile);
-    omp_unset_lock(&writelock);
   }
 
-  omp_destroy_lock(&writelock);
   return 0;
 }
