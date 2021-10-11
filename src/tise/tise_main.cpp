@@ -22,6 +22,8 @@ int main(int argc, char *argv[]) {
   for(;;) {
     switch(getopt(argc, argv, "hf:")) {
       case 'h':
+        std::cout << "Program for calculating 1e eigenstates using B-splines\n"
+                  << "-f <path> yaml input file with the input settings\n";
         return -1;
       case 'f':
         opt_file = optarg; 

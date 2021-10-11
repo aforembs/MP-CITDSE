@@ -66,13 +66,13 @@ int tise::ReadConfig(std::string file,
   YAML::Node settings = YAML::LoadFile(file);
 
   n = settings["Basis_Settings"]["state_no"].as<int>();
-  std::cout << "Number of States:     "
+  std::cout << "Number of States:                "
             << n << std::endl;
   k = settings["Basis_Settings"]["max_spline_k"].as<int>();
-  std::cout << "Maximum B-splines order:  "
+  std::cout << "Maximum B-splines order:         "
             << k << std::endl;
   r_max = settings["Basis_Settings"]["R_max"].as<int>();
-  std::cout << "Box radius:        "
+  std::cout << "Box radius:                      "
             << r_max << std::endl;
   grid = settings["Basis_Settings"]["grid"].as<std::string>();
   std::cout << "Type of knot spacing:            "
@@ -83,16 +83,16 @@ int tise::ReadConfig(std::string file,
               << k_file << std::endl;
   }
   pot = settings["Basis_Settings"]["potential"].as<std::string>();
-  std::cout << "Core Potential:            "
+  std::cout << "Core Potential:                  "
             << pot << std::endl;
   l_max     = settings["Basis_Settings"]["l_max"].as<int>();
-  std::cout << "Maximum l:                         "
+  std::cout << "Maximum l:                       "
             << l_max << std::endl;
   z = settings["Basis_Settings"]["atomic_no"].as<int>();
-  std::cout << "Atomic number:  "
+  std::cout << "Atomic number:                   "
             << z << std::endl;
   mass = settings["Basis_Settings"]["mass"].as<double>();
-  std::cout << "Atomic number:  "
+  std::cout << "mass (0.5 atoms, 1 positronium): "
             << mass << std::endl;
   return 0;
 }
