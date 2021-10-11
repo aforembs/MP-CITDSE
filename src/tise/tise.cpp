@@ -109,9 +109,7 @@ int tise::GenCoeff(int n, int k, int l_max,
   int nm2=n-2;
   int nk=nm2*k;
   int llp1=0, nik=0, ni2=0;
-  std::vector<double> ov_BB(nk), ov_dBdB(nk), ov_1_r2(nk), ov_V(nk);//, aa;
-  //std::vector<double> Enl, Cnl(n*nm2), Cnl_tmp;
-  //std::vector<double> w_bb(nk);
+  std::vector<double> ov_BB(nk), ov_dBdB(nk), ov_1_r2(nk), ov_V(nk);
 
   // Change these eventually
   ModelV *v_1    = new V_c(1.0);
@@ -129,11 +127,11 @@ int tise::GenCoeff(int n, int k, int l_max,
   delete v_1_r2;
   delete v;
 
-  // aa.reserve(nk); // possibly *l and parallel
-  // Enl.reserve(nm2);
-  // Cnl_tmp.reserve(nm2*nm2);
+  omp_lock_t writelock;
 
-  omp_set_num_threads(std::min(l_max+1, omp_get_max_threads()));
+  omp_init_lock(&writelock);
+
+  omp_set_num_threads(std::min((l_max+1)*2, omp_get_max_threads()));
   #pragma omp parallel for private(llp1, nik, ni2)
   for(int l=0; l<=l_max; ++l) {
     std::vector<double> Enl, Cnl(n*nm2), Cnl_tmp, aa, w_bb;
@@ -141,7 +139,11 @@ int tise::GenCoeff(int n, int k, int l_max,
     Cnl_tmp.reserve(nm2*nm2);
     aa.reserve(nk);
     w_bb.reserve(nk);
+
+    omp_set_lock(&writelock);
     std::copy(ov_BB.begin(), ov_BB.end(), w_bb.begin());
+    omp_unset_lock(&writelock);
+
     llp1=l*(l+1);
     for(int ni=0; ni<nm2; ++ni) {
       nik = ni*k;
@@ -156,12 +158,18 @@ int tise::GenCoeff(int n, int k, int l_max,
     // Reshape with zeros at r=0 & r=R
     for(int ni=0; ni<nm2; ++ni) {
       ni2=ni*nm2;
+      omp_set_lock(&writelock);
       std::copy(Cnl_tmp.begin()+ni2, 
                 Cnl_tmp.begin()+ni2+nm2, Cnl.begin()+1+ni*n);
+      omp_unset_lock(&writelock);
     }
-    // Write hdf5 file // this is not thread safe!!!!!! put outside loop
+    
+    // Write hdf5 file
+    omp_set_lock(&writelock);
     WriteHdf5(n, k, l, z, mass, pot, kkn, Enl, Cnl, outFile);
+    omp_unset_lock(&writelock);
   }
 
+  omp_destroy_lock(&writelock);
   return 0;
 }
