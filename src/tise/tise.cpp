@@ -49,7 +49,7 @@ int WriteHdf5(int n, int k, int li,
   Knots.write(&kkn[0], H5::PredType::NATIVE_DOUBLE);
   l.write(H5::PredType::NATIVE_INT32, &li);
   E_nl.write(&Enl[li*nm2], H5::PredType::NATIVE_DOUBLE);
-  C_nl.write(&Cnl[li*nm2*nm2], H5::PredType::NATIVE_DOUBLE);
+  C_nl.write(&Cnl[li*n*nm2], H5::PredType::NATIVE_DOUBLE);
 
   std::cout << "# write:: HDF5 DATA FOR L =  "<< li << " STORED IN "<< outFile << "\n\n";
   return 0;

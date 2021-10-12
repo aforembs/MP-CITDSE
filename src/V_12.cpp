@@ -22,8 +22,8 @@ double Fsltr(int k, int n, int bo,
   double Qk=0;
   double Jk=0;
   double Fk=0;
-  int bidx=0;
-  for(auto i=bo-1; i<n; ++i, ++bidx) {
+
+  for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
     loc_GL=0.0;
@@ -33,16 +33,18 @@ double Fsltr(int k, int n, int bo,
       Pl2i = 0; Pl2p = 0;
 
       for(int j=0; j<bo; ++j) {
-        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
       loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
     }
     Qk+=dl*loc_GL;
   }
 
-  bidx=0;
-  for(auto i=bo-1; i<n; ++i, ++bidx) {
+  // std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
+  // +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
+
+  for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
     loc_GL=0.0;
@@ -52,13 +54,16 @@ double Fsltr(int k, int n, int bo,
       Pl1i = 0; Pl1p = 0;
       Pl2i = 0; Pl2p = 0;
 
-
       for(int j=0; j<bo; ++j) {
-        Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-        Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+        Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
+      //if (k==0&&nc==0&&nd==0) {
+        // outFile << std::setiosflags(std::ios::scientific)
+        // << std::setprecision(12) <<r1<<" "<<Pl1i<<" "<<Pl1p<<" "<<Pl2i<<" "<<Pl2p<< "\n";
+      //}
       pr2 = Pl2i*Pl2p;
       // chi(r1)
       Jk+=dl*gl_w[p]*pow(r1,k)*pr2;
@@ -76,7 +81,8 @@ double Fsltr(int k, int n, int bo,
     }
     Fk+=dl*loc_GL;
   }
-  std::cout << Fk << '\n';
+  // outFile.close();
+  //std::cout << Fk << '\n';
   return Fk;
 }
 
@@ -96,39 +102,36 @@ double Fsltr_alt(int k, int n, int bo,
   double *Cl2i_pt=&Cf[offset[lb]];
   double *Cl2p_pt=&Cf[offset[ld]];
   double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
-  double dl, sl, dl2, sl2, loc_GL, r2, r1, pr2, chi;
+  double dl, sl, sl2, dl2, r2, r1, pr2, chi;
 
   // first calculate Qk for all of 0->R
   double Qk=0;
   double Jk=0;
   double Fk=0;
-  int bidx=0; int bidx2=0;
-  for(auto i=bo-1; i<n; ++i, ++bidx) {
+  for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
-    loc_GL=0.0;
 
     for(int p=0; p<bo; ++p){ // need to work around this index for chi calculation
       r1 = dl*gl_x[p] + sl;
       Pl1i = 0; Pl1p = 0;
 
       for(int j=0; j<bo; ++j) {
-        Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
-        Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+bidx*bo)];
+        Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
 
-      bidx2=0;
       Jk=0; Qk=0;
-      for(auto i2=bo-1; i2<n; ++i2, ++bidx2) {
+      for(auto i2=bo-1; i2<n; ++i2) {
       dl2 = (kkn[i2+1] - kkn[i2])*0.5;
       sl2 = (kkn[i2+1] + kkn[i2])*0.5;
         for(int p2=0; p2<bo; ++p2){
-          r2 = dl*gl_x[p2] + sl;
+          r2 = dl2*gl_x[p2] + sl2;
           Pl2i = 0; Pl2p = 0;
 
           for(int j2=0; j2<bo; ++j2) {
-            Pl2i += Cl2i_pt[nb*n+i2-bo+1+j2]*Bsp[j2+bo*(p2+bidx2*bo)];
-            Pl2p += Cl2p_pt[nd*n+i2-bo+1+j2]*Bsp[j2+bo*(p2+bidx2*bo)];
+            Pl2i += Cl2i_pt[nb*n+i2-bo+1+j2]*Bsp[j2+bo*(p2+i2*bo)];
+            Pl2p += Cl2p_pt[nd*n+i2-bo+1+j2]*Bsp[j2+bo*(p2+i2*bo)];
           }
           pr2 = Pl2i*Pl2p;
           if(r2<=r1) {
@@ -143,7 +146,7 @@ double Fsltr_alt(int k, int n, int bo,
 
       // Fk12;1'2'
       Fk += dl*gl_w[p]*Pl1i*Pl1p*chi/r1;
-      if (i==bo-1) {std::cout << r1 << " " << Fk << "\n";}
+      //if (i==bo-1) {std::cout << r1 << " " << Fk << "\n";}
 
     }
     //Fk+=dl*loc_GL;
@@ -162,7 +165,7 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   int n=0;   // no. of points
   int bo=0;   // max B-spline order
   int nkn=0; // no. of knots
-  int nSt=0; // no. of states
+  //int nSt=0; // no. of states
   std::vector<double> kkn;
   std::vector<double> Cf;
   std::vector<double*> C(L_max+1);
@@ -179,11 +182,13 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   H5::DataSpace cspace;
   hsize_t offset[2], count[2], stride[2], block[2];
   hsize_t dimms[2], v_dim[1];
-  offset[0]=0; offset[1]=0;
+  offset[0]=0; 
+  offset[1]=0;
   count[0] =0;
-  stride[0]=1; stride[1]=1;
-  block[0] =1; block[1]=1;
-  dimms[0] =0;
+  stride[0]=1; 
+  stride[1]=1;
+  block[0] =1; 
+  block[1]=1;
   H5::DataSpace memspace;
 
   int tot_states = 0;
@@ -203,28 +208,27 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   delete rset;
 
   rset = new H5::DataSet(file->openDataSet("En"));
-  nSt = rset->getSpace().getSimpleExtentNpoints();
+  //nSt = rset->getSpace().getSimpleExtentNpoints();
   delete rset;
   delete file;
 
   Cf.reserve(tot_states*n);
-  C[0]=&Cf[1];
-  Cf[0]=0.0; Cf[nSt+1] =0.0;
+  C[0]=&Cf[0];
   int nt=0;
   std::vector<int> nst_prev(L_max+1);
   nst_prev[0] = nt;
-  for(int i=1; i<=L_max; ++i) {
+  for(uint i=1; i<=L_max; ++i) {
     nt += N_sz[i-1];
     nst_prev[i] = nt*n;
-    C[i] = &Cf[nt*n+1];
-    Cf[nt*n]=0.0;
-    Cf[i*n-1]=0.0;
+    C[i] = &Cf[nt*n];
   }
 
   // read coefficients for all l
-  for(int l=0; l<=L_max; ++l) {
-    count[0] = N_sz[l]; count[1] = nSt;
-    dimms[0] = count[0]; dimms[1] = count[1];
+  for(uint l=0; l<=L_max; ++l) {
+    count[0] = N_sz[l]; 
+    count[1] = n;
+    dimms[0] = count[0]; 
+    dimms[1] = count[1];
     memspace.setExtentSimple(2, dimms, NULL);
 
     filename = cpot + std::to_string(l) + ".h5";
@@ -254,7 +258,7 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   filename = cpot + std::to_string(0) + "idx.h5";
   file = new H5::H5File(filename, H5F_ACC_RDONLY);
   L_set = new H5::DataSet(file->openDataSet("idx"));
-  L_sz = 1;
+  L_sz = 2;
   L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
   L_idx.resize(L_real_size);
   delete L_set;

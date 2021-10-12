@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <algorithm>
+#include <iomanip>
 #include "fastgl.h"
 #include "H5Cpp.h"
 #include "dmx_typ.h"

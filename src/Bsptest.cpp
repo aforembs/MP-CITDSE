@@ -12,7 +12,6 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   int n=0;   // no. of points
   int k=0;   // max B-spline order
   int nkn=0; // no. of knots
-  int nCf=0; // no. of coefficients
   int nSt=0; // no. of states
   std::vector<double> kkn;
   std::vector<double> Cf;
@@ -57,7 +56,7 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   C[0]=&Cf[0];
   // Cf[0]=0.0; Cf[n-1] = 0.0;
   int nst_prev = 0;
-  for(int i=1; i<=l1e_max; ++i) {
+  for(uint i=1; i<=l1e_max; ++i) {
     nst_prev += N_max[i-1];
     C[i] = &Cf[nst_prev*n];
     // Cf[nst_prev*n]=0.0;
@@ -65,7 +64,7 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   }
   std::cout << n << " " << nSt << " " << nkn <<"\n";
   // read coefficients for all l
-  for(int l=0; l<=l1e_max; ++l) {
+  for(uint l=0; l<=l1e_max; ++l) {
     count[0] = N_max[l];
     count[1] = n;
     dimms[0] = count[0]; 
@@ -87,20 +86,16 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
     gl_x[k-i] = fastgl::GLPair(k, i).x(); // generate GL nodes over B-splines support
   }
 
-  int len = (k+1)*(k+2)/2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
   std::vector<double> Bsplines;
-
   bsp::Splines(n, k, gl_x, kkn, Bsplines);
-  int i1 ;
   double dl, sl, x;
+
+  std::cout << Cf[0] <<" "<< Cf[n]<< " "<< Cf[2*n] <<"\n";
 
   std::ofstream outFile("dat/wfn_n10l0.dat", std::ofstream::out);
   // Output ground state wfn
-  int bidx=0;
-  double x_val=0, x_part=0;
-  for(auto i=k-1; i<n; ++i, ++bidx){
+  double x_val=0;
+  for(auto i=k-1; i<n; ++i){
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
 
@@ -109,7 +104,7 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
       x_val = 0;
 
       for(int j=0; j<k; ++j) {
-        x_val += Cf[i-k+1+j]*Bsplines[j+k*(p+i*k)];
+        x_val += Cf[n+i-k+1+j]*Bsplines[j+k*(p+i*k)];
       }
       outFile << std::setiosflags(std::ios::scientific)
               << std::setprecision(12) << x << " " << x_val << "\n";
@@ -121,8 +116,8 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
 
 int main() {
   std::vector<uint> Nm;
-  Nm.push_back(10);
-  Nm.push_back(10);
-  bsptest("dat/he", 0, Nm);
+  Nm.push_back(1);
+  Nm.push_back(1);
+  bsptest("dat/he", 1, Nm);
   return 0;
 }

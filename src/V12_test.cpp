@@ -3,9 +3,9 @@
 
 int main() {
 
-  std::vector<uint> N_maxs = {1,1};
+  std::vector<uint> N_maxs = {2,2};
 
-  V12("he", 0, N_maxs);
+  V12("dat/he", 1, N_maxs);
 
   return 0;
 }
