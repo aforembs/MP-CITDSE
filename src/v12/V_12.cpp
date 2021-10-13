@@ -1,5 +1,6 @@
 #include "V_12.h"
 
+// Fast slater integral code
 double Fsltr(int k, int n, int bo,
             int na, int la, int nb, int lb,
             int nc, int lc, int nd, int ld,
@@ -86,6 +87,7 @@ double Fsltr(int k, int n, int bo,
   return Fk;
 }
 
+// alternative slater integral code
 double Fsltr_alt(int k, int n, int bo,
             int na, int la, int nb, int lb,
             int nc, int lc, int nd, int ld,
@@ -158,14 +160,13 @@ double Fsltr_alt(int k, int n, int bo,
 int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   uint min_dir=0, min_exc=0;
   double Y_norm=0.0;
-  std::vector<double> v_mat; // standin for V_12 matrix
+  std::vector<double> v_mat;
   double sum_k=0.0;
   idx4 e12, e12p;
 
   int n=0;   // no. of points
   int bo=0;   // max B-spline order
   int nkn=0; // no. of knots
-  //int nSt=0; // no. of states
   std::vector<double> kkn;
   std::vector<double> Cf;
   std::vector<double*> C(L_max+1);
@@ -173,12 +174,12 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   uint L_sz=0, v_sz=0;
   std::string filename;
   std::string outfile_name;
-  H5::H5File *file=nullptr;
-  H5::H5File *outfile=nullptr;
+
+  // HDF5 defines
+  std::unique_ptr<H5::H5File> outfile=nullptr;
+  std::unique_ptr<H5::DataSet> V_set=nullptr;
+  std::unique_ptr<H5::DataSet> L_set=nullptr;
   std::vector<idx4> L_idx;
-  H5::DataSet *L_set=nullptr;
-  H5::DataSet *V_set=nullptr;
-  H5::DataSet *rset=nullptr;
   H5::DataSpace cspace;
   hsize_t offset[2], count[2], stride[2], block[2];
   hsize_t dimms[2], v_dim[1];
@@ -196,22 +197,18 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     tot_states += b;
   }
 
+  // read knots
   filename = cpot + std::to_string(0) + ".h5";
-  file = new H5::H5File(filename, H5F_ACC_RDONLY);
+  auto file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
   file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
   file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &bo);
-  rset = new H5::DataSet(file->openDataSet("Knots"));
+  auto rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Knots")));
   nkn = rset->getSpace().getSimpleExtentNpoints();
 
   kkn.reserve(nkn);
   rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
-  delete rset;
 
-  rset = new H5::DataSet(file->openDataSet("En"));
-  //nSt = rset->getSpace().getSimpleExtentNpoints();
-  delete rset;
-  delete file;
-
+  // reserve space for coefficients
   Cf.reserve(tot_states*n);
   C[0]=&Cf[0];
   int nt=0;
@@ -232,20 +229,19 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     memspace.setExtentSimple(2, dimms, NULL);
 
     filename = cpot + std::to_string(l) + ".h5";
-    file = new H5::H5File(filename, H5F_ACC_RDONLY);
-    rset = new H5::DataSet(file->openDataSet("Coeff"));
+    file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+    rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
     cspace = rset->getSpace();
     cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
-    delete rset;
-    delete file;
   }
 
+  // generate GL nodes and weights over B-splines support
   std::vector<double> gl_x(bo);
   std::vector<double> gl_w(bo);
   fastgl::QuadPair gl_i;
   for(int i=1; i<=bo; ++i) {
-    gl_i = fastgl::GLPair(bo, i); // generate GL nodes and weights over B-splines support
+    gl_i = fastgl::GLPair(bo, i);
     gl_x[bo-i] = gl_i.x(); 
     gl_w[bo-i] = gl_i.weight;
   }
@@ -254,27 +250,25 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   std::vector<double> Bsplines;
   bsp::Splines(n, bo, gl_x, kkn, Bsplines);
 
+  // read size of n1l1;n2l2 index vector
   int L_real_size=0;
-  filename = cpot + std::to_string(0) + "idx.h5";
-  file = new H5::H5File(filename, H5F_ACC_RDONLY);
-  L_set = new H5::DataSet(file->openDataSet("idx"));
-  L_sz = 2;
-  L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
-  L_idx.resize(L_real_size);
-  delete L_set;
-  delete file;
+  // filename = cpot + std::to_string(0) + "idx.h5";
+  // file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+  // auto L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
+  
+  // L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
+  // L_idx.resize(L_real_size);
+  L_sz = 2; // read only N=1 and N=2 for each L
 
   for(uint L=0; L<=L_max; ++L) {
     std::cout << "L: " << L << "\n";
-    // Read indices n1l1;n2l2
+    // Read n1l1;n2l2 indices for NL states
     filename = cpot + std::to_string(L) + "idx.h5";
-    file = new H5::H5File(filename, H5F_ACC_RDONLY);
-    L_set = new H5::DataSet(file->openDataSet("idx"));
+    file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+    L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
     L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
     L_idx.resize(L_real_size);
     L_set->read(&L_idx[0], H5::PredType::NATIVE_UINT32);
-    delete L_set;
-    delete file;
 
     v_sz = L_sz*(L_sz+1)/2;
     v_mat.reserve(v_sz);
@@ -285,11 +279,15 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
       for(uint NL1=NL2; NL1<L_sz; ++NL1){
         //set n1l1;n2l2
         e12 = L_idx[NL1];
-
+        // sqrt([la][lc][lb][ld])
         Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
         sum_k=0.0;
-        for(uint k=0; k<=L_max; ++k) { // should include l_max!=L_max ?
-          min_dir = ((L+e12.l2+e12p.l1) >> 0) & 1;
+        for(uint k=0; k<=L_max; ++k) { 
+          /* for direct check if:
+            (-)^{L+lb+lc}=(-)^{L+la+ld},
+            |la-lc| <= k <= la+lc,
+            |lb-ld| <= k <= lb+ld */
+          min_dir = ((L+e12.l2+e12p.l1) >> 0) & 1; // check if L+lb+lc is even
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
@@ -299,6 +297,10 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
+          /* for exchange check if:
+            (-)^{L+la+lc}=(-)^{L+lb+ld},
+            |la-ld| <= k <= la+ld,
+            |lc-lb| <= k <= lc+lb */
           min_exc = ((L+e12.l1+e12p.l1) >> 0) & 1;
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
@@ -317,11 +319,10 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     // save upper triangular V_12
     v_dim[0] = v_sz;
     outfile_name = cpot + "V12_" + std::to_string(L) + ".h5";
-    outfile = new H5::H5File(outfile_name, H5F_ACC_TRUNC);
-    V_set = new H5::DataSet(outfile->createDataSet("V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim)));
+    outfile = std::unique_ptr<H5::H5File>(new H5::H5File(outfile_name, H5F_ACC_TRUNC));
+    V_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+                    "V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim))));
     V_set->write(&v_mat[0], H5::PredType::NATIVE_DOUBLE);
-    delete V_set;
-    delete outfile;
 
     v_mat.clear();
   }

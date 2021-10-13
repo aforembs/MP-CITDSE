@@ -84,7 +84,7 @@ int bsp::WrKnotsH5(int n, int k, double r_max,
     tp_string="custom";
   }
 
-  H5::H5File *fl = new H5::H5File(file, H5F_ACC_TRUNC);
+  auto fl = std::unique_ptr<H5::H5File>(new H5::H5File(file, H5F_ACC_TRUNC));
   // Check if the file was opened
   if (!fl) {
     std::cerr << "# H5::H5File:: file couldn't opened: " << file << "\n";
@@ -111,7 +111,6 @@ int bsp::WrKnotsH5(int n, int k, double r_max,
   F.write(H5::PredType::NATIVE_DOUBLE, &fkn);
   Knots.write(&kkn[0], H5::PredType::NATIVE_DOUBLE);
 
-  delete fl;
   return 0;
 }
 
@@ -183,7 +182,7 @@ int bsp::SplineInt(int n, int k,
                   std::vector<double> &ov,
                   std::vector<double> &spl,
                   std::vector<double> &kkn,
-                  ModelV *Vptr) {
+                  std::unique_ptr<ModelV> &Vptr) {
   int j_max, t_min, t_max, tm1;  
   double ovlp, bsum, dl, sl, x;
 

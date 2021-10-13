@@ -3,6 +3,7 @@
 
 #include <cmath>
 #include <vector>
+#include <memory>
 #include <string>
 #include <iostream>
 #include <fstream>
@@ -42,7 +43,7 @@ int SplineInt(int n, int k,
               std::vector<double> &ov,
               std::vector<double> &spl,
               std::vector<double> &kkn,
-              ModelV *Vptr);
+              std::unique_ptr<ModelV> &Vptr);
 
 int SplineInt(int n, int k,
               std::vector<double> &gl_w,

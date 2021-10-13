@@ -1,4 +1,5 @@
 #include <vector>
+#include <memory>
 #include <algorithm>
 #include <iostream>
 #include <fstream>
@@ -18,8 +19,6 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   std::vector<double*> C(l1e_max+1);
 
   std::string filename;
-  H5::H5File    *file=nullptr;
-  H5::DataSet   *rset=nullptr;
   H5::DataSpace cspace;
   hsize_t offset[2], count[2], stride[2], block[2];
   hsize_t dimms[2];
@@ -37,30 +36,24 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   }
 
   filename = cpot + std::to_string(0) + ".h5";
-  file = new H5::H5File(filename, H5F_ACC_RDONLY);
+  auto file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
   file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
   file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &k);
-  rset = new H5::DataSet(file->openDataSet("Knots"));
+  auto rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Knots")));
   nkn = rset->getSpace().getSimpleExtentNpoints();
 
   kkn.reserve(nkn);
   rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
-  delete rset;
 
-  rset = new H5::DataSet(file->openDataSet("En"));
+  rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
   nSt = rset->getSpace().getSimpleExtentNpoints();
-  delete rset;
-  delete file;
 
   Cf.reserve(tot_states*n);
-  C[0]=&Cf[0];
-  // Cf[0]=0.0; Cf[n-1] = 0.0;
+  C[0] = &Cf[0];
   int nst_prev = 0;
   for(uint i=1; i<=l1e_max; ++i) {
     nst_prev += N_max[i-1];
     C[i] = &Cf[nst_prev*n];
-    // Cf[nst_prev*n]=0.0;
-    // Cf[i*n-1]=0.0;
   }
   std::cout << n << " " << nSt << " " << nkn <<"\n";
   // read coefficients for all l
@@ -72,13 +65,11 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
     memspace.setExtentSimple(2, dimms, NULL);
 
     filename = cpot + std::to_string(l) + ".h5";
-    file = new H5::H5File(filename, H5F_ACC_RDONLY);
-    rset = new H5::DataSet(file->openDataSet("Coeff"));
+    file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+    rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
     cspace = rset->getSpace();
     cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
-    delete rset;
-    delete file;
   }
 
   std::vector<double> gl_x(k);

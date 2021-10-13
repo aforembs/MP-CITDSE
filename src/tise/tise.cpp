@@ -11,8 +11,8 @@ int WriteHdf5(int n, int k, int li,
   auto nm2=n-2;
   outFile = outFile + pot + std::to_string(li) + ".h5" ;
 
-   // Create and leave in define mode
-  std::unique_ptr<H5::H5File> file(new H5::H5File(outFile, H5F_ACC_TRUNC));
+  // Create and leave in define mode
+  auto file = std::unique_ptr<H5::H5File>(new H5::H5File(outFile, H5F_ACC_TRUNC));
 
   // Check if the file was opened
   if (!file) {
@@ -115,20 +115,16 @@ int tise::GenCoeff(int n, int k, int l_max,
   std::vector<double> Enl, Cnl(lm1*n*nm2), Cnl_tmp, aa, w_bb;
 
   // Change these eventually
-  ModelV *v_1    = new V_c(1.0);
-  ModelV *v_1_r2 = new V_c_r2(1.0);
+  auto v_1    = std::unique_ptr<ModelV>(new V_c(1.0));
+  auto v_1_r2 = std::unique_ptr<ModelV>(new V_c_r2(1.0));
 
   bsp::SplineInt(nm2, k, gl_w, gl_x, ov_BB, spl, kkn, v_1); // int B_iB_j dr
   bsp::SplineInt(nm2, k, gl_w, gl_x, ov_dBdB, splp, kkn, v_1); // int B_i d/dr^2 B_j dr
   bsp::SplineInt(nm2, k, gl_w, gl_x, ov_1_r2, spl, kkn, v_1_r2); // int B_iB_j/r^2 dr
 
-  ModelV *v  = new  V_1_r(z);
+  auto v = std::unique_ptr<ModelV>(new V_1_r(z));
 
   bsp::SplineInt(nm2, k, gl_w, gl_x, ov_V, spl, kkn, v); // int B_i V(r) B_j dr
-
-  delete v_1;
-  delete v_1_r2;
-  delete v;
 
   Enl.reserve(lm1*nm2);
   Cnl_tmp.reserve(lm1*nm22);

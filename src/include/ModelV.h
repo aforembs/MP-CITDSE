@@ -58,8 +58,7 @@ class V_1_r: public ModelV {
 	public :
 		V_1_r(const double& z) : z_(z) {} 
 
-		virtual double V(const double& x)  {  
-		  assert(x) ;     	 
+		virtual inline double V(const double& x)  {       	 
 		  return  ( z_) / x  ;
 		} 
 	 	virtual void   plotV() {}
@@ -72,8 +71,7 @@ class V_c_r2: public ModelV {
 	public :
 		V_c_r2(const double& c) : c_(c) {} 
 
-		virtual double V(const double& x)	{  
-		  assert(x) ;     	 
+		virtual inline double V(const double& x)	{      	 
 		  return   c_ / (x*x)  ;
 	 	} 
 		virtual void   plotV(){}
@@ -83,7 +81,7 @@ class V_r: public ModelV {
 	public :
 		V_r() {} 
 
-		virtual double V(const double& x)  {  return  x ;}
+		virtual inline double V(const double& x)  {  return  x ;}
 		virtual void   plotV(){}
 };
 
@@ -91,7 +89,7 @@ class V_r2: public ModelV {
 	public :
 		V_r2() {} 
 
-		virtual double V(const double& x)  {  return  x*x ;}
+		virtual inline double V(const double& x)  {  return  x*x ;}
 		virtual void   plotV(){}
 };
 
