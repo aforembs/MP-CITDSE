@@ -20,9 +20,11 @@ double Fsltr(int k, int n, int bo,
   double dl, sl, loc_GL, r2, r1, pr2, chi;
 
   // first calculate Qk for all of 0->R
-  double Qk=0;
+  double Qk=0.0;
   double Jk=0;
   double Fk=0;
+
+  std::ofstream outQk("dat/Qk"+std::to_string(nb)+std::to_string(nd)+".dat");
 
   for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
@@ -37,13 +39,17 @@ double Fsltr(int k, int n, int bo,
         Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
         Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
+      outQk << r2 << " " << Pl2i << " " << Pl2p << " "<< Pl2i*Pl2p <<" "<< gl_w[p]<<" "<<pow(r2,-kp1)<< "\n";
       loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
     }
+    // if (nb==1 && nd==0 && lb==0 && ld==0) {
+    // std::cout <<"dl: "<< dl<< " loc_gl: "<< loc_GL << " Qk: " << Qk <<"\n";}
     Qk+=dl*loc_GL;
   }
 
-  // std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
-  // +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
+  // std::cout << "Qk: " << Qk << " n1l1n2l2n3l3n4l4: "<<na<<" "<<la<<" "<<nb<<" "<<lb<<" "<<nc<<" "<<lc<<" "<<nd<<" "<<ld<<"\n";
+  std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
+  +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
 
   for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
@@ -62,8 +68,8 @@ double Fsltr(int k, int n, int bo,
         Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
       //if (k==0&&nc==0&&nd==0) {
-        // outFile << std::setiosflags(std::ios::scientific)
-        // << std::setprecision(12) <<r1<<" "<<Pl1i<<" "<<Pl1p<<" "<<Pl2i<<" "<<Pl2p<< "\n";
+        outFile << std::setiosflags(std::ios::scientific)
+        << std::setprecision(12) <<r1<<" "<<Pl1i<<" "<<Pl1p<<" "<<Pl2i<<" "<<Pl2p<< "\n";
       //}
       pr2 = Pl2i*Pl2p;
       // chi(r1)
@@ -276,13 +282,15 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     for(uint NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
       e12p = L_idx[NL2];
+      std::cout << e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2 <<"\n";
       for(uint NL1=NL2; NL1<L_sz; ++NL1){
         //set n1l1;n2l2
         e12 = L_idx[NL1];
+        std::cout <<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2 <<"\n";
         // sqrt([la][lc][lb][ld])
         Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
         sum_k=0.0;
-        for(uint k=0; k<=L_max; ++k) { 
+        for(uint k=0; k<=L_max+1; ++k) { 
           /* for direct check if:
             (-)^{L+lb+lc}=(-)^{L+la+ld},
             |la-lc| <= k <= la+lc,
@@ -312,6 +320,8 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
+        std::cout << std::setiosflags(std::ios::scientific)
+                  << std::setprecision(12)<< sum_k << "\n";
         // write symmetric V_12 as upper triangular
         v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
       } 

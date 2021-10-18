@@ -154,8 +154,17 @@ int tise::GenCoeff(int n, int k, int l_max,
   for(int l=0; l<=l_max; ++l) {
     // Reshape with zeros at r=0 & r=R
     for(int ni=0; ni<nm2; ++ni) {
-      std::copy_n(std::execution::par_unseq, Cnl_tmp.begin()+l*nm22+ni*nm2, 
-                  nm2, Cnl.begin()+l*n*nm2+1+ni*n);
+      auto idxh   = l*nm22+ni*nm2;
+      auto st_it  = Cnl_tmp.begin()+idxh;
+      auto end_it = st_it+nm2;
+      // make the wf have a positive derivative at r=0
+      auto val=0.0;
+      for(auto i=0; i<k; ++i) val+=Cnl_tmp[idxh+i]*spl[i+(k-1)*k*k];
+      if (val<0.0) {
+        std::transform(std::execution::par_unseq, st_it, end_it, st_it,
+               std::bind(std::multiplies<double>(), std::placeholders::_1, -1.0));
+      }
+      std::copy(std::execution::par_unseq, st_it, end_it, Cnl.begin()+l*n*nm2+1+ni*n);
     }
     
     // Write hdf5 file

@@ -4,7 +4,7 @@
 int main() {
 
   // Vector of the maximum number of states from (1e) l= 0,1,2, ...
-  std::vector<uint> N_maxs = {100, 100, 60, 60};
+  std::vector<uint> N_maxs = {20, 20, 10, 10};
 
   DMX2e DMXcalculate("dat/he", 'v', 3, N_maxs);
 

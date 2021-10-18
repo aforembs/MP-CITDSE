@@ -1,1 +1,1 @@
-g++ -o bsptst -Wall -pedantic -O3 -march=native -std=c++17 -Iinclude Bsptest.cpp fastgl.cpp -lhdf5 -lhdf5_cpp -L. -lslatec -lgfortran -g
+g++ -o bsptst -Wall -pedantic -O3 -march=native -std=c++17 -Iinclude Bsptest.cpp bsplines.cpp fastgl.cpp -lhdf5 -lhdf5_cpp -L. -lslatec -lgfortran -g
