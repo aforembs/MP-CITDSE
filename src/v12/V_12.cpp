@@ -31,11 +31,11 @@ double Fsltr(int k, int n, int bo,
     sl = (kkn[i+1] + kkn[i])*0.5;
     loc_GL=0.0;
 
-    for(int p=0; p<bo; ++p){
+    for(auto p=0; p<bo; ++p){
       r2 = dl*gl_x[p] + sl;
       Pl2i = 0; Pl2p = 0;
 
-      for(int j=0; j<bo; ++j) {
+      for(auto j=0; j<bo; ++j) {
         Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
         Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
@@ -47,49 +47,162 @@ double Fsltr(int k, int n, int bo,
     Qk+=dl*loc_GL;
   }
 
-  // std::cout << "Qk: " << Qk << " n1l1n2l2n3l3n4l4: "<<na<<" "<<la<<" "<<nb<<" "<<lb<<" "<<nc<<" "<<lc<<" "<<nd<<" "<<ld<<"\n";
+  if (na==0&&nb==0&&nc==0&&nd==0&&lb==0&&ld==0) std::cout << std::setiosflags(std::ios::scientific)
+        << std::setprecision(15) << "Qk: " << Qk <<"\n";
+
   std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
   +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
 
+  // GL-quadrature won't work here!!!
+  // might need to generate different points for Simpson's rule
   for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
     loc_GL=0.0;
 
-    for(int p=0; p<bo; ++p){ // need to work around this index for chi calculation
+    for(auto p=0; p<bo; ++p){ // need to work around this index for chi calculation
       r1 = dl*gl_x[p] + sl;
       Pl1i = 0; Pl1p = 0;
       Pl2i = 0; Pl2p = 0;
 
-      for(int j=0; j<bo; ++j) {
+      for(auto j=0; j<bo; ++j) {
         Pl1i += Cl1i_pt[na*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
         Pl1p += Cl1p_pt[nc*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
         Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
         Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
-      //if (k==0&&nc==0&&nd==0) {
-        outFile << std::setiosflags(std::ios::scientific)
-        << std::setprecision(12) <<r1<<" "<<Pl1i<<" "<<Pl1p<<" "<<Pl2i<<" "<<Pl2p<< "\n";
-      //}
       pr2 = Pl2i*Pl2p;
       // chi(r1)
       Jk+=dl*gl_w[p]*pow(r1,k)*pr2;
       Qk-=dl*gl_w[p]*pow(r1,-kp1)*pr2;
       chi=pow(r1,-kp1)*Jk+pow(r1,k)*Qk;
 
+        outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<pr2<<" "<<chi<< "\n";
+
       // Fk12;1'2'
       loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
-      // if (i==bo-1) {std::cout << Jk << " " << r1 << " " << gl_w[p]*dl
-      // << " " << Qk << " " << dl*loc_GL << "\n";}
-      // if(nc==la&&la==lb&&lc==ld&&la==0&&k==0) {
-      //   std::cout << std::setiosflags(std::ios::scientific)
-      //         << std::setprecision(12)<< r1 << " " << Pl1i << "\n";
-      // }
     }
     Fk+=dl*loc_GL;
   }
-  // outFile.close();
-  //std::cout << Fk << '\n';
+  outFile.close();
+
+  return Fk;
+}
+
+// Fast slater integral code with simpson's rule inner int
+double FsltrSimp(int k, int n, int bo,
+            int na, int la, int nb, int lb,
+            int nc, int lc, int nd, int ld,
+            std::vector<uint> &N_max,
+            std::vector<double> &gl_w, 
+            std::vector<double> &gl_x, 
+            std::vector<double> &kkn,
+            std::vector<double> &Bsp,
+            std::vector<double> &Ssp,
+            std::vector<int> &offset,
+            std::vector<double> &Cf) {
+  int kp1=k+1;
+  double *Cl1i_pt=&Cf[offset[la]];
+  double *Cl1p_pt=&Cf[offset[lc]];
+  double *Cl2i_pt=&Cf[offset[lb]];
+  double *Cl2p_pt=&Cf[offset[ld]];
+  double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
+  double Pl2ira=0, Pl2pra=0, Pl2irb=0, Pl2prb=0;
+  double dl, sl, loc_GL, r2, r1, pr2, pr2a, pr2b, chi;
+
+  // first calculate Qk for all of 0->R
+  double Qk=0.0;
+  double Jk=0;
+  double Fk=0;
+
+  for(auto i=bo-1; i<n; ++i) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    loc_GL=0.0;
+
+    for(auto p=0; p<bo; ++p){
+      r2 = dl*gl_x[p] + sl;
+      Pl2i = 0; Pl2p = 0;
+
+      for(auto j=0; j<bo; ++j) {
+        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+      }
+      loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
+    }
+    Qk+=dl*loc_GL;
+  }
+
+  if (na==0&&nb==0&&nc==0&&nd==0&&lb==0&&ld==0) std::cout << std::setiosflags(std::ios::scientific)
+        << std::setprecision(15) << "Qk: " << Qk <<"\n";
+
+  std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
+  +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
+
+  double rm1=0.0;
+  double rs38a, rs38b;
+  double fm1j=0.0, fm1q=0.0;
+  auto sp=0;
+  double fact, pr1k, pr1km;
+  auto ibo1j=0;
+  auto ai=0;
+  auto bi=0;
+  // GL-quadrature won't work here!!!
+  // might need to generate different points for Simpson's rule
+  for(auto i=bo-1; i<n; ++i) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    loc_GL=0.0;
+
+    sp=0;
+    for(auto p=0; p<bo; ++p, sp+=2){ // need to work around this index for chi calculation
+      r1 = dl*gl_x[p] + sl;
+      rs38a = (2*rm1+r1)/3;
+      rs38b = (rm1+2*r1)/3;
+      Pl1i = 0; Pl1p = 0;
+      Pl2i = 0; Pl2p = 0;
+      Pl2ira=0; Pl2pra=0; 
+      Pl2irb=0; Pl2prb=0;
+
+      for(auto j=0; j<bo; ++j) {
+        ibo1j = i-bo+1+j;
+        Pl1i += Cl1i_pt[na*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
+        Pl1p += Cl1p_pt[nc*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
+        Pl2i += Cl2i_pt[nb*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
+        Pl2p += Cl2p_pt[nd*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
+
+        ai=ibo1j-(kkn[i]>rs38a);
+        bi=ibo1j-(kkn[i]>rs38b);
+        Pl2ira += Cl2i_pt[nb*n+ai]*Ssp[j+bo*(sp+i*2*bo)];
+        Pl2pra += Cl2p_pt[nd*n+ai]*Ssp[j+bo*(sp+i*2*bo)];
+
+        Pl2irb += Cl2i_pt[nb*n+bi]*Ssp[j+bo*(sp+1+i*2*bo)];
+        Pl2prb += Cl2p_pt[nd*n+bi]*Ssp[j+bo*(sp+1+i*2*bo)];
+      }
+      pr2 = Pl2i*Pl2p;
+      pr2a= Pl2ira*Pl2pra;
+      pr2b= Pl2irb*Pl2prb;
+      // chi(r1)
+      fact = (r1-rm1)*0.125;
+      pr1k = pow(r1,k);
+      pr1km= pow(r1,-kp1);
+      Jk+=fact*(fm1j+3*pow(rs38a,k)*pr2a+3*pow(rs38b,k)*pr2b+pr1k*pr2);
+      Qk-=fact*(fm1q+3*pow(rs38a,-kp1)*pr2a+3*pow(rs38b,-kp1)*pr2b+pr1km*pr2);
+      chi=pr1km*Jk+pr1k*Qk;
+
+        outFile <<r1<<" "<<rs38a<<" "<<rs38b<<" "<<Pl2i<<" "<<Pl2ira<<" "<<Pl2irb<<" "<<chi<< "\n";
+
+      // Fk12;1'2'
+      loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
+
+      rm1=r1;
+      fm1j=pr1k*pr2;
+      fm1q=pr1km*pr2;
+    }
+    Fk+=dl*loc_GL;
+  }
+  outFile.close();
+
   return Fk;
 }
 
@@ -256,6 +369,9 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   std::vector<double> Bsplines;
   bsp::Splines(n, bo, gl_x, kkn, Bsplines);
 
+  std::vector<double> Ssp;
+  bsp::SimpSplines(n, bo, gl_x, kkn, Ssp);
+
   // read size of n1l1;n2l2 index vector
   int L_real_size=0;
   // filename = cpot + std::to_string(0) + "idx.h5";
@@ -299,9 +415,9 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
-            sum_k += pow(-1,min_dir)*Fsltr(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_dir)*FsltrSimp(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n1, e12p.l1, e12p.n2, e12p.l2,
-                                          N_sz, gl_w, gl_x, kkn, Bsplines, nst_prev, Cf)
+                                          N_sz, gl_w, gl_x, kkn, Bsplines, Ssp, nst_prev, Cf)
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
@@ -313,15 +429,14 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
-            sum_k += pow(-1,min_exc)*Fsltr(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_exc)*FsltrSimp(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n2, e12p.l2, e12p.n1, e12p.l1,
-                                          N_sz, gl_w, gl_x, kkn, Bsplines, nst_prev, Cf)
+                                          N_sz, gl_w, gl_x, kkn, Bsplines, Ssp, nst_prev, Cf)
                   *wigner_3j0(e12.l1,k,e12p.l2)*wigner_3j0(e12.l2,k,e12p.l1)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
-        std::cout << std::setiosflags(std::ios::scientific)
-                  << std::setprecision(12)<< sum_k << "\n";
+        std::cout << sum_k<<" "<<pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k<< "\n";
         // write symmetric V_12 as upper triangular
         v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
       } 

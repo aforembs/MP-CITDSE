@@ -32,6 +32,11 @@ int Splines(int n, int k,
              std::vector<double> &knots,
              std::vector<double> &splines);
 
+int SimpSplines(int n, int k, 
+                std::vector<double> &gl_x,
+                std::vector<double> &knots,
+                std::vector<double> &sisplines);
+
 int SplinesP(int n, int k, 
               std::vector<double> &gl_x,
               std::vector<double> &knots,
