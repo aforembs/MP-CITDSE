@@ -133,29 +133,22 @@ double FsltrSimp(int k, int n, int bo,
     Qk+=dl*loc_GL;
   }
 
-  if (na==0&&nb==0&&nc==0&&nd==0&&lb==0&&ld==0) std::cout << std::setiosflags(std::ios::scientific)
-        << std::setprecision(15) << "Qk: " << Qk <<"\n";
-
-  std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
-  +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
-
   double rm1=0.0;
   double rs38a, rs38b;
   double fm1j=0.0, fm1q=0.0;
   auto sp=0;
   double fact, pr1k, pr1km;
-  auto ibo1j=0;
+  auto ibo1j=0, jbopi=0;
   auto ai=0;
   auto bi=0;
-  // GL-quadrature won't work here!!!
-  // might need to generate different points for Simpson's rule
+
   for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
     loc_GL=0.0;
 
     sp=0;
-    for(auto p=0; p<bo; ++p, sp+=2){ // need to work around this index for chi calculation
+    for(auto p=0; p<bo; ++p, sp+=2){
       r1 = dl*gl_x[p] + sl;
       rs38a = (2*rm1+r1)/3;
       rs38b = (rm1+2*r1)/3;
@@ -166,10 +159,11 @@ double FsltrSimp(int k, int n, int bo,
 
       for(auto j=0; j<bo; ++j) {
         ibo1j = i-bo+1+j;
-        Pl1i += Cl1i_pt[na*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
-        Pl1p += Cl1p_pt[nc*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
-        Pl2i += Cl2i_pt[nb*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
-        Pl2p += Cl2p_pt[nd*n+ibo1j]*Bsp[j+bo*(p+i*bo)];
+        jbopi = j+bo*(p+i*bo);
+        Pl1i += Cl1i_pt[na*n+ibo1j]*Bsp[jbopi];
+        Pl1p += Cl1p_pt[nc*n+ibo1j]*Bsp[jbopi];
+        Pl2i += Cl2i_pt[nb*n+ibo1j]*Bsp[jbopi];
+        Pl2p += Cl2p_pt[nd*n+ibo1j]*Bsp[jbopi];
 
         ai=ibo1j-(kkn[i]>rs38a);
         bi=ibo1j-(kkn[i]>rs38b);
@@ -182,6 +176,7 @@ double FsltrSimp(int k, int n, int bo,
       pr2 = Pl2i*Pl2p;
       pr2a= Pl2ira*Pl2pra;
       pr2b= Pl2irb*Pl2prb;
+
       // chi(r1)
       fact = (r1-rm1)*0.125;
       pr1k = pow(r1,k);
@@ -189,8 +184,6 @@ double FsltrSimp(int k, int n, int bo,
       Jk+=fact*(fm1j+3*pow(rs38a,k)*pr2a+3*pow(rs38b,k)*pr2b+pr1k*pr2);
       Qk-=fact*(fm1q+3*pow(rs38a,-kp1)*pr2a+3*pow(rs38b,-kp1)*pr2b+pr1km*pr2);
       chi=pr1km*Jk+pr1k*Qk;
-
-        outFile <<r1<<" "<<rs38a<<" "<<rs38b<<" "<<Pl2i<<" "<<Pl2ira<<" "<<Pl2irb<<" "<<chi<< "\n";
 
       // Fk12;1'2'
       loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
@@ -201,7 +194,6 @@ double FsltrSimp(int k, int n, int bo,
     }
     Fk+=dl*loc_GL;
   }
-  outFile.close();
 
   return Fk;
 }
@@ -372,15 +364,9 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   std::vector<double> Ssp;
   bsp::SimpSplines(n, bo, gl_x, kkn, Ssp);
 
-  // read size of n1l1;n2l2 index vector
-  int L_real_size=0;
-  // filename = cpot + std::to_string(0) + "idx.h5";
-  // file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-  // auto L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
-  
-  // L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
-  // L_idx.resize(L_real_size);
-  L_sz = 2; // read only N=1 and N=2 for each L
+
+  //int L_real_size=0;
+  //L_sz = 2; // read only N=1 and N=2 for each L
 
   for(uint L=0; L<=L_max; ++L) {
     std::cout << "L: " << L << "\n";
@@ -388,21 +374,24 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     filename = cpot + std::to_string(L) + "idx.h5";
     file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
     L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
-    L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
-    L_idx.resize(L_real_size);
+    L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+    L_idx.resize(L_sz);
     L_set->read(&L_idx[0], H5::PredType::NATIVE_UINT32);
 
     v_sz = L_sz*(L_sz+1)/2;
     v_mat.reserve(v_sz);
 
+    #pragma omp parallel private(e12p)
+    {
     for(uint NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
       e12p = L_idx[NL2];
-      std::cout << e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2 <<"\n";
+      // std::cout << e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2 <<"\n";
+      #pragma omp for private(e12,Y_norm,sum_k,min_dir,min_exc)
       for(uint NL1=NL2; NL1<L_sz; ++NL1){
         //set n1l1;n2l2
         e12 = L_idx[NL1];
-        std::cout <<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2 <<"\n";
+        // std::cout <<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2 <<"\n";
         // sqrt([la][lc][lb][ld])
         Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
         sum_k=0.0;
@@ -436,10 +425,12 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
-        std::cout << sum_k<<" "<<pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k<< "\n";
+        // std::cout << std::setiosflags(std::ios::scientific)
+                  // << std::setprecision(15) << pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k<< "\n";
         // write symmetric V_12 as upper triangular
         v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
       } 
+    }
     }
     // save upper triangular V_12
     v_dim[0] = v_sz;

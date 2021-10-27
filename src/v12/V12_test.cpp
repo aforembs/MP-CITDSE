@@ -3,10 +3,10 @@
 
 int main() {
 
-  std::vector<uint> N_maxs = {2,2};
+  std::vector<uint> N_maxs = {20,20,10,5}; // has to match dmx input
 
   // output file prefix, L_max, vector of numbers of states per L
-  V12("dat/he", 1, N_maxs);
+  V12("dat/he", 3, N_maxs);
 
   return 0;
 }

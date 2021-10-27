@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
   auto l_max=4;
   auto z=1;
   std::string grid, k_file, pot;
-  double mass=0.5, fkn=0.125;
+  double mass=0.5, fkn=0.00012;
 
   auto kkn = std::vector<double>();
 
