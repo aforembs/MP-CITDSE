@@ -77,7 +77,7 @@ double Fsltr(int k, int n, int bo,
       Qk-=dl*gl_w[p]*pow(r1,-kp1)*pr2;
       chi=pow(r1,-kp1)*Jk+pow(r1,k)*Qk;
 
-        outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<pr2<<" "<<chi<< "\n";
+      outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<pr2<<" "<<chi<< "\n";
 
       // Fk12;1'2'
       loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
@@ -90,7 +90,7 @@ double Fsltr(int k, int n, int bo,
 }
 
 // Fast slater integral code with simpson's rule inner int
-double FsltrSimp(int k, int n, int bo,
+double FsltrSimpGL(int k, int n, int bo,
             int na, int la, int nb, int lb,
             int nc, int lc, int nd, int ld,
             std::vector<uint> &N_max,
@@ -133,6 +133,9 @@ double FsltrSimp(int k, int n, int bo,
     Qk+=dl*loc_GL;
   }
 
+  std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
+  +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
+
   double rm1=0.0;
   double rs38a, rs38b;
   double fm1j=0.0, fm1q=0.0;
@@ -165,6 +168,7 @@ double FsltrSimp(int k, int n, int bo,
         Pl2i += Cl2i_pt[nb*n+ibo1j]*Bsp[jbopi];
         Pl2p += Cl2p_pt[nd*n+ibo1j]*Bsp[jbopi];
 
+        // Simpson's inner
         ai=ibo1j-(kkn[i]>rs38a);
         bi=ibo1j-(kkn[i]>rs38b);
         Pl2ira += Cl2i_pt[nb*n+ai]*Ssp[j+bo*(sp+i*2*bo)];
@@ -185,12 +189,121 @@ double FsltrSimp(int k, int n, int bo,
       Qk-=fact*(fm1q+3*pow(rs38a,-kp1)*pr2a+3*pow(rs38b,-kp1)*pr2b+pr1km*pr2);
       chi=pr1km*Jk+pr1k*Qk;
 
-      // Fk12;1'2'
+      outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<< "\n";
+
+      // Glq outer
       loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
 
       rm1=r1;
       fm1j=pr1k*pr2;
       fm1q=pr1km*pr2;
+    }
+    Fk+=dl*loc_GL;
+  }
+
+  return Fk;
+}
+
+double FsltrGL2(int k, int n, int bo, int gl2,
+            int na, int la, int nb, int lb,
+            int nc, int lc, int nd, int ld,
+            std::vector<uint> &N_max,
+            std::vector<double> &gl_ow, 
+            std::vector<double> &gl_ox,
+            std::vector<double> &gl_iw, 
+            std::vector<double> &gl_ix, 
+            std::vector<double> &kkn,
+            std::vector<double> &Bsp,
+            std::vector<double> &Gsp,
+            std::vector<int> &offset,
+            std::vector<double> &Cf) {
+  int kp1=k+1;
+  double *Cl1i_pt=&Cf[offset[la]];
+  double *Cl1p_pt=&Cf[offset[lc]];
+  double *Cl2i_pt=&Cf[offset[lb]];
+  double *Cl2p_pt=&Cf[offset[ld]];
+  double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
+  double Pl2igli=0, Pl2pgli=0;
+  double dl, sl, loc_GL, r2, r1, gl2r, pr2, dli, chi;
+
+  // first calculate Qk for all of 0->R
+  double Qk=0.0;
+  double Jk=0;
+  double Fk=0;
+
+  for(auto i=bo-1; i<n; ++i) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    loc_GL=0.0;
+
+    for(auto p=0; p<bo; ++p){
+      r2 = dl*gl_ox[p] + sl;
+      Pl2i = 0; Pl2p = 0;
+
+      for(auto j=0; j<bo; ++j) {
+        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+      }
+      loc_GL+=gl_ow[p]*pow(r2,-kp1)*Pl2i*Pl2p;
+    }
+    Qk+=dl*loc_GL;
+  }
+
+  // std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
+  // +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
+
+  double rm1=0.0;
+  double jki=0.0, qki=0.0;
+  auto sp=0;
+  auto ibo1j=0, jbopi=0;
+  auto ai=0;
+
+  for(auto i=bo-1; i<n; ++i) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    loc_GL=0.0;
+
+    sp=0;
+    for(auto p=0; p<bo; ++p, sp+=gl2){
+      r1 = dl*gl_ox[p] + sl;
+      Pl1i = 0; Pl1p = 0;
+
+      for(auto j=0; j<bo; ++j) {
+        ibo1j = i-bo+1+j;
+        jbopi = j+bo*(p+i*bo);
+        Pl1i += Cl1i_pt[na*n+ibo1j]*Bsp[jbopi];
+        Pl1p += Cl1p_pt[nc*n+ibo1j]*Bsp[jbopi];
+      }
+
+      // second, inner gaussian quadrature
+      jki=0; qki=0;
+      dli = (r1-rm1)*0.5;
+      for(auto p2=0; p2<gl2; ++p2) {
+        Pl2igli=0; Pl2pgli=0;
+        gl2r = dli*gl_ix[p2] + (r1+rm1)*0.5;
+        for(auto j=0; j<bo; ++j) {
+          ibo1j = i-bo+1+j;
+          jbopi = j+bo*(sp+p2+i*gl2*bo);
+          ai=ibo1j-(kkn[i]>gl2r);
+          Pl2igli += Cl2i_pt[nb*n+ai]*Gsp[jbopi];
+          Pl2pgli += Cl2p_pt[nd*n+ai]*Gsp[jbopi];
+        }
+        pr2 = Pl2igli*Pl2pgli;
+        jki += gl_iw[p2]*pow(gl2r,k)*pr2;
+        qki += gl_iw[p2]*pow(gl2r,-kp1)*pr2;
+      }
+
+      // chi(r1)
+      Jk+=dli*jki;
+      Qk-=dli*qki;
+      chi=pow(r1,-kp1)*Jk+pow(r1,k)*Qk;
+
+      // outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<< "\n";
+
+      // Glq outer
+      loc_GL += gl_ow[p]*Pl1i*Pl1p*chi;
+
+      rm1=r1;
     }
     Fk+=dl*loc_GL;
   }
@@ -225,7 +338,7 @@ double Fsltr_alt(int k, int n, int bo,
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
 
-    for(int p=0; p<bo; ++p){ // need to work around this index for chi calculation
+    for(int p=0; p<bo; ++p){
       r1 = dl*gl_x[p] + sl;
       Pl1i = 0; Pl1p = 0;
 
@@ -357,19 +470,28 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     gl_w[bo-i] = gl_i.weight;
   }
 
+  int bo2=4; // 5 inner 14 outer gives epsilon
+  std::vector<double> gl_ix(bo2);
+  std::vector<double> gl_iw(bo2);
+  for(int i=1; i<=bo2; ++i) {
+    gl_i = fastgl::GLPair(bo2, i);
+    gl_ix[bo2-i] = gl_i.x(); 
+    gl_iw[bo2-i] = gl_i.weight;
+  }
+
   // generate B-splines
   std::vector<double> Bsplines;
   bsp::Splines(n, bo, gl_x, kkn, Bsplines);
 
   std::vector<double> Ssp;
-  bsp::SimpSplines(n, bo, gl_x, kkn, Ssp);
+  // bsp::SimpSplines(n, bo, gl_x, kkn, Ssp);
+  bsp::GL2Splines(n, bo, bo2, gl_x, gl_ix, kkn, Ssp);
 
-
-  //int L_real_size=0;
-  //L_sz = 2; // read only N=1 and N=2 for each L
+  // int L_real_size=0;
+  // L_sz = 2; // read only N=1 and N=2 for each L
 
   for(uint L=0; L<=L_max; ++L) {
-    std::cout << "L: " << L << "\n";
+    
     // Read n1l1;n2l2 indices for NL states
     filename = cpot + std::to_string(L) + "idx.h5";
     file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
@@ -377,6 +499,8 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
     L_idx.resize(L_sz);
     L_set->read(&L_idx[0], H5::PredType::NATIVE_UINT32);
+
+    std::cout << "L: " << L <<" L_sz: "<< L_sz << "\n";
 
     v_sz = L_sz*(L_sz+1)/2;
     v_mat.reserve(v_sz);
@@ -404,9 +528,9 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
-            sum_k += pow(-1,min_dir)*FsltrSimp(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_dir)*FsltrGL2(k, n, bo, bo2, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n1, e12p.l1, e12p.n2, e12p.l2,
-                                          N_sz, gl_w, gl_x, kkn, Bsplines, Ssp, nst_prev, Cf)
+                                          N_sz, gl_w, gl_x, gl_iw, gl_ix, kkn, Bsplines, Ssp, nst_prev, Cf)
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
@@ -418,9 +542,9 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
-            sum_k += pow(-1,min_exc)*FsltrSimp(k, n, bo, e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_exc)*FsltrGL2(k, n, bo, bo2, e12.n1, e12.l1, e12.n2, e12.l2,
                                           e12p.n2, e12p.l2, e12p.n1, e12p.l1,
-                                          N_sz, gl_w, gl_x, kkn, Bsplines, Ssp, nst_prev, Cf)
+                                          N_sz, gl_w, gl_x, gl_iw, gl_ix, kkn, Bsplines, Ssp, nst_prev, Cf)
                   *wigner_3j0(e12.l1,k,e12p.l2)*wigner_3j0(e12.l2,k,e12p.l1)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }

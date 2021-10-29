@@ -135,10 +135,11 @@ int bsp::Splines(int n, int k,
   for(auto i=k-1; i<n; ++i){
     dl = knots[i+1] - knots[i];
     sl = knots[i+1] + knots[i];
+    i1 = i + 1 ;
 
     for(int p=0; p<k; ++p){
       x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
-      i1 = i + 1 ;
+      
       dbspvd_(&knots[0], k, 1, x, i1, k, &Db[0], &work[0]);
 
       splines.insert(std::end(splines), std::begin(Db), std::end(Db));
@@ -193,6 +194,50 @@ int bsp::SimpSplines(int n, int k,
   return 0;
 }
 
+int bsp::GL2Splines(int n, int k, int k2,
+                std::vector<double> &gl_outer,
+                std::vector<double> &gl_inner,
+                std::vector<double> &knots,
+                std::vector<double> &glsplines) {
+  int i1 ;
+  double dl, sl, x;
+  int len = (k+1)*(k+2)/2;
+  std::vector<double> Db(k);
+  std::vector<double> work(len);
+
+  glsplines.reserve(n*k2*k*k);
+
+  for(int i=0; i<(k-1); ++i) {
+    for(int j=0; j<k2*k*k; ++j) { 
+      {glsplines.emplace_back(0.0);} 
+    }
+  }
+
+  double xm1 = 0.0;
+  double gl2x;
+  auto ia=0;
+
+  for(auto i=k-1; i<n; ++i){
+    i1 = i + 1 ;
+    dl = knots[i1] - knots[i];
+    sl = knots[i1] + knots[i];
+
+    for(int p=0; p<k; ++p){
+      x = dl*0.5 * gl_outer[p] + sl*0.5;    //x-transformation
+
+      for (int j=0; j<k2; ++j) {
+        gl2x=(x-xm1)*0.5*gl_inner[j] + (x+xm1)*0.5;
+
+        ia=i1-(knots[i]>gl2x);
+        dbspvd_(&knots[0], k, 1, gl2x, ia, k, &Db[0], &work[0]);
+        glsplines.insert(std::end(glsplines), std::begin(Db), std::end(Db));
+      }
+      xm1=x;
+    }
+  }
+  return 0;
+}
+
 int bsp::SplinesP(int n, int k, 
                   std::vector<double> &gl_x,
                   std::vector<double> &knots,
@@ -210,10 +255,11 @@ int bsp::SplinesP(int n, int k,
   for(auto i=k-1; i<n; ++i){
     dl = knots[i+1] - knots[i];
     sl = knots[i+1] + knots[i];
+    i1 = i + 1 ;
 
     for(int p=0; p<k; ++p){
       x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
-      i1 = i + 1 ;
+      
       dbspvd_(&knots[0], k, 2, x, i1, k, &Db[0], &work[0]);
 
       splinesp.insert(std::end(splinesp), std::begin(Db)+k, std::end(Db));
