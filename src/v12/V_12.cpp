@@ -1,4 +1,6 @@
 #include "V_12.h"
+#include "time_tst.h"
+#include <omp.h>
 
 // Fast slater integral code
 double Fsltr(int k, int n, int bo,
@@ -205,8 +207,8 @@ double FsltrSimpGL(int k, int n, int bo,
 }
 
 double FsltrGL2(int k, int n, int bo, int gl2,
-            int na, int la, int nb, int lb,
-            int nc, int lc, int nd, int ld,
+            // int na, int la, int nb, int lb,
+            // int nc, int lc, int nd, int ld,
             std::vector<uint> &N_max,
             std::vector<double> &gl_ow, 
             std::vector<double> &gl_ox,
@@ -215,21 +217,32 @@ double FsltrGL2(int k, int n, int bo, int gl2,
             std::vector<double> &kkn,
             std::vector<double> &Bsp,
             std::vector<double> &Gsp,
-            std::vector<int> &offset,
-            std::vector<double> &Cf) {
+            // std::vector<int> &offset,
+            std::vector<double> &Cl1i_pt,
+            std::vector<double> &Cl1p_pt,
+            std::vector<double> &Cl2i_pt,
+            std::vector<double> &Cl2p_pt) {
   int kp1=k+1;
-  double *Cl1i_pt=&Cf[offset[la]];
-  double *Cl1p_pt=&Cf[offset[lc]];
-  double *Cl2i_pt=&Cf[offset[lb]];
-  double *Cl2p_pt=&Cf[offset[ld]];
+  // double *Cl1i_pt=&Cf[offset[la]];
+  // double *Cl1p_pt=&Cf[offset[lc]];
+  // double *Cl2i_pt=&Cf[offset[lb]];
+  // double *Cl2p_pt=&Cf[offset[ld]];
   double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
   double Pl2igli=0, Pl2pgli=0;
   double dl, sl, loc_GL, r2, r1, gl2r, pr2, dli, chi;
+
+  // int nna=na*n, nnb=nb*n, nnc=nc*n, nnd=nd*n;
 
   // first calculate Qk for all of 0->R
   double Qk=0.0;
   double Jk=0;
   double Fk=0;
+
+  double rm1=0.0;
+  double jki=0.0, qki=0.0;
+  auto sp=0;
+  auto ibo1j=0, jbopi=0;
+  auto ai=0;
 
   for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
@@ -241,8 +254,10 @@ double FsltrGL2(int k, int n, int bo, int gl2,
       Pl2i = 0; Pl2p = 0;
 
       for(auto j=0; j<bo; ++j) {
-        Pl2i += Cl2i_pt[nb*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
-        Pl2p += Cl2p_pt[nd*n+i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+        jbopi = j+bo*(p+i*bo);
+        ibo1j = i-bo+1+j;
+        Pl2i += Cl2i_pt[ibo1j]*Bsp[jbopi];
+        Pl2p += Cl2p_pt[ibo1j]*Bsp[jbopi];
       }
       loc_GL+=gl_ow[p]*pow(r2,-kp1)*Pl2i*Pl2p;
     }
@@ -252,11 +267,7 @@ double FsltrGL2(int k, int n, int bo, int gl2,
   // std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
   // +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
 
-  double rm1=0.0;
-  double jki=0.0, qki=0.0;
-  auto sp=0;
-  auto ibo1j=0, jbopi=0;
-  auto ai=0;
+
 
   for(auto i=bo-1; i<n; ++i) {
     dl = (kkn[i+1] - kkn[i])*0.5;
@@ -271,26 +282,65 @@ double FsltrGL2(int k, int n, int bo, int gl2,
       for(auto j=0; j<bo; ++j) {
         ibo1j = i-bo+1+j;
         jbopi = j+bo*(p+i*bo);
-        Pl1i += Cl1i_pt[na*n+ibo1j]*Bsp[jbopi];
-        Pl1p += Cl1p_pt[nc*n+ibo1j]*Bsp[jbopi];
+        Pl1i += Cl1i_pt[ibo1j]*Bsp[jbopi];
+        Pl1p += Cl1p_pt[ibo1j]*Bsp[jbopi];
       }
 
       // second, inner gaussian quadrature
       jki=0; qki=0;
       dli = (r1-rm1)*0.5;
-      for(auto p2=0; p2<gl2; ++p2) {
+      for(auto p2=0; p2<gl2; p2+=4) {
         Pl2igli=0; Pl2pgli=0;
         gl2r = dli*gl_ix[p2] + (r1+rm1)*0.5;
         for(auto j=0; j<bo; ++j) {
           ibo1j = i-bo+1+j;
           jbopi = j+bo*(sp+p2+i*gl2*bo);
           ai=ibo1j-(kkn[i]>gl2r);
-          Pl2igli += Cl2i_pt[nb*n+ai]*Gsp[jbopi];
-          Pl2pgli += Cl2p_pt[nd*n+ai]*Gsp[jbopi];
+          Pl2igli += Cl2i_pt[ai]*Gsp[jbopi];
+          Pl2pgli += Cl2p_pt[ai]*Gsp[jbopi];
         }
         pr2 = Pl2igli*Pl2pgli;
         jki += gl_iw[p2]*pow(gl2r,k)*pr2;
         qki += gl_iw[p2]*pow(gl2r,-kp1)*pr2;
+
+        Pl2igli=0; Pl2pgli=0;
+        gl2r = dli*gl_ix[p2+1] + (r1+rm1)*0.5;
+        for(auto j=0; j<bo; ++j) {
+          ibo1j = i-bo+1+j;
+          jbopi = j+bo*(sp+p2+1+i*gl2*bo);
+          ai=ibo1j-(kkn[i]>gl2r);
+          Pl2igli += Cl2i_pt[ai]*Gsp[jbopi];
+          Pl2pgli += Cl2p_pt[ai]*Gsp[jbopi];
+        }
+        pr2 = Pl2igli*Pl2pgli;
+        jki += gl_iw[p2+1]*pow(gl2r,k)*pr2;
+        qki += gl_iw[p2+1]*pow(gl2r,-kp1)*pr2;
+
+        Pl2igli=0; Pl2pgli=0;
+        gl2r = dli*gl_ix[p2+2] + (r1+rm1)*0.5;
+        for(auto j=0; j<bo; ++j) {
+          ibo1j = i-bo+1+j;
+          jbopi = j+bo*(sp+p2+2+i*gl2*bo);
+          ai=ibo1j-(kkn[i]>gl2r);
+          Pl2igli += Cl2i_pt[ai]*Gsp[jbopi];
+          Pl2pgli += Cl2p_pt[ai]*Gsp[jbopi];
+        }
+        pr2 = Pl2igli*Pl2pgli;
+        jki += gl_iw[p2+2]*pow(gl2r,k)*pr2;
+        qki += gl_iw[p2+2]*pow(gl2r,-kp1)*pr2;
+
+        Pl2igli=0; Pl2pgli=0;
+        gl2r = dli*gl_ix[p2+3] + (r1+rm1)*0.5;
+        for(auto j=0; j<bo; ++j) {
+          ibo1j = i-bo+1+j;
+          jbopi = j+bo*(sp+p2+3+i*gl2*bo);
+          ai=ibo1j-(kkn[i]>gl2r);
+          Pl2igli += Cl2i_pt[ai]*Gsp[jbopi];
+          Pl2pgli += Cl2p_pt[ai]*Gsp[jbopi];
+        }
+        pr2 = Pl2igli*Pl2pgli;
+        jki += gl_iw[p2+3]*pow(gl2r,k)*pr2;
+        qki += gl_iw[p2+3]*pow(gl2r,-kp1)*pr2;
       }
 
       // chi(r1)
@@ -470,7 +520,7 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     gl_w[bo-i] = gl_i.weight;
   }
 
-  int bo2=4; // 5 inner 14 outer gives epsilon
+  int bo2=4; // 4 inner 13 outer gives epsilon for linear
   std::vector<double> gl_ix(bo2);
   std::vector<double> gl_iw(bo2);
   for(int i=1; i<=bo2; ++i) {
@@ -487,8 +537,13 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
   // bsp::SimpSplines(n, bo, gl_x, kkn, Ssp);
   bsp::GL2Splines(n, bo, bo2, gl_x, gl_ix, kkn, Ssp);
 
-  // int L_real_size=0;
-  // L_sz = 2; // read only N=1 and N=2 for each L
+  std::vector<double> l1p_loc(n), l2p_loc(n);
+
+  int L_real_size=0;
+  L_sz = 500; // read only N=1 and N=2 for each L
+
+  omp_lock_t copylock;
+  omp_init_lock(&copylock);
 
   for(uint L=0; L<=L_max; ++L) {
     
@@ -496,8 +551,8 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     filename = cpot + std::to_string(L) + "idx.h5";
     file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
     L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
-    L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
-    L_idx.resize(L_sz);
+    L_real_size = L_set->getSpace().getSimpleExtentNpoints()/4;
+    L_idx.resize(L_real_size);
     L_set->read(&L_idx[0], H5::PredType::NATIVE_UINT32);
 
     std::cout << "L: " << L <<" L_sz: "<< L_sz << "\n";
@@ -505,17 +560,30 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
     v_sz = L_sz*(L_sz+1)/2;
     v_mat.reserve(v_sz);
 
+    uint64_t st_time = GetTimeMs64();    
     #pragma omp parallel private(e12p)
     {
     for(uint NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
       e12p = L_idx[NL2];
       // std::cout << e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2 <<"\n";
+      //omp_set_lock(&copylock);
+      #pragma omp critical
+      {
+      std::copy_n(Cf.begin()+offset[e12p.l1]+e12p.n1*n, n, l1p_loc.begin());
+      std::copy_n(Cf.begin()+offset[e12p.l2]+e12p.n2*n, n, l2p_loc.begin());
+      }
+      //omp_unset_lock(&copylock);
       #pragma omp for private(e12,Y_norm,sum_k,min_dir,min_exc)
       for(uint NL1=NL2; NL1<L_sz; ++NL1){
         //set n1l1;n2l2
         e12 = L_idx[NL1];
         // std::cout <<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2 <<"\n";
+        std::vector<double> l1i_loc(n), l2i_loc(n);
+        omp_set_lock(&copylock);
+        std::copy_n(Cf.begin()+offset[e12.l1]+e12.n1*n, n, l1i_loc.begin());
+        std::copy_n(Cf.begin()+offset[e12.l2]+e12.n2*n, n, l2i_loc.begin());
+        omp_unset_lock(&copylock);
         // sqrt([la][lc][lb][ld])
         Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
         sum_k=0.0;
@@ -528,9 +596,10 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
-            sum_k += pow(-1,min_dir)*FsltrGL2(k, n, bo, bo2, e12.n1, e12.l1, e12.n2, e12.l2,
-                                          e12p.n1, e12p.l1, e12p.n2, e12p.l2,
-                                          N_sz, gl_w, gl_x, gl_iw, gl_ix, kkn, Bsplines, Ssp, nst_prev, Cf)
+            sum_k += pow(-1,min_dir)*FsltrGL2(k, n, bo, bo2, //e12.n1, e12.l1, e12.n2, e12.l2,
+                                          //e12p.n1, e12p.l1, e12p.n2, e12p.l2,
+                                          N_sz, gl_w, gl_x, gl_iw, gl_ix, kkn, Bsplines, Ssp, 
+                                          l1i_loc, l1p_loc, l2i_loc, l2p_loc)
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
@@ -542,9 +611,10 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
-            sum_k += pow(-1,min_exc)*FsltrGL2(k, n, bo, bo2, e12.n1, e12.l1, e12.n2, e12.l2,
-                                          e12p.n2, e12p.l2, e12p.n1, e12p.l1,
-                                          N_sz, gl_w, gl_x, gl_iw, gl_ix, kkn, Bsplines, Ssp, nst_prev, Cf)
+            sum_k += pow(-1,min_exc)*FsltrGL2(k, n, bo, bo2, //e12.n1, e12.l1, e12.n2, e12.l2,
+                                          // e12p.n2, e12p.l2, e12p.n1, e12p.l1,
+                                          N_sz, gl_w, gl_x, gl_iw, gl_ix, kkn, Bsplines, Ssp,
+                                          l1i_loc, l2p_loc, l2i_loc, l1p_loc)
                   *wigner_3j0(e12.l1,k,e12p.l2)*wigner_3j0(e12.l2,k,e12p.l1)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
@@ -556,6 +626,8 @@ int V12(std::string cpot, uint L_max, std::vector<uint> &N_sz) {
       } 
     }
     }
+    omp_destroy_lock(&copylock);
+    std::cout << "loop time: " << ((double)(GetTimeMs64()-st_time)/1000.0) << "s\n";
     // save upper triangular V_12
     v_dim[0] = v_sz;
     outfile_name = cpot + "V12_" + std::to_string(L) + ".h5";
