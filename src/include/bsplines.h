@@ -37,6 +37,11 @@ int SimpSplines(int n, int k,
                 std::vector<double> &knots,
                 std::vector<double> &sisplines);
 
+int LobSplines(int n, int k, 
+                std::vector<double> &gl_x,
+                std::vector<double> &knots,
+                std::vector<double> &lobsplines);
+
 int GL2Splines(int n, int k, int k2,
               std::vector<double> &gl_outer,
               std::vector<double> &gl_inner,

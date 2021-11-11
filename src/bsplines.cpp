@@ -194,6 +194,57 @@ int bsp::SimpSplines(int n, int k,
   return 0;
 }
 
+int bsp::LobSplines(int n, int k, 
+                std::vector<double> &gl_x,
+                std::vector<double> &knots,
+                std::vector<double> &lobsplines) {
+  int i1 ;
+  double dl, sl, x;
+  int len = (k+1)*(k+2)/2;
+  std::vector<double> Db(k);
+  std::vector<double> work(len);
+
+  lobsplines.reserve(n*2*k*k);
+
+  for(int i=0; i<(k-1); ++i) {
+    for(int j=0; j<2*k*k; ++j) { 
+      {lobsplines.emplace_back(0.0);} 
+    }
+  }
+
+  double xm1 = 0.0;
+  double Lob4p = 0.4472135954999579392818347e0;
+  double dlob=0.0;
+  double slob=0.0;
+  double xloba, xlobb;
+  auto ia=0;
+  auto ib=0;
+
+  for(auto i=k-1; i<n; ++i){
+    i1 = i + 1 ;
+    dl = (knots[i1] - knots[i])*0.5;
+    sl = (knots[i1] + knots[i])*0.5;
+
+    for(int p=0; p<k; ++p){
+      x = dl*gl_x[p] + sl;    //x-transformation
+      dlob = (x-xm1)*0.5*Lob4p;
+      slob = (x+xm1)*0.5;
+      xloba = -dlob + slob;
+      xlobb = dlob  + slob;
+
+      ia=i1-(knots[i]>xloba);
+      ib=i1-(knots[i]>xlobb);
+      dbspvd_(&knots[0], k, 1, xloba, ia, k, &Db[0], &work[0]);
+      lobsplines.insert(std::end(lobsplines), std::begin(Db), std::end(Db));
+
+      dbspvd_(&knots[0], k, 1, xlobb, ib, k, &Db[0], &work[0]);
+      lobsplines.insert(std::end(lobsplines), std::begin(Db), std::end(Db));
+      xm1=x;
+    }
+  }
+  return 0;
+}
+
 int bsp::GL2Splines(int n, int k, int k2,
                 std::vector<double> &gl_outer,
                 std::vector<double> &gl_inner,
