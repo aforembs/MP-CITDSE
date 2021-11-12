@@ -1,5 +1,5 @@
-#ifndef DMX_CALC_H_
-#define DMX_CALC_H_
+#ifndef DMX2E_H_
+#define DMX2E_H_
 
 #include <cmath>
 #include <vector>
@@ -10,6 +10,7 @@
 #include "H5Cpp.h"
 #include "dmx_typ.h"
 #include "wigner_sym.h"
+#include "cfg_in.h"
 
 class DMX2e {
   private:
@@ -56,8 +57,13 @@ class DMX2e {
      */
     DMX2e(std::string cpot, char gau, uint L_max, std::vector<uint> &N_max);
 
+    /* Constructor for the DMX2e class, calculates and saves the sorted L states
+     * and the 2e dmx elements for each L->L+1 transition.
+     * @param in cpot     - the type of the coulomb potential e.g. "he" for helium
+     * @param in gau      - the gauge of the system
+     * @param in inp_dir  - path of diractory containing cfg-<L>.inp files
+     */
+    DMX2e(std::string cpot, char gau, uint L_max, std::string inp_dir);
 };
 
-// int calculate_2edmx(uint L_max, uint Ni_sz, uint Nf_sz);
-
-#endif // DMX_CALC_H_
+#endif // DMX2E_H_

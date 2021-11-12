@@ -7,7 +7,7 @@ ODIR = obj
 
 VPATH := ../
 
-SRC = dmx_test.cpp dmx_calc.cpp
+SRC = dmx_test.cpp dmx2e.cpp
 SRC_SH = wigner_sym.cpp
 
 CPPFLAGS = -Wall -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR)

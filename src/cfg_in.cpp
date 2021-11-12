@@ -1,10 +1,16 @@
 #include "cfg_in.h"
 
 int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<int> &cfgs) {
-  std::ifstream cfgfile(dir + "/cfg-" + std::to_string(L) + ".inp");
+  std::string filename = dir + "/cfg-" + std::to_string(L) + ".inp"; 
+  std::ifstream cfgfile(filename);
   std::string line;
   std::vector<int> vals;
   int val;
+
+  if(!std::filesystem::exists(filename)) {
+    std::cout << "Input file: " << filename << " does not exist!\n";
+    return -1;
+  }
 
   do {
     std::getline(cfgfile, line);
@@ -30,7 +36,7 @@ int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<int> &c
       if(iss >> val)
         cfgs[i*5+j] = val;
       else {
-        --i; 
+        --i; // ignore empty lines
         break;
       }
     }
