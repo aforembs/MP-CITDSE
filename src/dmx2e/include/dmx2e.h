@@ -35,6 +35,8 @@ class DMX2e {
      */
     int sort_L(uint L_max, std::vector<uint> &N_sz);
 
+    int sort_L(uint L_max, int ncf, std::vector<int> &cfgs);
+
     /* Function for calculating the 2e dipole matrix elements.
      * First all of the required subsections of the 1e dmx's are read into a vector.
      * Then for each L, L+1 pair the indices of both L's are read from the he<L>.idx files.
