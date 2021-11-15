@@ -8,9 +8,9 @@ ODIR = obj
 VPATH := ../
 
 SRC = dmx_test.cpp dmx2e.cpp
-SRC_SH = wigner_sym.cpp
+SRC_SH = wigner_sym.cpp cfg_in.cpp
 
-CPPFLAGS = -Wall -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR)
+CPPFLAGS = -Wall -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -g
 LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))

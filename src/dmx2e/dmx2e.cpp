@@ -418,8 +418,8 @@ struct cfg_line {
 };
 
 int DMX2e::sort_L(int L_max, std::string dir) {
-  uint l1=0;
-  uint l2=0;
+  int l1=0;
+  int l2=0;
   std::string filename;
   std::string outfile_name;
   std::unique_ptr<H5::DataSet> e1, e2, ei;
@@ -461,10 +461,10 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     t_sz += max_n2-min_n2;
   }
 
-  auto max_n1_it = std::max_element(cfg_st.begin(), cfg_st.end(),
+  auto max_line = *std::max_element(cfg_st.begin(), cfg_st.end(),
         [](cfg_line const &a, cfg_line const &b) { return a.n1 < b.n1; });
 
-  auto l1_sz = *(cfg_st.begin()+max_n1_it).n1;
+  auto l1_sz = max_line.n1;
   count1[0]=l1_sz;
   dimms1[0]=l1_sz;
   memspace_l1.setExtentSimple(1, dimms1, NULL);
@@ -518,7 +518,7 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     }
 
     double ent, en1=en12[line.n1];
-    for(uint n2=line.n2min; n2<line.n2max; ++n2) {
+    for(int n2=line.n2min; n2<line.n2max; ++n2) {
       ent = en1 + en12[max_Nsz+n2];
       en_d = {ent,line.n1,l1,n2,l2};
       Li_dat.emplace_back(en_d);
@@ -580,10 +580,10 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     t_sz += max_n2-min_n2;
   }
 
-  max_n1_it = std::max_element(cfg_st.begin(), cfg_st.end(),
+  max_line = *std::max_element(cfg_st.begin(), cfg_st.end(),
         [](cfg_line const &a, cfg_line const &b) { return a.n1 < b.n1; });
 
-  l1_sz = *(cfg_st.begin()+max_n1_it).n1;
+  l1_sz = max_line.n1;
   count1[0]=l1_sz;
   dimms1[0]=l1_sz;
   memspace_l1.setExtentSimple(1, dimms1, NULL);
@@ -636,7 +636,7 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     }
 
     double ent, en1=en12[line.n1];
-    for(uint n2=line.n2min; n2<line.n2max; ++n2) {
+    for(int n2=line.n2min; n2<line.n2max; ++n2) {
       ent = en1 + en12[max_Nsz+n2];
       en_d = {ent,line.n1,l1,n2,l2};
       Lf_dat.emplace_back(en_d);
@@ -672,7 +672,7 @@ int DMX2e::sort_L(int L_max, std::string dir) {
   ei->write(&idx_data[0], H5::PredType::NATIVE_UINT32);
 
   // Loop
-  for(uint L_itr=1; L_itr<L_max; ++L_itr) {
+  for(int L_itr=1; L_itr<L_max; ++L_itr) {
     outfile_name = pot + "2_" + std::to_string(L_itr) + std::to_string(L_itr+1) + gauge + ".h5";
     outfile = std::unique_ptr<H5::H5File>(
               new H5::H5File(outfile_name, H5F_ACC_TRUNC));
@@ -703,10 +703,10 @@ int DMX2e::sort_L(int L_max, std::string dir) {
       t_sz += max_n2-min_n2;
     }
 
-    max_n1_it = std::max_element(cfg_st.begin(), cfg_st.end(),
+    max_line = *std::max_element(cfg_st.begin(), cfg_st.end(),
           [](cfg_line const &a, cfg_line const &b) { return a.n1 < b.n1; });
 
-    l1_sz = *(cfg_st.begin()+max_n1_it).n1;
+    l1_sz = max_line.n1;
     count1[0]=l1_sz;
     dimms1[0]=l1_sz;
     memspace_l1.setExtentSimple(1, dimms1, NULL);
@@ -759,7 +759,7 @@ int DMX2e::sort_L(int L_max, std::string dir) {
       }
 
       double ent, en1=en12[line.n1];
-      for(uint n2=line.n2min; n2<line.n2max; ++n2) {
+      for(int n2=line.n2min; n2<line.n2max; ++n2) {
         ent = en1 + en12[max_Nsz+n2];
         en_d = {ent,line.n1,l1,n2,l2};
         Lf_dat.emplace_back(en_d);
@@ -971,10 +971,10 @@ int DMX2e::calc_dmx(uint L_max, std::vector<uint> &N_max) {
   return 0;
 }
 
-int DMX2e::calc_dmx(uint L_max, std::string dir) {
-  uint l1i=0, l2i=0, l1f=0, l2f=0;
-  uint Li_sz=0;
-  uint Lf_sz=0;
+int DMX2e::calc_dmx(int L_max, std::string dir) {
+  int l1i=0, l2i=0, l1f=0, l2f=0;
+  int Li_sz=0;
+  int Lf_sz=0;
   double Lsq=0.0;
   std::string filename;
   std::string outfile_name;
@@ -992,7 +992,6 @@ int DMX2e::calc_dmx(uint L_max, std::string dir) {
   H5::DataSpace memspace;
 
   std::vector<uint> dmx_sz(L_max);
-  std::vector<dmx_dim> D_dim(L_max);
   std::vector<double> D_data;
   std::vector<double*> D(L_max);
   std::vector<double> T;
@@ -1007,6 +1006,8 @@ int DMX2e::calc_dmx(uint L_max, std::string dir) {
   std::vector<idx4> Lf_idx(max_Nsz*L_max);
   std::vector<idx4*> buffs(2);
 
+  std::vector<cfg_line> cfg_st;
+  cfg_line cf_l;
   cfg_st.reserve(ncf);
   int t_sz=0, min_n2, max_n2;
   for(auto i=0; i<ncf; ++i) {
@@ -1017,19 +1018,14 @@ int DMX2e::calc_dmx(uint L_max, std::string dir) {
     t_sz += max_n2-min_n2;
   }
 
-  auto max_n1_it = std::max_element(cfg_st.begin(), cfg_st.end(),
-        [](cfg_line const &a, cfg_line const &b) { return a.n1 < b.n1; });
-  auto l1_sz = *(cfg_st.begin()+max_n1_it).n1;
-
-  auto max_l2_it = std::max_element(cfg_st.begin(), cfg_st.end(),
+  auto max_line = *std::max_element(cfg_st.begin(), cfg_st.end(),
         [](cfg_line const &a, cfg_line const &b) { return a.l2 < b.l2; });
-  auto l_m = *(cfg_st.begin()+max_l2_it).l2;
+  auto l_m = max_line.l2;
 
-  count[0]=;
-  count[1]=;
-  dimms[0]=l1_sz;
-  dimms[1]=;
-  memspace_l1.setExtentSimple(1, dimms1, NULL);
+  count[0]=max_N;
+  count[1]=max_N;
+  dimms[0]=max_N;
+  dimms[1]=max_N;
 
   // Sort the energies in parallel using C++17 built in parallel sort
   std::sort(std::execution::par_unseq, cfg_st.begin(), cfg_st.end(), 
@@ -1038,15 +1034,15 @@ int DMX2e::calc_dmx(uint L_max, std::string dir) {
   std::sort(std::execution::par_unseq, cfg_st.begin(), cfg_st.end(), 
         [](cfg_line const &a, cfg_line const &b) { if(a.l1==b.l1) return a.l2 < b.l2; });
 
+  D_data.reserve(max_N*max_N*l_m);
 
+  D[0] = &D_data[0];
+  for(int i=1; i<l_m; ++i) {
+    D[i] = &D_data[max_N*max_N*i];
+  }
 
   // Read all 1e dipoles
-  for(uint i=1; i<L_max; ++i) {
-    count[0] = D_dim[i].row;
-    count[1] = D_dim[i].col;
-    dimms[0] = D_dim[i].row;
-    dimms[1] = D_dim[i].col;
-
+  for(auto i=0; i<l_m; ++i) {
     filename = pot + std::to_string(i) + std::to_string(i+1) + gauge + ".h5";
     file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
     dmx = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("d_if")));
@@ -1057,8 +1053,8 @@ int DMX2e::calc_dmx(uint L_max, std::string dir) {
   }
 
   // for loop over L's
-  uint L=0;
-  uint Lf_i=1;
+  int L=0;
+  int Lf_i=1;
 
   // read L indices
   filename = pot + std::to_string(L) + "idx.h5";
@@ -1079,19 +1075,19 @@ int DMX2e::calc_dmx(uint L_max, std::string dir) {
 
   // calculate 2e dipoles
   Lsq = 2*sqrt(Lf_i);
-  for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
+  for(int idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
     #pragma omp parallel for private(l1i,l2i,l1f,l2f)
-    for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
+    for(int idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
       l1i=Li_idx[idLi].l1;
       l2i=Li_idx[idLi].l2;
       l1f=Lf_idx[idLf].l1;
       l2f=Lf_idx[idLf].l2;
       if(l1i+1==l1f && l2i==l2f) {
         T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
-              D[l1i][Li_idx[idLi].n1+D_dim[l1i].col*Lf_idx[idLf].n1]/sqrt(l1f);
+              D[l1i][Li_idx[idLi].n1+max_N*Lf_idx[idLf].n1]/sqrt(l1f);
       } else if(l2i+1==l2f && l1i==l1f) {
         T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
-              D[l2i][Li_idx[idLi].n2+D_dim[l2i].col*Lf_idx[idLf].n2]/sqrt(l2f);
+              D[l2i][Li_idx[idLi].n2+max_N*Lf_idx[idLf].n2]/sqrt(l2f);
       } else {T[idLi+Li_sz*idLf]=0.0;}
     }
   }
@@ -1131,19 +1127,19 @@ int DMX2e::calc_dmx(uint L_max, std::string dir) {
 
     // calculate 2e dipoles
     Lsq = 2*sqrt(Lf_i);
-    for(uint idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
+    for(int idLf=0; idLf<Lf_sz; ++idLf) { // up to sz Lf
       #pragma omp parallel for private(l1i,l2i,l1f,l2f)
-      for(uint idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
+      for(int idLi=0; idLi<Li_sz; ++idLi) { // up to sz Li
         l1i=buffs.at(buf_Li)[idLi].l1;
         l2i=buffs.at(buf_Li)[idLi].l2;
         l1f=buffs.at(buf_Lf)[idLf].l1;
         l2f=buffs.at(buf_Lf)[idLf].l2;
         if(l1i+1==l1f && l2i==l2f) {
           T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
-              D[l1i][buffs.at(buf_Li)[idLi].n1+D_dim[l1i].col*buffs.at(buf_Lf)[idLf].n1]/sqrt(l1f);
+              D[l1i][buffs.at(buf_Li)[idLi].n1+max_N*buffs.at(buf_Lf)[idLf].n1]/sqrt(l1f);
         } else if(l2i+1==l2f && l1i==l1f) {
           T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
-              D[l2i][buffs.at(buf_Li)[idLi].n2+D_dim[l2i].col*buffs.at(buf_Lf)[idLf].n2]/sqrt(l2f);
+              D[l2i][buffs.at(buf_Li)[idLi].n2+max_N*buffs.at(buf_Lf)[idLf].n2]/sqrt(l2f);
         } else {T[idLi+Li_sz*idLf]=0.0;}
       }
     }
@@ -1180,5 +1176,5 @@ DMX2e::DMX2e(std::string cpot, char gau, uint L_max, std::string inp_dir) {
 
   sort_L(L_max, inp_dir);
 
-  // calc_dmx(L_max, N_max);
+  calc_dmx(L_max, inp_dir);
 }

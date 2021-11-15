@@ -35,7 +35,7 @@ class DMX2e {
      */
     int sort_L(uint L_max, std::vector<uint> &N_sz);
 
-    int sort_L(uint L_max, int ncf, std::vector<int> &cfgs);
+    int sort_L(int L_max, std::string dir);
 
     /* Function for calculating the 2e dipole matrix elements.
      * First all of the required subsections of the 1e dmx's are read into a vector.
@@ -47,6 +47,8 @@ class DMX2e {
      *                   equal L_max+1
      */
     int calc_dmx(uint L_max, std::vector<uint> &N_max);
+
+    int calc_dmx(int L_max, std::string dir);
 
   public:
     /* Constructor for the DMX2e class, calculates and saves the sorted L states
