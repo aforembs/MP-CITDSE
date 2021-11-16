@@ -1,6 +1,6 @@
 #include "cfg_in.h"
 
-int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<int> &cfgs) {
+int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<cfg::line> &cfgs) {
   std::string filename = dir + "/cfg-" + std::to_string(L) + ".inp"; 
   std::ifstream cfgfile(filename);
   std::string line;
@@ -27,18 +27,25 @@ int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<int> &c
   std::istringstream iss(line);
   iss >> ncf;
 
-  cfgs.reserve(ncf*5);
+  cfg::line cf_l;
+  cfgs.reserve(ncf);
 
   for(auto i=0; i<ncf; ++i) {
     std::getline(cfgfile, line);
     std::istringstream iss(line);
-    for(auto j=0; j<5; ++j) { // read n1, l1, l2, n2_min, n2_max
-      if(iss >> val)
-        cfgs[i*5+j] = val;
-      else {
-        --i; // ignore empty lines
-        break;
-      }
+    if(iss >> val) {
+      cf_l.n1 = val-1; // -1 for C indexing
+      iss >> val;
+      cf_l.l1 = val;
+      iss >> val;
+      cf_l.l2 = val;
+      iss >> val;
+      cf_l.n2min = val-1;
+      iss >> val;
+      cf_l.n2max = val;
+      cfgs.emplace_back(cf_l);
+    } else {
+      --i; // ignore empty lines
     }
   }
   return 0;

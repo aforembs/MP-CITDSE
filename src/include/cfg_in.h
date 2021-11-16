@@ -10,7 +10,15 @@
 #include <filesystem>
 
 namespace cfg {
-  int ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<int> &cfgs);
+  struct line {
+    int n1;
+    int l1;
+    int l2;
+    int n2min;
+    int n2max;
+  };
+
+  int ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<line> &cfgs);
 }
 
 #endif // CFG_IN_H_

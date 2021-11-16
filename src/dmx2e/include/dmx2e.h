@@ -23,7 +23,7 @@ class DMX2e {
      * @param in L       - The 2e total orbital angular momentum L
      * @param in l1e_max - The maximum 1e angular momentum l1 and l2
      */ 
-    en_L make_enL(uint L, uint l1e_max);
+    en_L make_enL(int L, int l1e_max);
 
     /* Function for sorting the n1,l1+n2,l2 LN states by ascending energies
      * these sorted energies are stored in the he2_<L><L+1>v.h5 files.
@@ -33,7 +33,7 @@ class DMX2e {
      *                   1e angular momentum l1 or l2. The number of elements must 
      *                   equal L_max+1
      */
-    int sort_L(uint L_max, std::vector<uint> &N_sz);
+    int sort_L(int L_max, std::vector<int> &N_sz);
 
     int sort_L(int L_max, std::string dir);
 
@@ -46,7 +46,7 @@ class DMX2e {
      *                   1e angular momentum l1 or l2. The number of elements must 
      *                   equal L_max+1
      */
-    int calc_dmx(uint L_max, std::vector<uint> &N_max);
+    int calc_dmx(int L_max, std::vector<int> &N_max);
 
     int calc_dmx(int L_max, std::string dir);
 
@@ -59,7 +59,7 @@ class DMX2e {
      *                   1e angular momentum l1 or l2. The number of elements must 
      *                   equal L_max+1
      */
-    DMX2e(std::string cpot, char gau, uint L_max, std::vector<uint> &N_max);
+    DMX2e(std::string cpot, char gau, int L_max, std::vector<int> &N_max);
 
     /* Constructor for the DMX2e class, calculates and saves the sorted L states
      * and the 2e dmx elements for each L->L+1 transition.
@@ -67,7 +67,7 @@ class DMX2e {
      * @param in gau      - the gauge of the system
      * @param in inp_dir  - path of diractory containing cfg-<L>.inp files
      */
-    DMX2e(std::string cpot, char gau, uint L_max, std::string inp_dir);
+    DMX2e(std::string cpot, char gau, int L_max, std::string inp_dir);
 };
 
 #endif // DMX2E_H_
