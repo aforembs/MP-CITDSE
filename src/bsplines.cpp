@@ -194,6 +194,46 @@ int bsp::SimpSplines(int n, int k,
   return 0;
 }
 
+int bsp::Lob3Splines(int n, int k, 
+                std::vector<double> &gl_x,
+                std::vector<double> &knots,
+                std::vector<double> &lsplines) {
+  int i1 ;
+  double dl, sl, x;
+  int len = (k+1)*(k+2)/2;
+  std::vector<double> Db(k);
+  std::vector<double> work(len);
+
+  lsplines.reserve(n*k*k);
+
+  for(int i=0; i<(k-1); ++i) {
+    for(int j=0; j<k*k; ++j) { 
+      {lsplines.emplace_back(0.0);} 
+    }
+  }
+
+  double xm1 = 0.0;
+  double xlm;
+  auto ia=0;
+
+  for(auto i=k-1; i<n; ++i){
+    i1 = i + 1 ;
+    dl = knots[i1] - knots[i];
+    sl = knots[i1] + knots[i];
+
+    for(int p=0; p<k; ++p){
+      x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
+      xlm = (xm1+x)*0.5;
+
+      ia=i1-(knots[i]>xlm);
+      dbspvd_(&knots[0], k, 1, xlm, ia, k, &Db[0], &work[0]);
+      lsplines.insert(std::end(lsplines), std::begin(Db), std::end(Db));
+      xm1=x;
+    }
+  }
+  return 0;
+}
+
 int bsp::LobSplines(int n, int k, 
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,

@@ -504,7 +504,7 @@ int DMX2e::sort_L(int L_max, std::string dir) {
       e_space.selectHyperslab(H5S_SELECT_SET, count2, offset, stride, block);
       e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l2, e_space);
     }
-    std::cout << line.n1 << "\n";
+
     double ent, en1=en12[line.n1];
     for(int n2=line.n2min; n2<line.n2max; ++n2) {
       ent = en1 + en12[max_Nsz+n2];
@@ -548,6 +548,7 @@ int DMX2e::sort_L(int L_max, std::string dir) {
 
   idx_data.clear();
   Li_dat.clear();
+  cfgs.clear();
 
   // L final sort & save
   cfg::ReadCfg(dir, 1, sym, ncf, cfgs);
@@ -671,6 +672,7 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     en_srtd.clear();
     idx_data.clear();
     Lf_dat.clear();
+    cfgs.clear();
 
     cfg::ReadCfg(dir, L_itr, sym, ncf, cfgs);
 

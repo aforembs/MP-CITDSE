@@ -8,7 +8,7 @@ ODIR = obj
 VPATH := ../
 
 SRC = V12_test.cpp V_12.cpp 
-SRC_SH = wigner_sym.cpp fastgl.cpp bsplines.cpp
+SRC_SH = wigner_sym.cpp fastgl.cpp bsplines.cpp cfg_in.cpp
 
 CPPFLAGS = -Wall -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -g
 LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -fopenmp -L../ -lslatec -lgfortran -g

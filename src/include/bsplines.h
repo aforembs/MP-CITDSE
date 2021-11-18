@@ -37,6 +37,11 @@ int SimpSplines(int n, int k,
                 std::vector<double> &knots,
                 std::vector<double> &sisplines);
 
+int Lob3Splines(int n, int k, 
+                std::vector<double> &gl_x,
+                std::vector<double> &knots,
+                std::vector<double> &lsplines);
+
 int LobSplines(int n, int k, 
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,
