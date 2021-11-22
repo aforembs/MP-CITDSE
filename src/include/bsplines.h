@@ -53,6 +53,10 @@ int GL2Splines(int n, int k, int k2,
               std::vector<double> &knots,
               std::vector<double> &glsplines);
 
+int TrapSplines(int n, int k, int pt,
+                std::vector<double> &knots,
+                std::vector<double> &splines);
+
 int SplinesP(int n, int k, 
               std::vector<double> &gl_x,
               std::vector<double> &knots,

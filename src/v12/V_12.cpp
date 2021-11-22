@@ -670,7 +670,7 @@ double FsltrTrapGL(int k, int n, int bo,
   return Fk;
 }
 
-double FsltrTrap(int k, int n, int bo,
+double FsltrTrap(int k, int n, int bo, int pt,
             std::vector<double> &kkn,
             std::vector<double> &Bsp,
             std::vector<double> &Cl1i_pt,
@@ -679,47 +679,56 @@ double FsltrTrap(int k, int n, int bo,
             std::vector<double> &Cl2p_pt) {
   int kp1=k+1;
   double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
-  double dl, sl, loc_GL, r2, r1, pr2, chi;
+  double a, b, step, loc_GL, r2, r1, pr2, chi;
+  double dltr;
 
   // first calculate Qk for all of 0->R
   double Qk=0.0;
   double Jk=0;
   double Fk=0;
+  double rm1=0.0;
+  double fm1j=0.0, fm1q=0.0;
+  double pr1k, pr1km;
 
   for(auto i=bo-1; i<n; ++i) {
-    dl = (kkn[i+1] - kkn[i])*0.5;
-    sl = (kkn[i+1] + kkn[i])*0.5;
+    b = kkn[i+1];
+    a = kkn[i];
+    step = (b-a)/(double)pt;
     loc_GL=0.0;
 
-    for(auto p=0; p<bo; ++p){
-      r2 = dl*gl_x[p] + sl;
+    for(auto p=1; p<=pt; ++p){
+      r2 = a + p*step;
+      dltr = (r2-rm1)*0.5;
       Pl2i = 0; Pl2p = 0;
 
       for(auto j=0; j<bo; ++j) {
         Pl2i += Cl2i_pt[i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
         Pl2p += Cl2p_pt[i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
       }
-      loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
+      pr1km=pow(r2,-kp1);
+      loc_GL+=dltr*(fm1q + pr1km*Pl2i*Pl2p);
+      rm1=r2;
+      fm1q=pr1km*Pl2i*Pl2p;
     }
-    Qk+=dl*loc_GL;
+    Qk+=loc_GL;
   }
 
   // std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
   // +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
 
-  double rm1=0.0;
-  double dltr;
-  double fm1j=0.0, fm1q=0.0;
-  double pr1k, pr1km;
+  rm1=0.0;
+  
+  fm1j=0.0, fm1q=0.0;
   auto ibo1j=0, jbopi=0;
 
   for(auto i=bo-1; i<n; ++i) {
-    dl = (kkn[i+1] - kkn[i])*0.5;
-    sl = (kkn[i+1] + kkn[i])*0.5;
+    b = kkn[i+1];
+    a = kkn[i];
+    step = (b-a)/(double)pt;
     loc_GL=0.0;
 
-    for(auto p=0; p<bo; ++p){
-      r1 = dl*gl_x[p] + sl;
+    for(auto p=1; p<=pt; ++p){
+      r1 = a + p*step;
       dltr=(r1-rm1)*0.5;
       Pl1i = 0; Pl1p = 0;
       Pl2i = 0; Pl2p = 0;
@@ -744,13 +753,13 @@ double FsltrTrap(int k, int n, int bo,
       // outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<< "\n";
 
       // Glq outer
-      loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
+      loc_GL += Pl1i*Pl1p*chi;
 
       rm1=r1;
       fm1j=pr1k*pr2;
       fm1q=pr1km*pr2;
     }
-    Fk+=dl*loc_GL;
+    Fk+=loc_GL;
   }
 
   return Fk;
@@ -914,7 +923,7 @@ int V12(std::string cpot, int L_max, std::vector<uint> &N_sz) {
     gl_w[bo-i] = gl_i.weight;
   }
 
-  int bo2=4; // 4 inner 13 outer gives epsilon for linear
+  int bo2=3; // 4 inner 13 outer gives epsilon for linear
   std::vector<double> gl_ix(bo2);
   std::vector<double> gl_iw(bo2);
   for(int i=1; i<=bo2; ++i) {
@@ -1128,32 +1137,32 @@ int V12(std::string cpot, int L_max, std::string dir) {
   }
 
   // generate GL nodes and weights over B-splines support
-  std::vector<double> gl_x(bo);
-  std::vector<double> gl_w(bo);
-  fastgl::QuadPair gl_i;
-  for(int i=1; i<=bo; ++i) {
-    gl_i = fastgl::GLPair(bo, i);
-    gl_x[bo-i] = gl_i.x(); 
-    gl_w[bo-i] = gl_i.weight;
-  }
+  // std::vector<double> gl_x(bo);
+  // std::vector<double> gl_w(bo);
+  // fastgl::QuadPair gl_i;
+  // for(int i=1; i<=bo; ++i) {
+  //   gl_i = fastgl::GLPair(bo, i);
+  //   gl_x[bo-i] = gl_i.x(); 
+  //   gl_w[bo-i] = gl_i.weight;
+  // }
 
-  int bo2=4; // 4 inner 13 outer gives epsilon for linear
-  std::vector<double> gl_ix(bo2);
-  std::vector<double> gl_iw(bo2);
-  for(int i=1; i<=bo2; ++i) {
-    gl_i = fastgl::GLPair(bo2, i);
-    gl_ix[bo2-i] = gl_i.x(); 
-    gl_iw[bo2-i] = gl_i.weight;
-  }
+  int bo2=9; // 4 inner 13 outer gives epsilon for linear
+  // std::vector<double> gl_ix(bo2);
+  // std::vector<double> gl_iw(bo2);
+  // for(int i=1; i<=bo2; ++i) {
+  //   gl_i = fastgl::GLPair(bo2, i);
+  //   gl_ix[bo2-i] = gl_i.x(); 
+  //   gl_iw[bo2-i] = gl_i.weight;
+  // }
 
   // generate B-splines
   std::vector<double> Bsplines;
-  bsp::Splines(n, bo, gl_x, kkn, Bsplines);
+  bsp::TrapSplines(n, bo, bo2, kkn, Bsplines);
 
   std::vector<double> Ssp;
   // bsp::SimpSplines(n, bo, gl_x, kkn, Ssp);
   // bsp::GL2Splines(n, bo, bo2, gl_x, gl_ix, kkn, Ssp);
-  bsp::Lob3Splines(n, bo, gl_x, kkn, Ssp);
+  // bsp::Lob3Splines(n, bo, gl_x, kkn, Ssp);
 
   std::vector<double> l1p_loc(n), l2p_loc(n);
 
@@ -1179,8 +1188,8 @@ int V12(std::string cpot, int L_max, std::string dir) {
     v_mat.reserve(v_sz);
 
     uint64_t st_time = GetTimeMs64();    
-    #pragma omp parallel private(e12p)
-    {
+    // #pragma omp parallel private(e12p)
+    // {
     for(int NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
       e12p = L_idx[NL2];
@@ -1191,7 +1200,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
       std::copy_n(Cf.begin()+offset[e12p.l2]+e12p.n2*n, n, l2p_loc.begin());
       }
       //omp_unset_lock(&copylock);
-      #pragma omp for private(e12,Y_norm,sum_k,min_dir,min_exc)
+      // #pragma omp for private(e12,Y_norm,sum_k,min_dir,min_exc)
       for(int NL1=NL2; NL1<L_sz; ++NL1) {
         //set n1l1;n2l2
         e12 = L_idx[NL1];
@@ -1213,9 +1222,9 @@ int V12(std::string cpot, int L_max, std::string dir) {
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
-            sum_k += pow(-1,min_dir)*FsltrTrapGL(k, n, bo, //e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_dir)*FsltrTrap(k, n, bo, //e12.n1, e12.l1, e12.n2, e12.l2,
                                           //e12p.n1, e12p.l1, e12p.n2, e12p.l2,
-                                          gl_w, gl_x, kkn, Bsplines, //Ssp, 
+                                          bo2, kkn, Bsplines, //Ssp, 
                                           l1i_loc, l1p_loc, l2i_loc, l2p_loc)
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
@@ -1228,9 +1237,9 @@ int V12(std::string cpot, int L_max, std::string dir) {
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
-            sum_k += pow(-1,min_exc)*FsltrTrapGL(k, n, bo, //e12.n1, e12.l1, e12.n2, e12.l2,
+            sum_k += pow(-1,min_exc)*FsltrTrap(k, n, bo, //e12.n1, e12.l1, e12.n2, e12.l2,
                                           // e12p.n2, e12p.l2, e12p.n1, e12p.l1,
-                                          gl_w, gl_x, kkn, Bsplines, //Ssp,
+                                          bo2, kkn, Bsplines, //Ssp,
                                           l1i_loc, l2p_loc, l2i_loc, l1p_loc)
                   *wigner_3j0(e12.l1,k,e12p.l2)*wigner_3j0(e12.l2,k,e12p.l1)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
@@ -1245,7 +1254,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
         v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
       }
     }
-    }
+    // }
     omp_destroy_lock(&copylock);
     std::cout << "loop time: " << ((double)(GetTimeMs64()-st_time)/1000.0) << "s\n";
     // save upper triangular V_12

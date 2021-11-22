@@ -329,6 +329,42 @@ int bsp::GL2Splines(int n, int k, int k2,
   return 0;
 }
 
+int bsp::TrapSplines(int n, int k, int pt,
+                std::vector<double> &knots,
+                std::vector<double> &splines) {
+  int i1 ;
+  double a, ia, b, x;
+  double step=0.0;
+  int len = (k+1)*(k+2)/2;
+  std::vector<double> Db(k);
+  std::vector<double> work(len);
+
+  splines.reserve(n*pt*k);
+
+  for(auto i=0; i<(k-1); ++i) {
+    for(auto j=0; j<pt*k; ++j) { 
+      {splines.emplace_back(0.0);} 
+    }
+  }
+
+  for(auto i=k-1; i<n; ++i){
+    i1 = i + 1 ;
+    b = knots[i1];
+    a = knots[i];
+    step = (b-a)/(double)pt;
+
+    for(auto p=1; p<=pt; ++p){
+      x = a + p*step;    //x-transformation
+      
+      // ia=i1-(knots[i1]<x);
+      dbspvd_(&knots[0], k, 1, x, i1, k, &Db[0], &work[0]);
+
+      splines.insert(std::end(splines), std::begin(Db), std::end(Db));
+    }
+  }
+  return 0;
+}
+
 int bsp::SplinesP(int n, int k, 
                   std::vector<double> &gl_x,
                   std::vector<double> &knots,
