@@ -253,7 +253,7 @@ int bsp::LobSplines(int n, int k,
   }
 
   double xm1 = 0.0;
-  double Lob4p = 0.4472135954999579392818347e0;
+  constexpr double Lob4p = 0.4472135954999579392818347e0;
   double dlob=0.0;
   double slob=0.0;
   double xloba, xlobb;
@@ -333,7 +333,7 @@ int bsp::TrapSplines(int n, int k, int pt,
                 std::vector<double> &knots,
                 std::vector<double> &splines) {
   int i1 ;
-  double a, ia, b, x;
+  double a, b, x;
   double step=0.0;
   int len = (k+1)*(k+2)/2;
   std::vector<double> Db(k);
