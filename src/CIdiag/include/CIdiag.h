@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <memory>
+#include <iostream>
 #include <lapacke.h>
 #include "H5Cpp.h"
 
