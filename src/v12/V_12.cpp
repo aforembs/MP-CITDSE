@@ -596,16 +596,15 @@ double FsltrLob3GL(int k, int n, int bo,
             std::vector<double> &Cl1i_pt,
             // std::vector<double> &Cl1p_pt,
             std::vector<double> &Cl2i_pt,
-            std::vector<double> &Cl2p_pt,
+            // std::vector<double> &Cl2p_pt,
             std::vector<double> &p1p_buff,
             std::vector<double> &p2p_buff,
             std::vector<double> &p2p_mid,
-            std::vector<double> &p2is,
-            std::vector<double> &p2ps) {
+            std::vector<double> &p2is) {
   int kp1=k+1;
   int i1;
-  double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
-  double Pl2ira=0, Pl2pra=0;
+  double Pl1i=0, Pl2i=0;
+  double Pl2ira=0;
   double dl, sl, loc_GL, r1, pr2, pr2a, chi;
 
   // first calculate Qk for all of 0->R
@@ -622,10 +621,10 @@ double FsltrLob3GL(int k, int n, int bo,
     loc_GL=0.0;
 
     for(auto p=0; p<bo; ++p){
-      Pl2i = 0; Pl2p = 0;
+      Pl2i = 0;
       for(auto j=0; j<bo; ++j) {
         Pl2i += Cl2i_pt[i1-bo+j]*Bsp[j+bo*(p+i*bo)];
-        Pl2p += Cl2p_pt[i1-bo+j]*Bsp[j+bo*(p+i*bo)];
+        // Pl2p += Cl2p_pt[i1-bo+j]*Bsp[j+bo*(p+i*bo)];
       }
       p2is[(i1-bo)*bo+p]=Pl2i;
       // p2ps[(i1-bo)*bo+p]=Pl2p;
@@ -654,9 +653,9 @@ double FsltrLob3GL(int k, int n, int bo,
       r1 = dl*gl_x[p] + sl;
       rlob = (r1+rm1)*0.5;
       dlob = (r1-rm1)*0.5;
-      Pl1i = 0; Pl1p = 0;
+      Pl1i = 0;
       // Pl2i = 0; Pl2p = 0;
-      Pl2ira=0; Pl2pra=0; 
+      Pl2ira=0;
 
       for(auto j=0; j<bo; ++j) {
         ibo1j = i1-bo+j;
@@ -946,6 +945,139 @@ double Fsltr_alt(int k, int n, int bo,
   }
 
   return Fk;
+}
+
+int Rpowk(std::vector<double> &r_out, std::vector<double> &r_in, int n, int bo,
+       std::vector<double> &gl_x, std::vector<double> &kkn, int k_max) {
+  r_out.reserve((k_max+1)*n*bo);
+  r_in.reserve((k_max+1)*n*bo);
+  auto km1=0;
+
+  double rm1 = 0.0;
+  auto nbo=n*bo;
+  double rlm, dl, sl, ri;
+  auto ibo1bo=0;
+  for(auto i=bo-1; i<n; ++i) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    ibo1bo = (i-bo+1)*bo;
+
+    for(auto p=0; p<bo; ++p){
+      ri = dl*gl_x[p] + sl;
+      rlm = (rm1+ri)*0.5;
+      r_out[p+ibo1bo+nbo] = ri;
+      r_out[p+ibo1bo] = 1.0;
+      r_in[p+ibo1bo+nbo] = rlm;
+      r_in[p+ibo1bo] = 1.0;
+      rm1=ri;
+    }
+  }
+
+  for(auto k=2; k<=k_max; ++k) {
+    km1=k-1;
+    rm1 = 0.0;
+    for(auto i=bo-1; i<n; ++i) {
+      dl = (kkn[i+1] - kkn[i])*0.5;
+      sl = (kkn[i+1] + kkn[i])*0.5;
+      ibo1bo = (i-bo+1)*bo;
+
+      for(auto p=0; p<bo; ++p){
+        ri = dl*gl_x[p] + sl;
+        rlm = (rm1+ri)*0.5;
+        r_out[p+ibo1bo+k*nbo] = ri*r_out[p+ibo1bo+km1*nbo];
+        r_in[p+ibo1bo+k*nbo] = rlm*r_in[p+ibo1bo+km1*nbo];
+        rm1=ri;
+      }
+    }
+  }
+
+  return 0;
+}
+
+int Rpowk(std::vector<double> &r_out, std::vector<double> &r_in, int n, int bo,
+       std::vector<double> &gl_xo, std::vector<double> &gl_xi,
+       std::vector<double> &kkn, int k_max) {
+  r_out.reserve((k_max+1)*n*bo);
+  r_in.reserve((k_max+1)*n*bo);
+  auto km1=0;
+
+  double rm1 = 0.0;
+  auto nbo=n*bo;
+  double rlm, dl, sl, ri;
+  auto ibo1bo=0;
+  for(auto i=bo-1; i<n; ++i) {
+    dl = (kkn[i+1] - kkn[i])*0.5;
+    sl = (kkn[i+1] + kkn[i])*0.5;
+    ibo1bo = (i-bo+1)*bo;
+
+    for(auto p=0; p<bo; ++p){
+      ri = dl*gl_xo[p] + sl;
+      rlm = (rm1+ri)*0.5;
+      r_out[p+ibo1bo+nbo] = ri;
+      r_out[p+ibo1bo] = 1.0;
+      r_in[p+ibo1bo+nbo] = rlm;
+      r_in[p+ibo1bo] = 1.0;
+      rm1=ri;
+    }
+  }
+
+  for(auto k=2; k<=k_max; ++k) {
+    km1=k-1;
+    rm1 = 0.0;
+    for(auto i=bo-1; i<n; ++i) {
+      dl = (kkn[i+1] - kkn[i])*0.5;
+      sl = (kkn[i+1] + kkn[i])*0.5;
+      ibo1bo = (i-bo+1)*bo;
+
+      for(auto p=0; p<bo; ++p){
+        ri = dl*gl_xo[p] + sl;
+        rlm = (rm1+ri)*0.5;
+        r_out[p+ibo1bo+k*nbo] = ri*r_out[p+ibo1bo+km1*nbo];
+        r_in[p+ibo1bo+k*nbo] = rlm*r_in[p+ibo1bo+km1*nbo];
+        rm1=ri;
+      }
+    }
+  }
+
+  return 0;
+}
+
+int Prprim(int n, int bo, std::vector<double> &kkn,
+           std::vector<double> &gl_x,
+           std::vector<double> &Bsp, std::vector<double> &Ssp, 
+           std::vector<double> &l1p_loc, std::vector<double> &l2p_loc, 
+           std::vector<double> &p1p_out, std::vector<double> &p2p_out,
+           std::vector<double> &p1p_in, std::vector<double> &p2p_in) {
+      double rm1 = 0.0, r=0.0;
+      double dl, sl;
+      for(auto i=bo-1; i<n; ++i) {
+        auto i1=i+1;
+        dl = (kkn[i1] - kkn[i])*0.5;
+        sl = (kkn[i1] + kkn[i])*0.5;
+
+        for(auto p=0; p<bo; ++p){
+          double Pl1p = 0, Pl2p = 0, Pl2pm=0, Pl1pm=0;
+          r=dl*gl_x[p] + sl;
+          double rlob = (rm1+r)*0.5;
+
+          for(auto j=0; j<bo; ++j) {
+            auto ibo1j=i1-bo+j;
+            Pl1p += l1p_loc[ibo1j]*Bsp[j+bo*(p+i*bo)];
+            Pl2p += l2p_loc[ibo1j]*Bsp[j+bo*(p+i*bo)];
+
+            auto ai=ibo1j-(kkn[i]>rlob);
+            Pl1pm += l1p_loc[ai]*Ssp[j+bo*(p+i*bo)];
+            Pl2pm += l2p_loc[ai]*Ssp[j+bo*(p+i*bo)];
+          }
+          p1p_out[(i1-bo)*bo+p]=Pl1p;
+          p2p_out[(i1-bo)*bo+p]=Pl1p;
+          p1p_in[(i1-bo)*bo+p] =Pl1pm;
+          p2p_in[(i1-bo)*bo+p] =Pl2pm;
+          rm1=r;
+        }
+      }
+
+  return 0;
 }
 
 int V12(std::string cpot, int L_max, std::vector<uint> &N_sz) {
@@ -1453,20 +1585,22 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
   auto k_max = l1_m+l2_m;
 
   // reserve space for coefficients
-  Cf.reserve(max_N*n*std::max(l1_m,l2_m));
+  auto e1_lm = std::max(l1_m,l2_m);
+  Cf.reserve(max_N*n*(e1_lm+1));
   C[0]=&Cf[0];
   int nt=0;
   std::vector<int> nst_prev(L_max+1);
   nst_prev[0] = nt;
-  for(int i=1; i<=L_max; ++i) {
+  // This could be wrong !!!
+  for(int i=1; i<=e1_lm; ++i) {
     nt += max_N;
     nst_prev[i] = nt*n;
     C[i] = &Cf[nt*n];
   }
 
   // read coefficients for all l
-  for(int l=0; l<=L_max; ++l) {
-    count[0] = max_N; 
+  for(int l=0; l<=e1_lm; ++l) {
+    count[0] = max_N;
     count[1] = n;
     dimms[0] = count[0]; 
     dimms[1] = count[1];
@@ -1490,6 +1624,8 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
     gl_w[bo-i] = gl_i.weight;
   }
 
+  // Try to see if this is better!!!
+
   // int bo2=4; // 4 inner 13 outer gives epsilon for linear
   // std::vector<double> gl_ix(bo2);
   // std::vector<double> gl_iw(bo2);
@@ -1508,48 +1644,9 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
   // bsp::GL2Splines(n, bo, bo2, gl_x, gl_ix, kkn, Ssp);
   bsp::Lob3Splines(n, bo, gl_x, kkn, Ssp);
 
+  // Precalculate r^k
   std::vector<double> rk, rk_mid;
-  rk.reserve((k_max+1)*n*bo);
-  rk_mid.reserve((k_max+1)*n*bo);
-  auto km1=0;
-
-  double rm1 = 0.0;
-  auto nbo=n*bo;
-  double rlm, dl, sl, ri;
-  auto ibo1bo=0;
-  for(auto i=bo-1; i<n; ++i) {
-    dl = (kkn[i+1] - kkn[i])*0.5;
-    sl = (kkn[i+1] + kkn[i])*0.5;
-    ibo1bo = (i-bo+1)*bo;
-
-    for(auto p=0; p<bo; ++p){
-      ri = dl*gl_x[p] + sl;
-      rlm = (rm1+ri)*0.5;
-      rk[p+ibo1bo+nbo] = ri;
-      rk[p+ibo1bo] = 1.0;
-      rk_mid[p+ibo1bo+nbo] = rlm;
-      rk_mid[p+ibo1bo] = 1.0;
-      rm1=ri;
-    }
-  }
-
-  for(auto k=2; k<=k_max; ++k) {
-    km1=k-1;
-    rm1 = 0.0;
-    for(auto i=bo-1; i<n; ++i) {
-      dl = (kkn[i+1] - kkn[i])*0.5;
-      sl = (kkn[i+1] + kkn[i])*0.5;
-      ibo1bo = (i-bo+1)*bo;
-
-      for(auto p=0; p<bo; ++p){
-        ri = dl*gl_x[p] + sl;
-        rlm = (rm1+ri)*0.5;
-        rk[p+ibo1bo+k*nbo] = ri*rk[p+ibo1bo+km1*nbo];
-        rk_mid[p+ibo1bo+k*nbo] = rlm*rk_mid[p+ibo1bo+km1*nbo];
-        rm1=ri;
-      }
-    }
-  }
+  Rpowk(rk, rk_mid, n, bo, gl_x, kkn, k_max);
 
   std::vector<double> l1p_loc(n), l2p_loc(n);
   std::vector<double> p1p_buff(bo*n), p2p_buff(bo*n), p2p_mid(bo*n), p1p_mid(bo*n);
@@ -1572,7 +1669,7 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
     file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
     L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
     L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
-    L_idx.resize(L_sz);
+    L_idx.reserve(L_sz);
     L_set->read(&L_idx[0], H5::PredType::NATIVE_UINT32);
 
     std::cout << "L: " << L <<" L_sz: "<< L_sz << "\n";
@@ -1594,34 +1691,8 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
       std::copy_n(Cf.begin()+offset[e12p.l2]+e12p.n2*n, n, l2p_loc.begin());
       
       // calculate P1' P2' here and pass it to sltr
-      
-      double rm1 = 0.0, r=0.0;
-      for(auto i=bo-1; i<n; ++i) {
-        auto i1=i+1;
-        dl = (kkn[i1] - kkn[i])*0.5;
-        sl = (kkn[i1] + kkn[i])*0.5;
-
-        for(auto p=0; p<bo; ++p){
-          double Pl1p = 0, Pl2p = 0, Pl2pm=0, Pl1pm=0;
-          r=dl* gl_x[p] + sl;
-          double rlob = (rm1+r)*0.5;
-
-          for(auto j=0; j<bo; ++j) {
-            auto ibo1j=i1-bo+j;
-            Pl1p += l1p_loc[ibo1j]*Bsplines[j+bo*(p+i*bo)];
-            Pl2p += l2p_loc[ibo1j]*Bsplines[j+bo*(p+i*bo)];
-
-            auto ai=ibo1j-(kkn[i]>rlob);
-            Pl1pm += l1p_loc[ai]*Ssp[j+bo*(p+i*bo)];
-            Pl2pm += l2p_loc[ai]*Ssp[j+bo*(p+i*bo)];
-          }
-          p1p_buff[(i1-bo)*bo+p]=Pl1p;
-          p2p_buff[(i1-bo)*bo+p]=Pl1p;
-          p1p_mid[(i1-bo)*bo+p] =Pl1pm;
-          p2p_mid[(i1-bo)*bo+p] =Pl2pm;
-          rm1=r;
-        }
-      }
+      Prprim(n, bo, kkn, gl_x, Bsplines, Ssp, l1p_loc, l2p_loc,
+          p1p_buff, p2p_buff, p1p_mid, p2p_mid);
       }
 
       //omp_unset_lock(&copylock);
@@ -1652,11 +1723,9 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
             int sign = 1;
             sign |= (min_dir << 31); 
-            sum_k += sign*FsltrLob3GL(k, n, bo, //e12.n1, e12.l1, e12.n2, e12.l2,
-                                          //e12p.n1, e12p.l1, e12p.n2, e12p.l2,
-                                          gl_w, gl_x, kkn, Bsplines, Ssp, rk, rk_mid,
-                                          l1i_loc, l2i_loc, l2p_loc, 
-                                          p1p_buff, p2p_buff, p2p_mid, pi, pp)
+            sum_k += sign*FsltrLob3GL(k, n, bo, 
+                                      gl_w, gl_x, kkn, Bsplines, Ssp, rk, rk_mid,
+                                      l1i_loc, l2i_loc, p1p_buff, p2p_buff, p2p_mid, pi)
                   *wigner_3j0(e12.l1,k,e12p.l1)*wigner_3j0(e12.l2,k,e12p.l2)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
           }
@@ -1669,17 +1738,19 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
             int sign = 1;
             sign |= (min_exc << 31);
-            sum_k += sign*FsltrLob3GL(k, n, bo, //e12.n1, e12.l1, e12.n2, e12.l2,
-                                          // e12p.n2, e12p.l2, e12p.n1, e12p.l1,
-                                          gl_w, gl_x, kkn, Bsplines, Ssp, rk, rk_mid,
-                                          l1i_loc, l2i_loc, l1p_loc,
-                                          p2p_buff, p1p_buff, p1p_mid, pi, pp)
+            sum_k += sign*FsltrLob3GL(k, n, bo,
+                                      gl_w, gl_x, kkn, Bsplines, Ssp, rk, rk_mid,
+                                      l1i_loc, l2i_loc, p2p_buff, p1p_buff, p1p_mid, pi)
                   *wigner_3j0(e12.l1,k,e12p.l2)*wigner_3j0(e12.l2,k,e12p.l1)
                   *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
+        // omp_set_lock(&copylock);
+          // std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
+          // " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
+        // omp_unset_lock(&copylock);
         // if(e12p.n1==0&&e12p.l1==0&&e12p.n2==0&&e12p.l2==0&&
-        //   e12.n1==0&&e12.l1==0&&e12.n2==0&&e12.l2==0) {
+        //   e12.n1==3&&e12.l1==1&&e12.n2==105&&e12.l2==1) {
         // std::cout << std::setiosflags(std::ios::scientific)
         //           << std::setprecision(15) << pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k<< "\n";
         //   }
