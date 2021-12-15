@@ -578,8 +578,6 @@ double FsltrLob3GL(int k, int n, int bo,
   return Fk;
 }
 
-int flag=0;
-
 double FsltrLob3GL(int k, int n, int bo,
             std::vector<double> &gl_w, 
             std::vector<double> &gl_x, 
@@ -604,8 +602,6 @@ double FsltrLob3GL(int k, int n, int bo,
 
   // first calculate Qk for all of 0->R
   double Qk=0.0;
-  double Jk=0;
-  double Fk=0;
 
   constexpr double Lobo = 0.3333333333333333333333333e0;
   constexpr double Lobi = 0.1333333333333333333333333e1;
@@ -629,9 +625,9 @@ double FsltrLob3GL(int k, int n, int bo,
   }
 
   std::ofstream outFile;
-  if(flag==1) {
-    outFile.open("dat/slt_test_wrong.dat", std::ofstream::out);
-  }
+
+  outFile.open("dat/slt_test_wrong.dat", std::ofstream::out);
+
 
   double rm1=0.0;
   double rlob, dlob;
@@ -639,6 +635,9 @@ double FsltrLob3GL(int k, int n, int bo,
   double pr1k, pr1km;
   auto ibo1j=0, jbopi=0;
   auto ai=0;
+
+  double Jk=0.0;
+  double Fk=0.0;
 
   for(auto i=bo-1; i<n; ++i) {
     i1=i+1;
@@ -677,11 +676,11 @@ double FsltrLob3GL(int k, int n, int bo,
       Qk-=dlob*(Lobo*fm1q+Lobi*(1.0/rk_mid[p+(i1-bo)*bo+kp1*n*bo])*pr2a+Lobo*pr1km*pr2);
       chi=pr1km*Jk+pr1k*Qk;
 
-      if(flag==1) {
-        outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<<" "<<Fk<<""<<pr1k<<" "<<pr1km<<" "
-                <<p2is[(i1-bo)*bo+p]<<" "<<p2p_buff[(i1-bo)*bo+p]<<" "
-                <<Pl1i<<" "<<p1p_buff[(i1-bo)*bo+p]<<"\n";
-      }
+      // if(flag==1) {
+      //   outFile <<r1<<" "<<chi<<" "<<k<<" "<<Fk<<" "
+      //           <<p2is[(i1-bo)*bo+p]<<" "<<p2p_buff[(i1-bo)*bo+p]<<" "
+      //           <<Pl1i<<" "<<p1p_buff[(i1-bo)*bo+p]<<"\n";
+      // }
 
       // Glq outer
       loc_GL += gl_w[p]*Pl1i*p1p_buff[(i1-bo)*bo+p]*chi;
@@ -691,6 +690,8 @@ double FsltrLob3GL(int k, int n, int bo,
       fm1q=pr1km*pr2;
     }
     Fk+=dl*loc_GL;
+    outFile <<r1<<" "<<chi<<" "<<k<<" "<<Fk<<"\n";
+
   }
   //if(flag==1) flag=0;
 
@@ -1073,7 +1074,7 @@ int Prprim(int n, int bo, std::vector<double> &kkn,
             Pl2pm += Cf[per_l*l2+n2*n+ai]*Ssp[j+bo*(p+i*bo)];
           }
           p1p_out[(i1-bo)*bo+p]=Pl1p;
-          p2p_out[(i1-bo)*bo+p]=Pl1p;
+          p2p_out[(i1-bo)*bo+p]=Pl2p;
           p1p_in[(i1-bo)*bo+p] =Pl1pm;
           p2p_in[(i1-bo)*bo+p] =Pl2pm;
           rm1=r;
@@ -1600,7 +1601,7 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
   // This could be wrong !!!
   for(int i=1; i<=e1_lm; ++i) {
     // nst_prev[i] = nt*n;
-    C[i] = &Cf[max_N*n*i];
+    C[i] = &Cf[max_N*n*i]; //invalid read of size 8
   }
 
   // read coefficients for all l
@@ -1616,7 +1617,7 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
     rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
     cspace = rset->getSpace();
     cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
+    rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace); //invalid read of size 8
     file->close();
   }
 
@@ -1676,7 +1677,7 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
     L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
     L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
     L_idx.reserve(L_sz);
-    L_set->read(&L_idx[0], H5::PredType::NATIVE_UINT32);
+    L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32);
     file->close();
 
     std::cout << "L: " << L <<" L_sz: "<< L_sz << "\n";
@@ -1688,9 +1689,9 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
     }
     // #pragma omp parallel private(e12p)
     // {
-    for(int NL2=0; NL2<L_sz; ++NL2) {
+    for(int NL2=0; NL2<1; ++NL2) {
       //set n1'l1';n2'l2'
-      e12p = L_idx[NL2];
+      e12p = {0,4,7,4};//L_idx[NL2];
       //omp_set_lock(&copylock);
       #pragma omp single
       {
@@ -1702,12 +1703,9 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
       //omp_unset_lock(&copylock);
       #pragma omp barrier
       #pragma omp for private(e12,Y_norm,sum_k,min_dir,min_exc)
-      for(int NL1=NL2; NL1<L_sz; ++NL1) {
+      for(int NL1=NL2; NL1<1; ++NL1) {
         //set n1l1;n2l2
-        e12 = L_idx[NL1];
-
-        if(e12p.n1==0&&e12p.l1==4&&e12p.n2==7&&e12p.l2==4&&
-          e12.n1==4&&e12.l1==0&&e12.n2==20&&e12.l2==0) flag=1;
+        e12 = {4,0,20,0};//L_idx[NL1];
 
         std::vector<double> l1i_loc(n), l2i_loc(n);
         std::vector<double> pi(bo*n), pp(bo*n);
@@ -1729,12 +1727,14 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
-            sum_k += pow(-1,min_dir)*FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
+            sum_k += //pow(-1,min_dir)*
+            FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
                           Ssp, rk, rk_mid, l1i_loc, l2i_loc, p1p_buff, 
-                          p2p_buff, p2p_mid, pi)*wigner_3j0(e12.l1,k,e12p.l1)
-                          *wigner_3j0(e12.l2,k,e12p.l2)
-                          *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
-            if(flag==1) {std::cout<< sum_k<<"\n";}
+                          p2p_buff, p2p_mid, pi);
+                          //*wigner_3j0(e12.l1,k,e12p.l1)
+                          //*wigner_3j0(e12.l2,k,e12p.l2)
+                          //*wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
+            std::cout<< sum_k<<"\n";
           }
           /* for exchange check if:
             (-)^{L+la+lc}=(-)^{L+lb+ld},
@@ -1743,15 +1743,16 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
-            sum_k += pow(-1,min_exc)*FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
+            sum_k += //pow(-1,min_exc)*
+            FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
                           Ssp, rk, rk_mid, l1i_loc, l2i_loc, p2p_buff, 
-                          p1p_buff, p1p_mid, pi)*wigner_3j0(e12.l1,k,e12p.l2)
-                          *wigner_3j0(e12.l2,k,e12p.l1)
-                          *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
-            if(flag==1) {std::cout<< sum_k<<"\n";}
+                          p1p_buff, p1p_mid, pi);
+                          //*wigner_3j0(e12.l1,k,e12p.l2)
+                          //*wigner_3j0(e12.l2,k,e12p.l1)
+                          //*wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
+            std::cout<< sum_k<<"\n";
           }
         }
-        if(flag==1) flag=0;
         // omp_set_lock(&copylock);
         //   if(abs(sum_k)>1.0e+5) {
         //   std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
