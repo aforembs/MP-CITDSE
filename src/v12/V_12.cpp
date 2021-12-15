@@ -1535,7 +1535,7 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
   int nkn=0; // no. of knots
   std::vector<double> kkn;
   std::vector<double> Cf;
-  std::vector<double*> C(L_max+1);
+  std::vector<double*> C(L_max+1); // error
 
   int L_sz=0, v_sz=0;
   std::string filename;
@@ -1683,7 +1683,7 @@ int V12_alt(std::string cpot, int L_max, std::string dir) {
     std::cout << "L: " << L <<" L_sz: "<< L_sz << "\n";
 
     v_sz = L_sz*(L_sz+1)/2;
-    v_mat.reserve(v_sz);
+    v_mat.reserve(v_sz); // error
 
     st_time = GetTimeMs64();
     }
