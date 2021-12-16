@@ -10,11 +10,10 @@
 #include "wigner_sym.h"
 #include "bsplines.h"
 #include "cfg_in.h"
+#include "integrator.h"
 
 int V12(std::string cpot, int L_max, std::vector<uint> &N_sz);
 
 int V12(std::string cpot, int L_max, std::string dir);
-
-int V12_alt(std::string cpot, int L_max, std::string dir);
 
 #endif // V_12_H_
