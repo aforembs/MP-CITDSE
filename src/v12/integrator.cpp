@@ -621,10 +621,10 @@ double FsltrLob3GL(int k, int n, int bo,
     Qk+=dl*loc_GL;
   }
 
-  std::ofstream outFile;
+  // std::ofstream outFile;
 
-  outFile.open("dat/slt_test_wrong.dat", std::ofstream::out);
-  std::cout << Qk << "\n";
+  // outFile.open("dat/slt_test_wrong.dat", std::ofstream::out);
+  // std::cout << Qk << "\n";
 
   double rm1=0.0;
   double rlob, dlob;
@@ -675,9 +675,9 @@ double FsltrLob3GL(int k, int n, int bo,
       chi=pr1km*Jk+pr1k*Qk;
 
       // if(flag==1) {
-        outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<<" "<<Fk<<" "
-                <<p2is[i1bo+p]<<" "<<p2p_buff[(i+2-bo)*bo+p]<<" "
-                <<Pl1i<<" "<<p1p_buff[(i+2-bo)*bo+p]<<"\n";
+        // outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<<" "<<Fk<<" "
+        //         <<p2is[i1bo+p]<<" "<<p2p_buff[(i+2-bo)*bo+p]<<" "
+        //         <<Pl1i<<" "<<p1p_buff[(i+2-bo)*bo+p]<<"\n";
       // }
 
       // Glq outer
@@ -691,9 +691,9 @@ double FsltrLob3GL(int k, int n, int bo,
     // outFile <<r1<<" "<<chi<<" "<<k<<" "<<Fk<<"\n";
 
   }
-  outFile.close();
+  // outFile.close();
   //if(flag==1) flag=0;
-  std::cout << Fk << "\n";
+  // std::cout << Fk << "\n";
   return Fk;
 }
 

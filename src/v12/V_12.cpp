@@ -490,7 +490,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
 
   omp_lock_t copylock;
   omp_init_lock(&copylock);
-  omp_set_num_threads(1);
+  // omp_set_num_threads(1);
   uint64_t st_time;
 
   #pragma omp parallel private(e12p)
@@ -516,9 +516,9 @@ int V12(std::string cpot, int L_max, std::string dir) {
     st_time = GetTimeMs64();
     }
 
-    for(int NL2=0; NL2<1; ++NL2) {
+    for(int NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
-      e12p = {0,0,0,1};//L_idx[NL2];
+      e12p = L_idx[NL2];
 
       #pragma omp single
       {
@@ -529,9 +529,9 @@ int V12(std::string cpot, int L_max, std::string dir) {
 
       #pragma omp barrier
       #pragma omp for private(e12,Y_norm,sum_k,min_dir,min_exc)
-      for(int NL1=NL2; NL1<1; ++NL1) {
+      for(int NL1=NL2; NL1<L_sz; ++NL1) {
         //set n1l1;n2l2
-        e12 = {0,0,0,1};//L_idx[NL1];
+        e12 = L_idx[NL1];
 
         std::vector<double> l1i_loc(n), l2i_loc(n);
         std::vector<double> pi(bo*n), pp(bo*n);
@@ -544,8 +544,8 @@ int V12(std::string cpot, int L_max, std::string dir) {
         sum_k=0.0;
         min_dir = ((L+e12.l2+e12p.l1) >> 0) & 1; // check if L+lb+lc is odd
         min_exc = ((L+e12.l1+e12p.l1) >> 0) & 1;
-        for(int k=std::max(std::max(abs(e12.l1-e12p.l1),abs(e12.l2-e12p.l2)),std::max(abs(e12.l1-e12p.l2),abs(e12.l2-e12p.l1))); 
-            k<=std::min(std::min(e12.l1+e12p.l1,e12.l2+e12p.l2),std::max(e12.l1+e12p.l2,e12.l2+e12p.l1)); ++k) { 
+        for(int k=0; k<=k_max; ++k) {//int k=std::max(std::max(abs(e12.l1-e12p.l1),abs(e12.l2-e12p.l2)),std::max(abs(e12.l1-e12p.l2),abs(e12.l2-e12p.l1))); 
+            //k<=std::min(std::min(e12.l1+e12p.l1,e12.l2+e12p.l2),std::max(e12.l1+e12p.l2,e12.l2+e12p.l1)); ++k) { 
           /* for direct check if:
             (-)^{L+lb+lc}=(-)^{L+la+ld},
             |la-lc| <= k <= la+lc,
@@ -575,11 +575,11 @@ int V12(std::string cpot, int L_max, std::string dir) {
                           *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
-        // omp_set_lock(&copylock);
-        //   if(sum_k==0) {
-        //   std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
-        //   " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
-        // omp_unset_lock(&copylock);
+        omp_set_lock(&copylock);
+          if(sum_k==0) {
+          std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
+          " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
+        omp_unset_lock(&copylock);
         // if(e12p.n1==0&&e12p.l1==0&&e12p.n2==0&&e12p.l2==0&&
         //   e12.n1==3&&e12.l1==1&&e12.n2==105&&e12.l2==1) {
         // std::cout << std::setiosflags(std::ios::scientific)
