@@ -43,7 +43,10 @@ int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<cfg::li
       cf_l.n2min = val-1;
       iss >> val;
       cf_l.n2max = val;
-      cfgs.emplace_back(cf_l);
+      if(abs(cf_l.l1-cf_l.l2)<=L && L<=(cf_l.l1+cf_l.l2) && ((L>>0)&1)==(((cf_l.l1+cf_l.l2)>>0)&1)) 
+        cfgs.emplace_back(cf_l);
+      else
+        std::cout << "cfg-"<< L <<".inp, line: (" << i+1 << ") has an invalid configuration, skipping\n";
     } else {
       --i; // ignore empty lines
     }

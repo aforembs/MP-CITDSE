@@ -108,6 +108,7 @@ int Prprim(int n, int bo, int off1, int off2,
 
       for(auto i=bo-1; i<n; ++i) {
         auto i1=i+1;
+        auto i1bo=(i1-bo)*bo;
         dl = (kkn[i1] - kkn[i])*0.5;
         sl = (kkn[i1] + kkn[i])*0.5;
 
@@ -125,10 +126,10 @@ int Prprim(int n, int bo, int off1, int off2,
             Pl1pm += Cf[off1+ai]*Ssp[j+bo*(p+i*bo)];
             Pl2pm += Cf[off2+ai]*Ssp[j+bo*(p+i*bo)];
           }
-          p1p_out[(i1-bo)*bo+p]=Pl1p;
-          p2p_out[(i1-bo)*bo+p]=Pl2p;
-          p1p_in[(i1-bo)*bo+p] =Pl1pm;
-          p2p_in[(i1-bo)*bo+p] =Pl2pm;
+          p1p_out[i1bo+p]=Pl1p;
+          p2p_out[i1bo+p]=Pl2p;
+          p1p_in[i1bo+p] =Pl1pm;
+          p2p_in[i1bo+p] =Pl2pm;
           rm1=r;
         }
       }
@@ -365,7 +366,6 @@ int V12(std::string cpot, int L_max, std::string dir) {
   int bo=0;   // max B-spline order
   int nkn=0; // no. of knots
   std::vector<double> kkn;
-  std::vector<double*> C(L_max+1); // error
 
   int L_sz=0, v_sz=0;
   std::string filename;
@@ -377,15 +377,8 @@ int V12(std::string cpot, int L_max, std::string dir) {
   std::unique_ptr<H5::DataSet> L_set=nullptr;
   std::vector<idx4> L_idx;
   H5::DataSpace cspace;
-  hsize_t offset[2], count[2], stride[2], block[2];
+  hsize_t offset[2]={0,0}, count[2], stride[2]={1,1}, block[2]={1,1};
   hsize_t dimms[2], v_dim[1];
-  offset[0]=0; 
-  offset[1]=0;
-  count[0] =0;
-  stride[0]=1; 
-  stride[1]=1;
-  block[0] =1; 
-  block[1] =1;
   H5::DataSpace memspace;
 
   // read knots
@@ -420,17 +413,11 @@ int V12(std::string cpot, int L_max, std::string dir) {
     l1_m = std::max(l1_m,max_line.l1);
   }
   auto k_max = l1_m+l2_m;
-  auto lc_sz = n*max_N;
+  auto lc_sz = max_N*n;
 
   // reserve space for coefficients
   auto e1_lm = std::max(l1_m,l2_m);
   std::vector<double> Cf(lc_sz*(e1_lm+1));
-  C[0]=&Cf[0];
-  std::vector<int> nst_prev(L_max+1);
-
-  for(int i=1; i<=e1_lm; ++i) {
-    C[i] = &Cf[lc_sz*i]; //invalid read of size 8
-  }
 
   // read coefficients for all l
   for(int l=0; l<=e1_lm; ++l) {
@@ -445,7 +432,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
     rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
     cspace = rset->getSpace();
     cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    rset->read(C[l], H5::PredType::NATIVE_DOUBLE, memspace, cspace); //invalid read of size 8
+    rset->read(&Cf[l*lc_sz], H5::PredType::NATIVE_DOUBLE, memspace, cspace); //invalid read of size 8
     file->close();
   }
 
@@ -523,7 +510,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
       #pragma omp single
       {
       // calculate P1' P2' here and pass it to sltr
-      Prprim(n, bo, lc_sz*e12p.l1+n*e12p.n1, lc_sz*e12p.l2+n*e12p.n2, 
+      Prprim(n, bo, e12p.l1*lc_sz+e12p.n1*n, e12p.l2*lc_sz+e12p.n2*n, 
         kkn, gl_x, Bsplines, Ssp, Cf, p1p_buff, p2p_buff, p1p_mid, p2p_mid);
       }
 
@@ -536,8 +523,8 @@ int V12(std::string cpot, int L_max, std::string dir) {
         std::vector<double> l1i_loc(n), l2i_loc(n);
         std::vector<double> pi(bo*n), pp(bo*n);
         omp_set_lock(&copylock);
-        std::copy_n(Cf.begin()+e12.l1*max_N*n+e12.n1*n, n, l1i_loc.begin());
-        std::copy_n(Cf.begin()+e12.l2*max_N*n+e12.n2*n, n, l2i_loc.begin());
+        std::copy_n(Cf.begin()+e12.l1*lc_sz+e12.n1*n, n, l1i_loc.begin());
+        std::copy_n(Cf.begin()+e12.l2*lc_sz+e12.n2*n, n, l2i_loc.begin());
         omp_unset_lock(&copylock);
         // sqrt([la][lc][lb][ld])
         Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
@@ -576,7 +563,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
           }
         }
         omp_set_lock(&copylock);
-          if(sum_k==0) {
+          if(abs(pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k)>0.3e+1) {
           std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
           " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
         omp_unset_lock(&copylock);
