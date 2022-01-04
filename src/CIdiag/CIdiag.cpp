@@ -33,18 +33,12 @@ int CalcCI(std::string pot, char gauge, int L_max) {
 
     for(auto i=0; i<L_sz; ++i) {
       v12[(2*L_sz-i-1)*i/2+i] += ens[i];
+      if(i==0) {std::cout << v12[(2*L_sz-i-1)*i/2+i] << "\n";}
       vecs[i*L_sz+i] = v12[(2*L_sz-i-1)*i/2+i];
       for(auto j=i+1; j<L_sz; ++j) {
         vecs[i*L_sz+j] = v12[(2*L_sz-i-1)*i/2+j];
         // vecs[j*L_sz+i] = vecs[i*L_sz+j];
       }
-    }
-
-    for(auto i=0; i<3; ++i) {
-      for(auto j=0; j<3; ++j) {
-        std::cout << vecs[i*L_sz+j] <<" ";
-      }
-      std::cout << "\n";
     }
 
     eig.resize(L_sz);

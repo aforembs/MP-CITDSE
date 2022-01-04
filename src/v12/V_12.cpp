@@ -562,11 +562,11 @@ int V12(std::string cpot, int L_max, std::string dir) {
                           *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
           }
         }
-        omp_set_lock(&copylock);
-          if(abs(pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k)>0.3e+1) {
-          std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
-          " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
-        omp_unset_lock(&copylock);
+        // omp_set_lock(&copylock);
+        //   if(abs(pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k)>0.3e+1) {
+        //   std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
+        //   " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
+        // omp_unset_lock(&copylock);
         // if(e12p.n1==0&&e12p.l1==0&&e12p.n2==0&&e12p.l2==0&&
         //   e12.n1==3&&e12.l1==1&&e12.n2==105&&e12.l2==1) {
         // std::cout << std::setiosflags(std::ios::scientific)
@@ -574,6 +574,10 @@ int V12(std::string cpot, int L_max, std::string dir) {
         //   }
         // write symmetric V_12 as upper triangular
         v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
+        if(e12.n1==e12.n2 && e12.l1==e12.l2)
+          v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] *= 0.7071067811865475244008444e0;
+        if(e12p.n1==e12p.n2 && e12p.l1==e12p.l2)
+          v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] *= 0.7071067811865475244008444e0;
       }
     }
 
