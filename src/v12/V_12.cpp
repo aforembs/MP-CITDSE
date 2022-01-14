@@ -479,6 +479,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
   omp_init_lock(&copylock);
   // omp_set_num_threads(1);
   uint64_t st_time;
+  // std::ofstream dat_fl;
 
   #pragma omp parallel private(e12p)
   {
@@ -506,6 +507,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
     for(int NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
       e12p = L_idx[NL2];
+      bool eqvp = e12p.n1==e12p.n2 && e12p.l1==e12p.l2;
 
       #pragma omp single
       {
@@ -563,21 +565,28 @@ int V12(std::string cpot, int L_max, std::string dir) {
           }
         }
         // omp_set_lock(&copylock);
-        //   if(abs(pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k)>0.3e+1) {
+        //   if(NL1==290) {
         //   std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
         //   " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
         // omp_unset_lock(&copylock);
         // if(e12p.n1==0&&e12p.l1==0&&e12p.n2==0&&e12p.l2==0&&
-        //   e12.n1==3&&e12.l1==1&&e12.n2==105&&e12.l2==1) {
-        // std::cout << std::setiosflags(std::ios::scientific)
+        //   e12.n1==1&&e12.l1==0&&e12.n2==1&&e12.l2==0) {
+        //   std::cout << std::setiosflags(std::ios::scientific)
         //           << std::setprecision(15) << pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k<< "\n";
         //   }
         // write symmetric V_12 as upper triangular
-        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
-        if(e12.n1==e12.n2 && e12.l1==e12.l2)
-          v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] *= 0.7071067811865475244008444e0;
-        if(e12p.n1==e12p.n2 && e12p.l1==e12p.l2)
-          v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] *= 0.7071067811865475244008444e0;
+        double v12 = pow(-1,e12.l1+e12.l2)*Y_norm*sum_k;
+        // v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = pow(-1,(e12.l1+e12.l2))*Y_norm*sum_k;
+        if(e12.n1==e12.n2 && e12.l1==e12.l2) {v12 *= 0.7071067811865475244008444e0;}
+          // v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] *= 0.7071067811865475244008444e0;
+        if(eqvp) {v12 *= 0.7071067811865475244008444e0;}
+          // v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] *= 0.7071067811865475244008444e0;
+        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = v12;
+        // if(e12p.n1==0&&e12p.l1==0&&e12p.n2==0&&e12p.l2==0&&
+        //   e12.n1==1&&e12.l1==0&&e12.n2==1&&e12.l2==0) {
+        //   std::cout << std::setiosflags(std::ios::scientific)
+        //           << std::setprecision(15) <<v12<< "\n";
+        // }
       }
     }
 
@@ -593,7 +602,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
                     "V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim))));
     V_set->write(&v_mat[0], H5::PredType::NATIVE_DOUBLE);
     outfile->close();
-
+    // dat_fl.close();
     v_mat.clear();
     }
   }

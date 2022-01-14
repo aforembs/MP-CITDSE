@@ -3,10 +3,10 @@ Basis_Settings:
   state_no: 400
   max_spline_k: 9
   R_max: 200                # box radius in a.u.
-  grid: "linear"            # grid type
+  grid: "linear"              # grid type
   knot_file: ""
   potential: "he"           # potential name
-  l_max: 3                  # l <= l_max
+  l_max: 7                  # l <= l_max
   atomic_no: 2              # nuclear charge
   mass: 0.5                 # 0.5 for atom 1 for positronium
 # Settings for the TDSE solver

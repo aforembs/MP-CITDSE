@@ -7,6 +7,7 @@ int CalcCI(std::string pot, char gauge, int L_max) {
   std::vector<double> ens, v12, eig, vecs;
   std::vector<int> ifail;
   int m, L_sz, v_sz, w_sz;
+  std::ofstream dat_fl;
 
   for(auto L=0; L<L_max; ++L) {
 
@@ -31,15 +32,18 @@ int CalcCI(std::string pot, char gauge, int L_max) {
     v12data->read(&v12[0], H5::PredType::NATIVE_DOUBLE);
     file->close();
 
+    dat_fl.open("dat/r12-"+std::to_string(L)+".dat");
     for(auto i=0; i<L_sz; ++i) {
       v12[(2*L_sz-i-1)*i/2+i] += ens[i];
-      if(i==0) {std::cout << v12[(2*L_sz-i-1)*i/2+i] << "\n";}
+      dat_fl << std::abs(v12[(2*L_sz-i-1)*i/2+i]) << "\n";
       vecs[i*L_sz+i] = v12[(2*L_sz-i-1)*i/2+i];
       for(auto j=i+1; j<L_sz; ++j) {
         vecs[i*L_sz+j] = v12[(2*L_sz-i-1)*i/2+j];
+        dat_fl << std::abs(v12[(2*L_sz-i-1)*i/2+j]) << "\n";
         // vecs[j*L_sz+i] = vecs[i*L_sz+j];
       }
     }
+    dat_fl.close();
 
     eig.resize(L_sz);
     // ifail.reserve(L_sz);
