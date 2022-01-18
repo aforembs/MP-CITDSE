@@ -7,6 +7,7 @@
 #include <fstream>
 #include <lapacke.h>
 #include "H5Cpp.h"
+#include "dmx_typ.h"
 
 int CalcCI(std::string pot, char gauge, int L_max);
 

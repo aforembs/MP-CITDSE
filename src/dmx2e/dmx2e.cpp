@@ -458,11 +458,11 @@ int DMX2e::sort_L(int L_max, std::string dir) {
   memspace_l1.setExtentSimple(1, dimms1, NULL);
 
   // Sort the energies in parallel using C++17 built in parallel sort
-  std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
-        [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
+  // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
+  //       [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
 
-  std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
-        [](cfg::line const &a, cfg::line const &b) {return (a.l2 < b.l2) && (a.l1==b.l1);});
+  // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
+  //       [](cfg::line const &a, cfg::line const &b) {return (a.l2 < b.l2) && (a.l1==b.l1);});
 
   // L initial sort & save
   Li_dat.reserve(t_sz);
@@ -516,8 +516,8 @@ int DMX2e::sort_L(int L_max, std::string dir) {
   }
 
   // Sort the energies in parallel using C++17 built in parallel sort
-  std::sort(std::execution::par_unseq, Li_dat.begin(), Li_dat.end(), 
-        [](en_data const &a, en_data const &b) { return a.en < b.en; });
+  // std::sort(std::execution::par_unseq, Li_dat.begin(), Li_dat.end(), 
+  //       [](en_data const &a, en_data const &b) { return a.en < b.en; });
 
   // Separate the sorted energies from the sorted indices
   for(auto i : Li_dat) {
@@ -577,8 +577,8 @@ int DMX2e::sort_L(int L_max, std::string dir) {
   memspace_l1.setExtentSimple(1, dimms1, NULL);
 
   // Sort the energies in parallel using C++17 built in parallel sort
-  std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
-        [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
+  // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
+  //       [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
 
   // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
   //       [](cfg::line const &a, cfg::line const &b) {return (a.l2 < b.l2) && (a.l1==b.l1);});
@@ -636,8 +636,8 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     last_l2=l2;
   }
 
-  std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(), 
-        [](en_data const &a, en_data const &b) { return a.en < b.en; });
+  // std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(), 
+  //       [](en_data const &a, en_data const &b) { return a.en < b.en; });
 
   for(auto i : Lf_dat) {
     en_srtd.emplace_back(i.en);
@@ -705,8 +705,8 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     memspace_l1.setExtentSimple(1, dimms1, NULL);
 
     // Sort the energies in parallel using C++17 built in parallel sort
-    std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
-          [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
+    // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
+    //       [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
 
     // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
     //       [](cfg::line const &a, cfg::line const &b) {return (a.l2 < b.l2) && (a.l1==b.l1);});
@@ -764,8 +764,8 @@ int DMX2e::sort_L(int L_max, std::string dir) {
       last_l2=l2;
     }
 
-    std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(), 
-        [](en_data const &a, en_data const &b) { return a.en < b.en; });
+    // std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(), 
+    //     [](en_data const &a, en_data const &b) { return a.en < b.en; });
 
     for(auto i : Lf_dat) {
       en_srtd.emplace_back(i.en);
@@ -975,7 +975,7 @@ int DMX2e::calc_dmx(int L_max, std::vector<int> &N_max) {
   return 0;
 }
 
-int DMX2e::calc_dmx(int L_max, std::string dir) {
+int DMX2e::calc_dmx(int L_max, int l_m, std::string dir) {
   int l1i=0, l2i=0, l1f=0, l2f=0;
   int Li_sz=0;
   int Lf_sz=0;
@@ -1001,25 +1001,20 @@ int DMX2e::calc_dmx(int L_max, std::string dir) {
 
   int ncf, sym;
   std::vector<cfg::line> cfgs;
-  cfg::ReadCfg(dir, 0, sym, ncf, cfgs);
-
   std::vector<idx4*> buffs(2);
+  auto max_N=0;
+  cfg::line max_n2l;
 
-  int t_sz=0;
-  for(auto i=0; i<ncf; ++i) {
-    t_sz += cfgs[i].n2max-cfgs[i].n2min;
-  }
+  for(auto Li=0; Li<=L_max; ++Li) {
+    cfg::ReadCfg(dir, Li, sym, ncf, cfgs);
 
-  auto max_n2l = *std::max_element(cfgs.begin(), cfgs.end(),
+    max_n2l = *std::max_element(cfgs.begin(), cfgs.end(),
         [](cfg::line const &a, cfg::line const &b) { return a.n2max < b.n2max; });
-  auto max_N = max_n2l.n2max;
+    max_N =std::max(max_n2l.n2max,max_N);
+  }
   auto max_Nsz = ncf*max_N;
-  std::vector<idx4> Li_idx(max_Nsz*L_max);
-  std::vector<idx4> Lf_idx(max_Nsz*L_max);
-
-  auto max_line = *std::max_element(cfgs.begin(), cfgs.end(),
-        [](cfg::line const &a, cfg::line const &b) { return a.l2 < b.l2; });
-  auto l_m = max_line.l2;
+  std::vector<idx4> Li_idx(max_Nsz);
+  std::vector<idx4> Lf_idx(max_Nsz);
 
   count[0]=max_N;
   count[1]=max_N;
@@ -1075,10 +1070,10 @@ int DMX2e::calc_dmx(int L_max, std::string dir) {
       l1f=Lf_idx[idLf].l1;
       l2f=Lf_idx[idLf].l2;
       if(l1i+1==l1f && l2i==l2f) {
-        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
+        T[idLi+idLf*Li_sz] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
               D_data[l1i*max2 + Li_idx[idLi].n1+max_N*Lf_idx[idLf].n1]/sqrt(l1f);
       } else if(l2i+1==l2f && l1i==l1f) {
-        T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
+        T[idLi+idLf*Li_sz] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
               D_data[l2i*max2 + Li_idx[idLi].n2+max_N*Lf_idx[idLf].n2]/sqrt(l2f);
       } else {T[idLi+Li_sz*idLf]=0.0;}
     }
@@ -1131,10 +1126,10 @@ int DMX2e::calc_dmx(int L_max, std::string dir) {
         l1f=buffs.at(buf_Lf)[idLf].l1;
         l2f=buffs.at(buf_Lf)[idLf].l2;
         if(l1i+1==l1f && l2i==l2f) {
-          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
+          T[idLi+idLf*Li_sz] = Lsq*pow(-1,l2i+l1f)*sqrt(4*l1f*l1f-1)*wigner_6j_2e(L,l1f,l1i,l2i)*
               D_data[l1i*max2 + buffs.at(buf_Li)[idLi].n1+max_N*buffs.at(buf_Lf)[idLf].n1]/sqrt(l1f);
         } else if(l2i+1==l2f && l1i==l1f) {
-          T[idLi+Li_sz*idLf] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
+          T[idLi+idLf*Li_sz] = Lsq*pow(-1,l1i+l2f)*sqrt(4*l2f*l2f-1)*wigner_6j_2e(L,l2f,l2i,l1i)*
               D_data[l2i*max2 + buffs.at(buf_Li)[idLi].n2+max_N*buffs.at(buf_Lf)[idLf].n2]/sqrt(l2f);
         } else {T[idLi+Li_sz*idLf]=0.0;}
       }
@@ -1168,11 +1163,11 @@ DMX2e::DMX2e(std::string cpot, char gau, int L_max, std::vector<int> &N_max) {
   calc_dmx(L_max, N_max);
 }
 
-DMX2e::DMX2e(std::string cpot, char gau, int L_max, std::string inp_dir) {
+DMX2e::DMX2e(std::string cpot, char gau, int L_max, int l_m, std::string inp_dir) {
   pot = cpot;
   gauge = gau;
 
   sort_L(L_max, inp_dir);
 
-  calc_dmx(L_max, inp_dir);
+  calc_dmx(L_max, l_m, inp_dir);
 }

@@ -2,7 +2,7 @@
 
 int main() {
 
-  CalcCI("dat/he", 'v',3);
+  CalcCI("dat/he", 'v',2);
 
   return 0;
 }

@@ -159,7 +159,8 @@ int tise::GenCoeff(int n, int k, int l_max,
       auto end_it = st_it+nm2;
       // make the wf have a positive derivative at r=0
       auto val=0.0;
-      for(auto i=0; i<k; ++i) val+=Cnl_tmp[idxh+i]*spl[i+(k-1)*k*k];
+      for(auto i=0; i<k; ++i) val+=Cnl_tmp[idxh+i]*splp[i+(k-1)*k*k];
+      //   val_b+=Cnl_tmp[idxh+i]*spl[i+(k-1)*k*k];}
       if (val<0.0) {
         std::transform(std::execution::par_unseq, st_it, end_it, st_it,
                std::bind(std::multiplies<double>(), std::placeholders::_1, -1.0));

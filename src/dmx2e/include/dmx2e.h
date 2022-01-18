@@ -48,7 +48,7 @@ class DMX2e {
      */
     int calc_dmx(int L_max, std::vector<int> &N_max);
 
-    int calc_dmx(int L_max, std::string dir);
+    int calc_dmx(int L_max, int l_m, std::string dir);
 
   public:
     /* Constructor for the DMX2e class, calculates and saves the sorted L states
@@ -67,7 +67,7 @@ class DMX2e {
      * @param in gau      - the gauge of the system
      * @param in inp_dir  - path of diractory containing cfg-<L>.inp files
      */
-    DMX2e(std::string cpot, char gau, int L_max, std::string inp_dir);
+    DMX2e(std::string cpot, char gau, int L_max, int l_m, std::string inp_dir);
 };
 
 #endif // DMX2E_H_

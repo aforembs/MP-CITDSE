@@ -751,6 +751,8 @@ double FsltrLob3GL(int k, int n, int bo,
   constexpr double Lobo = 0.3333333333333333333333333e0;
   constexpr double Lobi = 0.1333333333333333333333333e1;
 
+  // std::ofstream outFile("dat/Qk.dat");
+
   for(auto i=bo-1; i<n; ++i) {
     i1=i+1;
     i1bo=(i1-bo)*bo;
@@ -775,10 +777,14 @@ double FsltrLob3GL(int k, int n, int bo,
       Qk+=dlob*(fm1q+Lobi*(1.0/rk_mid[p+i1bo+kp1*nbo])*Pl2ira*p2p_mid[i1bo+p]
                 +Lobo*(1.0/rk[p+i1bo+kp1*nbo])*Pl2i*p2p_buff[i1bo+p]);
 
+      // outFile << r1 << " " << (1.0/rk_mid[p+i1bo+kp1*nbo]) << " " << Qk <<"\n";
+
       fm1q=Lobo*(1.0/rk[p+i1bo+kp1*nbo])*Pl2i*p2p_buff[i1bo+p];
       rm1=r1;
     }
   }
+  // outFile.close();
+  // outFile.open("dat/slt_wrong.dat");
 
   double Jk=0.0;
   double Fk=0.0;
@@ -819,15 +825,20 @@ double FsltrLob3GL(int k, int n, int bo,
       chi=pr1km*Jk+pr1k*Qk;
 
       // Glq outer
-      loc_GL+=gl_w[p]*Pl1i*p1p_buff[i1bo+p]*chi;
+      Fk+=dl*gl_w[p]*Pl1i*p1p_buff[i1bo+p]*chi;
+
+      // outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<<" "<<Fk<<" "
+      //         <<p2is[i1bo+p]<<" "<<p2p_buff[i1bo+p]<<" "
+      //         <<Pl1i<<" "<<p1p_buff[i1bo+p]<<"\n";
 
       rm1=r1;
       fm1j=Lobo*pr1k*pr2;
       fm1q=Lobo*pr1km*pr2;
     }
-    Fk+=dl*loc_GL;
+    //Fk+=dl*loc_GL;
   }
-
+  // outFile.close();
+  // std::cout << k << " " << Fk << "\n";
   return Fk;
 }
 

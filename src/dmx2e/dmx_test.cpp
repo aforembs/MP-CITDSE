@@ -8,7 +8,7 @@ int main() {
 
   // DMX2e DMXcalculate("dat/he", 'v', 3, N_maxs);
 
-  DMX2e DMXcalc("dat/he", 'v', 3, "inp");
+  DMX2e DMXcalc("dat/he", 'v', 2, 5, "inp");
 
   return 0;
 }

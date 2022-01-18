@@ -541,13 +541,20 @@ int V12(std::string cpot, int L_max, std::string dir) {
             |lb-ld| <= k <= lb+ld */
           if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
-             ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2))) {
+             ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2)) &&
+             !(((k+e12.l1+e12p.l1) >> 0) & 1) &&
+             !(((k+e12.l2+e12p.l2) >> 0) & 1) &&
+             !std::isinf(1.0/rk_mid[(k+1)*n*bo])) {
             sum_k += pow(-1,min_dir)*FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
                           Ssp, rk, rk_mid, l1i_loc, l2i_loc, p1p_buff, 
                           p2p_buff, p2p_mid, pi)
                           *wigner_3j0(e12.l1,k,e12p.l1)
                           *wigner_3j0(e12.l2,k,e12p.l2)
                           *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
+            // std::cout<<k<<" "<< sum_k<<" "
+            //         <<wigner_3j0(e12.l1,k,e12p.l1)<<" "
+            //         <<wigner_3j0(e12.l2,k,e12p.l2)<<" "
+            //         <<wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k)<< "\n";
           }
           /* for exchange check if:
             (-)^{L+la+lc}=(-)^{L+lb+ld},
@@ -555,17 +562,24 @@ int V12(std::string cpot, int L_max, std::string dir) {
             |lc-lb| <= k <= lc+lb */
           if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
              ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
-             ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1))) {
+             ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1)) &&
+             !(((k+e12.l1+e12p.l2) >> 0) & 1) &&
+             !(((k+e12.l2+e12p.l1) >> 0) & 1) &&
+             !std::isinf(1.0/rk_mid[(k+1)*n*bo])) {
             sum_k += pow(-1,min_exc)*FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
                           Ssp, rk, rk_mid, l1i_loc, l2i_loc, p2p_buff, 
                           p1p_buff, p1p_mid, pi)
                           *wigner_3j0(e12.l1,k,e12p.l2)
                           *wigner_3j0(e12.l2,k,e12p.l1)
                           *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
+            // std::cout<<k<<" "<< sum_k<<" "
+            //         <<wigner_3j0(e12.l1,k,e12p.l2)<<" "
+            //         <<wigner_3j0(e12.l2,k,e12p.l1)<<" "
+            //         <<wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k)<< "\n";
           }
         }
         // omp_set_lock(&copylock);
-        //   if(NL1==290) {
+        //   if(std::isinf(sum_k) || std::isnan(sum_k)) {
         //   std::cout<<e12p.n1<<" "<<e12p.l1<<" "<<e12p.n2<<" "<<e12p.l2<<
         //   " "<<e12.n1<<" "<<e12.l1<<" "<<e12.n2<<" "<<e12.l2<<"\n"; }
         // omp_unset_lock(&copylock);
@@ -584,8 +598,8 @@ int V12(std::string cpot, int L_max, std::string dir) {
         v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = v12;
         // if(e12p.n1==0&&e12p.l1==0&&e12p.n2==0&&e12p.l2==0&&
         //   e12.n1==1&&e12.l1==0&&e12.n2==1&&e12.l2==0) {
-        //   std::cout << std::setiosflags(std::ios::scientific)
-        //           << std::setprecision(15) <<v12<< "\n";
+          // std::cout << std::setiosflags(std::ios::scientific)
+          //         << std::setprecision(15)<<sum_k<<" "<<v12<< "\n";
         // }
       }
     }
