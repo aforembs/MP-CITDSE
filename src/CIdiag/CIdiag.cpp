@@ -45,15 +45,19 @@ int CalcCI(std::string pot, char gauge, int L_max) {
     dat_fl.open("dat/r12-"+std::to_string(L)+".dat");
     for(auto i=0; i<L_sz; ++i) {
       v12[(2*L_sz-i-1)*i/2+i] += ens[i];
-      dat_fl<<L_idx[i].n1<<" "<<L_idx[i].l1<<" "<<L_idx[i].n2<<" "
-            <<L_idx[i].l2<<" "<< std::abs(v12[(2*L_sz-i-1)*i/2+i]) << "\n";
+      dat_fl
+            // <<L_idx[i].n1<<" "<<L_idx[i].l1<<" "<<L_idx[i].n2<<" "
+            // <<L_idx[i].l2<<" "<<ens[i]<<" "
+            << std::abs(v12[(2*L_sz-i-1)*i/2+i]) << "\n";
       vecs[i*L_sz+i] = v12[(2*L_sz-i-1)*i/2+i];
       for(auto j=i+1; j<L_sz; ++j) {
         vecs[i*L_sz+j] = v12[(2*L_sz-i-1)*i/2+j];
-        dat_fl<<L_idx[i].n1<<" "<<L_idx[i].l1<<" "<<L_idx[i].n2<<" "
-              <<L_idx[i].l2<<" "
-              <<L_idx[j].n1<<" "<<L_idx[j].l1<<" "<<L_idx[j].n2<<" "
-              <<L_idx[j].l2<<" "<< std::abs(v12[(2*L_sz-i-1)*i/2+j]) << "\n";
+        dat_fl
+              // <<L_idx[i].n1<<" "<<L_idx[i].l1<<" "<<L_idx[i].n2<<" "
+              // <<L_idx[i].l2<<" "
+              // <<L_idx[j].n1<<" "<<L_idx[j].l1<<" "<<L_idx[j].n2<<" "
+              // <<L_idx[j].l2<<" "
+              << std::abs(v12[(2*L_sz-i-1)*i/2+j]) << "\n";
         // vecs[j*L_sz+i] = vecs[i*L_sz+j];
       }
     }

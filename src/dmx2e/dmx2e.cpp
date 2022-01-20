@@ -429,12 +429,11 @@ int DMX2e::sort_L(int L_max, std::string dir) {
   idx4 idx_elm;
 
   H5::DataSpace e_space;
-  hsize_t offset[1], count1[1], count2[1], stride[1], block[1];
-  hsize_t dimms2[1], dimms1[1];
+  hsize_t offset[1], count[1], stride[1], block[1], dimms[1];
   offset[0]=0;
   stride[0]=1;
   block[0] =1;
-  H5::DataSpace memspace_l1, memspace_l2;
+  H5::DataSpace memspace_l1, memspace_l;
 
   hsize_t t_sz=0;
   for(auto i=0; i<ncf; ++i) {
@@ -445,17 +444,17 @@ int DMX2e::sort_L(int L_max, std::string dir) {
         [](cfg::line const &a, cfg::line const &b) { return a.n2max < b.n2max; });
   auto max_Nsz = max_n2l.n2max;
   en12.reserve(max_Nsz*2);
-  count2[0] =max_Nsz;
-  dimms2[0] =max_Nsz;
-  memspace_l2.setExtentSimple(1, dimms2, NULL);
+  count[0] =max_Nsz;
+  dimms[0] =max_Nsz;
+  memspace_l.setExtentSimple(1, dimms, NULL);
 
-  auto max_line = *std::max_element(cfgs.begin(), cfgs.end(),
-        [](cfg::line const &a, cfg::line const &b) { return a.n1 < b.n1; });
+  // auto max_line = *std::max_element(cfgs.begin(), cfgs.end(),
+  //       [](cfg::line const &a, cfg::line const &b) { return a.n1 < b.n1; });
 
-  auto l1_sz = max_line.n1;
-  count1[0]=l1_sz;
-  dimms1[0]=l1_sz;
-  memspace_l1.setExtentSimple(1, dimms1, NULL);
+  // auto l1_sz = max_line.n1;
+  // count1[0]=l1_sz;
+  // dimms1[0]=l1_sz;
+  // memspace_l1.setExtentSimple(1, dimms1, NULL);
 
   // Sort the energies in parallel using C++17 built in parallel sort
   // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
@@ -471,16 +470,16 @@ int DMX2e::sort_L(int L_max, std::string dir) {
   hsize_t write_sz[] = {t_sz};
   hsize_t idx_sz[] = {t_sz*4};
 
-  filename = pot + std::to_string(0)+std::to_string(1) + gauge + ".h5";
+  filename = pot +"0.h5";
   file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-  e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+  e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
   e_space = e1->getSpace();
-  e_space.selectHyperslab(H5S_SELECT_SET, count1, offset, stride, block);
-  e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l1, e_space);
+  e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+  e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
 
   e_space = e1->getSpace();
-  e_space.selectHyperslab(H5S_SELECT_SET, count2, offset, stride, block);
-  e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l2, e_space);
+  e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+  e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
 
   int last_l1=0, last_l2=0;
   for(const auto &line : cfgs) {
@@ -488,21 +487,21 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     l2=line.l2;
 
     if(l1!=last_l1) {
-      filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
+      filename = pot + std::to_string(l1)+".h5";
       file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
-      e_space.selectHyperslab(H5S_SELECT_SET, count1, offset, stride, block);
-      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l1, e_space);
+      e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
     }
 
     if(l2!=last_l2) {
-      filename = pot + std::to_string(l2)+std::to_string(l2+1) + gauge + ".h5";
+      filename = pot + std::to_string(l2)+".h5";
       file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
-      e_space.selectHyperslab(H5S_SELECT_SET, count2, offset, stride, block);
-      e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l2, e_space);
+      e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+      e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
     }
 
     double ent, en1=en12[line.n1];
@@ -564,17 +563,17 @@ int DMX2e::sort_L(int L_max, std::string dir) {
         [](cfg::line const &a, cfg::line const &b) { return a.n2max < b.n2max; });
   max_Nsz = max_n2l.n2max;
   en12.reserve(max_Nsz*2);
-  count2[0] =max_Nsz;
-  dimms2[0] =max_Nsz;
-  memspace_l2.setExtentSimple(1, dimms2, NULL);
+  count[0] =max_Nsz;
+  dimms[0] =max_Nsz;
+  memspace_l.setExtentSimple(1, dimms, NULL);
 
-  max_line = *std::max_element(cfgs.begin(), cfgs.end(),
-        [](cfg::line const &a, cfg::line const &b) { return a.n1 < b.n1; });
+  // max_line = *std::max_element(cfgs.begin(), cfgs.end(),
+  //       [](cfg::line const &a, cfg::line const &b) { return a.n1 < b.n1; });
 
-  l1_sz = max_line.n1;
-  count1[0]=l1_sz;
-  dimms1[0]=l1_sz;
-  memspace_l1.setExtentSimple(1, dimms1, NULL);
+  // l1_sz = max_line.n1;
+  // count1[0]=l1_sz;
+  // dimms1[0]=l1_sz;
+  // memspace_l1.setExtentSimple(1, dimms1, NULL);
 
   // Sort the energies in parallel using C++17 built in parallel sort
   // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
@@ -589,16 +588,16 @@ int DMX2e::sort_L(int L_max, std::string dir) {
   write_sz[0]=t_sz;
   idx_sz[0]=t_sz*4;
 
-  filename = pot + std::to_string(0)+std::to_string(1) + gauge + ".h5";
+  filename = pot +"0.h5";
   file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-  e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+  e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
   e_space = e1->getSpace();
-  e_space.selectHyperslab(H5S_SELECT_SET, count1, offset, stride, block);
-  e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l1, e_space);
+  e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+  e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
 
   e_space = e1->getSpace();
-  e_space.selectHyperslab(H5S_SELECT_SET, count2, offset, stride, block);
-  e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l2, e_space);
+  e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+  e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
   file->close();
 
   last_l1=0; last_l2=0;
@@ -607,22 +606,22 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     l2=line.l2;
 
     if(l1!=last_l1) {
-      filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
+      filename = pot + std::to_string(l1)+ ".h5";
       file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
-      e_space.selectHyperslab(H5S_SELECT_SET, count1, offset, stride, block);
-      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l1, e_space);
+      e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+      e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
       file->close();
     }
 
     if(l2!=last_l2) {
-      filename = pot + std::to_string(l2)+std::to_string(l2+1) + gauge + ".h5";
+      filename = pot + std::to_string(l2)+".h5";
       file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+      e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
-      e_space.selectHyperslab(H5S_SELECT_SET, count2, offset, stride, block);
-      e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l2, e_space);
+      e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+      e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
       file->close();
     }
 
@@ -692,17 +691,17 @@ int DMX2e::sort_L(int L_max, std::string dir) {
           [](cfg::line const &a, cfg::line const &b) { return a.n2max < b.n2max; });
     max_Nsz = max_n2l.n2max;
     en12.reserve(max_Nsz*2);
-    count2[0] =max_Nsz;
-    dimms2[0] =max_Nsz;
-    memspace_l2.setExtentSimple(1, dimms2, NULL);
+    count[0] =max_Nsz;
+    dimms[0] =max_Nsz;
+    memspace_l.setExtentSimple(1, dimms, NULL);
 
-    max_line = *std::max_element(cfgs.begin(), cfgs.end(),
-          [](cfg::line const &a, cfg::line const &b) { return a.n1 < b.n1; });
+    // max_line = *std::max_element(cfgs.begin(), cfgs.end(),
+    //       [](cfg::line const &a, cfg::line const &b) { return a.n1 < b.n1; });
 
-    l1_sz = max_line.n1;
-    count1[0]=l1_sz;
-    dimms1[0]=l1_sz;
-    memspace_l1.setExtentSimple(1, dimms1, NULL);
+    // l1_sz = max_line.n1;
+    // count1[0]=l1_sz;
+    // dimms1[0]=l1_sz;
+    // memspace_l1.setExtentSimple(1, dimms1, NULL);
 
     // Sort the energies in parallel using C++17 built in parallel sort
     // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(), 
@@ -717,16 +716,16 @@ int DMX2e::sort_L(int L_max, std::string dir) {
     write_sz[0]=t_sz;
     idx_sz[0]=t_sz*4;
 
-    filename = pot + std::to_string(0)+std::to_string(1) + gauge + ".h5";
+    filename = pot +"0.h5";
     file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-    e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+    e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
     e_space = e1->getSpace();
-    e_space.selectHyperslab(H5S_SELECT_SET, count1, offset, stride, block);
-    e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l1, e_space);
+    e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+    e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
 
     e_space = e1->getSpace();
-    e_space.selectHyperslab(H5S_SELECT_SET, count2, offset, stride, block);
-    e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l2, e_space);
+    e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+    e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
     file->close();
 
     last_l1=0; last_l2=0;
@@ -735,22 +734,22 @@ int DMX2e::sort_L(int L_max, std::string dir) {
       l2=line.l2;
 
       if(l1!=last_l1) {
-        filename = pot + std::to_string(l1)+std::to_string(l1+1) + gauge + ".h5";
+        filename = pot + std::to_string(l1)+".h5";
         file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-        e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+        e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
         e_space = e1->getSpace();
-        e_space.selectHyperslab(H5S_SELECT_SET, count1, offset, stride, block);
-        e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l1, e_space);
+        e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+        e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
         file->close();
       }
 
       if(l2!=last_l2) {
-        filename = pot + std::to_string(l2)+std::to_string(l2+1) + gauge + ".h5";
+        filename = pot + std::to_string(l2)+".h5";
         file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-        e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("e_i")));
+        e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
         e_space = e1->getSpace();
-        e_space.selectHyperslab(H5S_SELECT_SET, count2, offset, stride, block);
-        e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l2, e_space);
+        e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+        e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
         file->close();
       }
 
