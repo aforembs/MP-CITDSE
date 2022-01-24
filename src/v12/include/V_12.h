@@ -11,6 +11,7 @@
 #include "bsplines.h"
 #include "cfg_in.h"
 #include "integrator.h"
+#include "wigxjpf.h"
 
 int V12(std::string cpot, int L_max, std::vector<uint> &N_sz);
 

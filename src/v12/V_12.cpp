@@ -481,8 +481,12 @@ int V12(std::string cpot, int L_max, std::string dir) {
   uint64_t st_time;
   // std::ofstream dat_fl;
 
+  wig_table_init(2*(k_max+2),6);
+  
+
   #pragma omp parallel private(e12p)
   {
+  wig_thread_temp_init(2*(k_max+2));
   for(int L=0; L<=L_max; ++L) {
     
     // Read n1l1;n2l2 indices for NL states
@@ -506,7 +510,7 @@ int V12(std::string cpot, int L_max, std::string dir) {
 
     for(int NL2=0; NL2<L_sz; ++NL2) {
       //set n1'l1';n2'l2'
-      e12p = L_idx[NL2];
+      e12p =L_idx[NL2];
       bool eqvp = e12p.n1==e12p.n2 && e12p.l1==e12p.l2;
 
       #pragma omp single
@@ -546,12 +550,13 @@ int V12(std::string cpot, int L_max, std::string dir) {
              !(((k+e12.l2+e12p.l2) >> 0) & 1) &&
              !std::isinf(1.0/rk_mid[(k+1)*n*bo])) {
             sum_k += pow(-1,min_dir)*FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
-                          Ssp, rk, rk_mid, l1i_loc, l2i_loc, p1p_buff, 
-                          p2p_buff, p2p_mid, pi)
-                          *wigner_3j0(e12.l1,k,e12p.l1)
-                          *wigner_3j0(e12.l2,k,e12p.l2)
-                          *wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
-            // std::cout<<k<<" "<< sum_k<<" "
+                      Ssp, rk, rk_mid, l1i_loc, l2i_loc, p1p_buff, 
+                      p2p_buff, p2p_mid, pi)
+                      *wigner_3j0(e12.l1,k,e12p.l1)
+                      *wigner_3j0(e12.l2,k,e12p.l2)
+                      *wig6jj(2*e12p.l1,2*e12p.l2,2*L,2*e12.l2,2*e12.l1,2*k);
+                          //wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k);
+            // std::cout<<k<<" dir "<< sum_k<<" "
             //         <<wigner_3j0(e12.l1,k,e12p.l1)<<" "
             //         <<wigner_3j0(e12.l2,k,e12p.l2)<<" "
             //         <<wigner_6j(e12p.l1,e12p.l2,L,e12.l2,e12.l1,k)<< "\n";
@@ -567,12 +572,13 @@ int V12(std::string cpot, int L_max, std::string dir) {
              !(((k+e12.l2+e12p.l1) >> 0) & 1) &&
              !std::isinf(1.0/rk_mid[(k+1)*n*bo])) {
             sum_k += pow(-1,min_exc)*FsltrLob3GL(k, n, bo, gl_w, gl_x, kkn, Bsplines, 
-                          Ssp, rk, rk_mid, l1i_loc, l2i_loc, p2p_buff, 
-                          p1p_buff, p1p_mid, pi)
-                          *wigner_3j0(e12.l1,k,e12p.l2)
-                          *wigner_3j0(e12.l2,k,e12p.l1)
-                          *wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
-            // std::cout<<k<<" "<< sum_k<<" "
+                      Ssp, rk, rk_mid, l1i_loc, l2i_loc, p2p_buff, 
+                      p1p_buff, p1p_mid, pi)
+                      *wigner_3j0(e12.l1,k,e12p.l2)
+                      *wigner_3j0(e12.l2,k,e12p.l1)
+                      *wig6jj(2*e12p.l1,2*e12p.l2,2*L,2*e12.l1,2*e12.l2,2*k);
+                          //wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k);
+            // std::cout<<k<<" exc "<< sum_k<<" "
             //         <<wigner_3j0(e12.l1,k,e12p.l2)<<" "
             //         <<wigner_3j0(e12.l2,k,e12p.l1)<<" "
             //         <<wigner_6j(e12p.l1,e12p.l2,L,e12.l1,e12.l2,k)<< "\n";
@@ -620,8 +626,10 @@ int V12(std::string cpot, int L_max, std::string dir) {
     v_mat.clear();
     }
   }
+  wig_temp_free();
   }
-
+  
+  wig_table_free();
   omp_destroy_lock(&copylock);
 
   return 0;

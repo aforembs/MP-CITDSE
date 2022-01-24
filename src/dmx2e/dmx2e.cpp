@@ -1001,7 +1001,7 @@ int DMX2e::calc_dmx(int L_max, int l_m, std::string dir) {
   int ncf, sym;
   std::vector<cfg::line> cfgs;
   std::vector<idx4*> buffs(2);
-  auto max_N=0;
+  auto max_N=0, max_nl=0;
   cfg::line max_n2l;
 
   for(auto Li=0; Li<=L_max; ++Li) {
@@ -1010,8 +1010,9 @@ int DMX2e::calc_dmx(int L_max, int l_m, std::string dir) {
     max_n2l = *std::max_element(cfgs.begin(), cfgs.end(),
         [](cfg::line const &a, cfg::line const &b) { return a.n2max < b.n2max; });
     max_N =std::max(max_n2l.n2max,max_N);
+    max_nl=std::max(ncf,max_nl);
   }
-  auto max_Nsz = ncf*max_N;
+  auto max_Nsz = max_nl*max_N;
   std::vector<idx4> Li_idx(max_Nsz);
   std::vector<idx4> Lf_idx(max_Nsz);
 
