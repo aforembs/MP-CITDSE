@@ -56,7 +56,8 @@ int WriteHdf5(int n, int k, int li,
 }
 
 int tise::ReadConfig(std::string file,
-                    int &n, int &k, int &r_max,
+                    int &n, int &k, 
+                    int &glq_pt, int &r_max,
                     std::string &grid,
                     std::string &k_file,
                     std::string &pot,
@@ -66,16 +67,19 @@ int tise::ReadConfig(std::string file,
   YAML::Node settings = YAML::LoadFile(file);
 
   n = settings["Basis_Settings"]["state_no"].as<int>();
-  std::cout << "Number of States:                "
+  std::cout << "Number of States:                          "
             << n << std::endl;
   k = settings["Basis_Settings"]["max_spline_k"].as<int>();
-  std::cout << "Maximum B-splines order:         "
+  std::cout << "Maximum B-splines order:                   "
             << k << std::endl;
+  glq_pt = settings["Basis_Settings"]["GL_quad_points"].as<int>();
+  std::cout << "Number of points in the outer quadrature:  "
+            << glq_pt << std::endl;
   r_max = settings["Basis_Settings"]["R_max"].as<int>();
-  std::cout << "Box radius:                      "
+  std::cout << "Box radius:                                "
             << r_max << std::endl;
   grid = settings["Basis_Settings"]["grid"].as<std::string>();
-  std::cout << "Type of knot spacing:            "
+  std::cout << "Type of knot spacing:                      "
             << grid << std::endl;
   if(grid.compare("custom")==0) {
     k_file = settings["Basis_Settings"]["grid"].as<std::string>();
@@ -83,21 +87,21 @@ int tise::ReadConfig(std::string file,
               << k_file << std::endl;
   }
   pot = settings["Basis_Settings"]["potential"].as<std::string>();
-  std::cout << "Core Potential:                  "
+  std::cout << "Core Potential:                            "
             << pot << std::endl;
   l_max     = settings["Basis_Settings"]["l_max"].as<int>();
-  std::cout << "Maximum l:                       "
+  std::cout << "Maximum l:                                 "
             << l_max << std::endl;
   z = settings["Basis_Settings"]["atomic_no"].as<int>();
-  std::cout << "Atomic number:                   "
+  std::cout << "Atomic number:                             "
             << z << std::endl;
   mass = settings["Basis_Settings"]["mass"].as<double>();
-  std::cout << "mass (0.5 atoms, 1 positronium): "
+  std::cout << "mass (0.5 atoms, 1 positronium):           "
             << mass << std::endl;
   return 0;
 }
 
-int tise::GenCoeff(int n, int k, int l_max,
+int tise::GenCoeff(int n, int k, int glq_pt, int l_max,
                   double z, double mass,
                   std::string pot,
                   std::vector<double> &gl_w, 
@@ -118,13 +122,13 @@ int tise::GenCoeff(int n, int k, int l_max,
   auto v_1    = std::unique_ptr<ModelV>(new V_c(1.0));
   auto v_1_r2 = std::unique_ptr<ModelV>(new V_c_r2(1.0));
 
-  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_BB, spl, kkn, v_1); // int B_iB_j dr
-  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_dBdB, splp, kkn, v_1); // int B_i d/dr^2 B_j dr
-  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_1_r2, spl, kkn, v_1_r2); // int B_iB_j/r^2 dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_BB, spl, kkn, v_1); // int B_iB_j dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_dBdB, splp, kkn, v_1); // int B_i d/dr^2 B_j dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_1_r2, spl, kkn, v_1_r2); // int B_iB_j/r^2 dr
 
   auto v = std::unique_ptr<ModelV>(new V_1_r(z));
 
-  bsp::SplineInt(nm2, k, gl_w, gl_x, ov_V, spl, kkn, v); // int B_i V(r) B_j dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_V, spl, kkn, v); // int B_i V(r) B_j dr
 
   Enl.reserve(lm1*nm2);
   Cnl_tmp.reserve(lm1*nm22);
@@ -132,11 +136,11 @@ int tise::GenCoeff(int n, int k, int l_max,
   w_bb.reserve(lm1*nk);
   
   for(int l=0; l<=l_max; ++l) {
-    std::copy(std::execution::par_unseq, ov_BB.begin(), ov_BB.end(), w_bb.begin()+l*nk);
+    std::copy(std::execution::seq, ov_BB.begin(), ov_BB.end(), w_bb.begin()+l*nk);
   }
 
-  omp_set_num_threads(std::min(lm1, omp_get_max_threads()));
-  #pragma omp parallel for private(llp1, nik, lnk)
+  // omp_set_num_threads(std::min(lm1, omp_get_max_threads()));
+  // #pragma omp parallel for private(llp1, nik, lnk)
   for(int l=0; l<=l_max; ++l) {
     llp1=l*(l+1);
     lnk=l*nk;
@@ -159,13 +163,13 @@ int tise::GenCoeff(int n, int k, int l_max,
       auto end_it = st_it+nm2;
       // make the wf have a positive derivative at r=0
       auto val=0.0;
-      for(auto i=0; i<k; ++i) val+=Cnl_tmp[idxh+i]*splp[i+(k-1)*k*k];
-      //   val_b+=Cnl_tmp[idxh+i]*spl[i+(k-1)*k*k];}
+      for(auto i=0; i<k; ++i) val+=Cnl_tmp[idxh+i]*spl[i+(k-1)*k*glq_pt];
+
       if (val<0.0) {
-        std::transform(std::execution::par_unseq, st_it, end_it, st_it,
+        std::transform(std::execution::seq, st_it, end_it, st_it,
                std::bind(std::multiplies<double>(), std::placeholders::_1, -1.0));
       }
-      std::copy(std::execution::par_unseq, st_it, end_it, Cnl.begin()+l*n*nm2+1+ni*n);
+      std::copy(std::execution::seq, st_it, end_it, Cnl.begin()+l*n*nm2+1+ni*n);
     }
     
     // Write hdf5 file

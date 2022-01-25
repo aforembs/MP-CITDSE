@@ -7,14 +7,17 @@
 #include "fastgl.h"
 #include "H5Cpp.h"
 #include "dmx_typ.h"
-#include "wigner_sym.h"
 #include "bsplines.h"
 #include "cfg_in.h"
 #include "integrator.h"
 #include "wigxjpf.h"
 
-int V12(std::string cpot, int L_max, std::vector<uint> &N_sz);
+namespace r_12{
 
-int V12(std::string cpot, int L_max, std::string dir);
+// int ReadConfig(std::string file,);
+
+int R12(std::string cpot, int L_max, int glq_pt, std::string dir);
+
+}
 
 #endif // V_12_H_

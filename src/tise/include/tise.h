@@ -17,14 +17,16 @@
 namespace tise {
 
 int ReadConfig(std::string file,
-              int &n, int &k, int &r_max,
+              int &n, int &k, 
+              int &glq_pt, int &r_max,
               std::string &grid,
               std::string &k_file,
               std::string &pot,
               int &l_max, int &z, 
               double &mass);
 
-int GenCoeff(int n, int k, int l,
+int GenCoeff(int n, int k, 
+            int glq_pt, int l,
             double z, double mass,
             std::string pot,
             std::vector<double> &gl_w, 

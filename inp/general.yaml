@@ -2,18 +2,23 @@
 Basis_Settings:
   state_no: 400
   max_spline_k: 9
+  GL_quad_points: 9
   R_max: 200                # box radius in a.u.
-  grid: "linear"              # grid type
+  grid: "linear"            # grid type
   knot_file: ""
   potential: "he"           # potential name
   l_max: 7                  # l <= l_max
   atomic_no: 2              # nuclear charge
   mass: 0.5                 # 0.5 for atom 1 for positronium
+# Settings for the two electron interaction calculation
+R12_Settings:
+  L_max: 2                  # total L <= L_max
+  integrator: "glob3"       # inner integral type
 # Settings for the TDSE solver
 Propagator_Settings:
   Lanczos_iterations: 200   # number of Lanczos basis vectors
   dt: 0.5                   # time step size
-  L_max: 5                  # total L <= L_max
+  L_max: 2                  # total L <= L_max
 Field_Parameters:
   w: 8.5                    # photon energy
   Io: 1.0e13                # peak intensity

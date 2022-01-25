@@ -11,6 +11,7 @@ int main(int argc, char *argv[]) {
   std::string opt_file;
   auto n=400;
   auto k=9;
+  auto glq_pt=9;
   auto r_max=200;
   auto l_max=4;
   auto z=1;
@@ -32,7 +33,7 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  tise::ReadConfig(opt_file, n, k, r_max, grid, k_file, pot, l_max, z, mass);
+  tise::ReadConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z, mass);
 
   if(grid.compare("linear")==0) {
     bsp::GenKnots(n, k, r_max, fkn, 'l', kkn);
@@ -55,22 +56,23 @@ int main(int argc, char *argv[]) {
   }
 
   // generate GL nodes and weights over B-splines support
-  auto gl_x = std::vector<double>(k);
-  auto gl_w = std::vector<double>(k);
+  auto gl_x = std::vector<double>(glq_pt);
+  auto gl_w = std::vector<double>(glq_pt);
   fastgl::QuadPair gl_i;
-  for(int i=1; i<=k; ++i) {
-    gl_i = fastgl::GLPair(k, i);
-    gl_x[k-i] = gl_i.x(); 
-    gl_w[k-i] = gl_i.weight;
+  for(int i=1; i<=glq_pt; ++i) {
+    gl_i = fastgl::GLPair(glq_pt, i);
+    gl_x[glq_pt-i] = gl_i.x(); 
+    gl_w[glq_pt-i] = gl_i.weight;
   }
 
   // generate B_i(r) and B'_i(r)
   auto spl  = std::vector<double>();
   auto splp = std::vector<double>();
-  bsp::Splines(n, k, gl_x, kkn, spl);
-  bsp::SplinesP(n, k, gl_x, kkn, splp);
+  bsp::Splines(n, k, glq_pt, gl_x, kkn, spl);
+  bsp::SplinesP(n, k, glq_pt, gl_x, kkn, splp);
 
-  tise::GenCoeff(n, k, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp, "dat/");
+  tise::GenCoeff(n, k, glq_pt, l_max, z, mass, pot, 
+                gl_w, gl_x, kkn, spl, splp, "dat/");
 
   return 0;
 }

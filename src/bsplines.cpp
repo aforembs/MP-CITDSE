@@ -114,7 +114,7 @@ int bsp::WrKnotsH5(int n, int k, double r_max,
   return 0;
 }
 
-int bsp::Splines(int n, int k, 
+int bsp::Splines(int n, int k, int glq_pt,
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,
                 std::vector<double> &splines) {
@@ -124,20 +124,17 @@ int bsp::Splines(int n, int k,
   std::vector<double> Db(k);
   std::vector<double> work(len);
 
-  splines.reserve(n*k*k);
+  splines.reserve(n*glq_pt*k);
 
-  for(int i=0; i<(k-1); ++i) {
-    for(int j=0; j<k*k; ++j) { 
-      {splines.emplace_back(0.0);} 
-    }
-  }
+  for(int i=0; i<(k-1)*glq_pt*k; ++i) 
+    splines.emplace_back(0.0);
 
   for(auto i=k-1; i<n; ++i){
     dl = knots[i+1] - knots[i];
     sl = knots[i+1] + knots[i];
     i1 = i + 1 ;
 
-    for(int p=0; p<k; ++p){
+    for(int p=0; p<glq_pt; ++p){
       x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
       
       dbspvd_(&knots[0], k, 1, x, i1, k, &Db[0], &work[0]);
@@ -148,7 +145,7 @@ int bsp::Splines(int n, int k,
   return 0;
 }
 
-int bsp::SimpSplines(int n, int k, 
+int bsp::SimpSplines(int n, int k, int glq_pt,
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,
                 std::vector<double> &sisplines) {
@@ -158,13 +155,10 @@ int bsp::SimpSplines(int n, int k,
   std::vector<double> Db(k);
   std::vector<double> work(len);
 
-  sisplines.reserve(n*2*k*k);
+  sisplines.reserve(n*2*glq_pt*k);
 
-  for(int i=0; i<(k-1); ++i) {
-    for(int j=0; j<2*k*k; ++j) { 
-      {sisplines.emplace_back(0.0);} 
-    }
-  }
+  for(int i=0; i<(k-1)*2*glq_pt*k; ++i) 
+    sisplines.emplace_back(0.0);
 
   double xm1 = 0.0;
   double xs38a, xs38b;
@@ -176,7 +170,7 @@ int bsp::SimpSplines(int n, int k,
     dl = knots[i1] - knots[i];
     sl = knots[i1] + knots[i];
 
-    for(int p=0; p<k; ++p){
+    for(int p=0; p<glq_pt; ++p){
       x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
       xs38a = (2*xm1+x)/3;
       xs38b = (xm1+2*x)/3;
@@ -194,7 +188,7 @@ int bsp::SimpSplines(int n, int k,
   return 0;
 }
 
-int bsp::Lob3Splines(int n, int k, 
+int bsp::Lob3Splines(int n, int k, int glq_pt,
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,
                 std::vector<double> &lsplines) {
@@ -204,13 +198,10 @@ int bsp::Lob3Splines(int n, int k,
   std::vector<double> Db(k);
   std::vector<double> work(len);
 
-  lsplines.reserve(n*k*k);
+  lsplines.reserve(n*glq_pt*k);
 
-  for(int i=0; i<(k-1); ++i) {
-    for(int j=0; j<k*k; ++j) { 
-      {lsplines.emplace_back(0.0);} 
-    }
-  }
+  for(int i=0; i<(k-1)*glq_pt*k; ++i) 
+    lsplines.emplace_back(0.0);
 
   double xm1 = 0.0;
   double xlm;
@@ -221,7 +212,7 @@ int bsp::Lob3Splines(int n, int k,
     dl = knots[i1] - knots[i];
     sl = knots[i1] + knots[i];
 
-    for(int p=0; p<k; ++p){
+    for(int p=0; p<glq_pt; ++p){
       x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
       xlm = (xm1+x)*0.5;
 
@@ -234,7 +225,7 @@ int bsp::Lob3Splines(int n, int k,
   return 0;
 }
 
-int bsp::LobSplines(int n, int k, 
+int bsp::LobSplines(int n, int k, int glq_pt,
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,
                 std::vector<double> &lobsplines) {
@@ -244,13 +235,10 @@ int bsp::LobSplines(int n, int k,
   std::vector<double> Db(k);
   std::vector<double> work(len);
 
-  lobsplines.reserve(n*2*k*k);
+  lobsplines.reserve(n*2*glq_pt*k);
 
-  for(int i=0; i<(k-1); ++i) {
-    for(int j=0; j<2*k*k; ++j) { 
-      {lobsplines.emplace_back(0.0);} 
-    }
-  }
+  for(int i=0; i<(k-1)*2*glq_pt*k; ++i) 
+    lobsplines.emplace_back(0.0);
 
   double xm1 = 0.0;
   constexpr double Lob4p = 0.4472135954999579392818347e0;
@@ -265,7 +253,7 @@ int bsp::LobSplines(int n, int k,
     dl = (knots[i1] - knots[i])*0.5;
     sl = (knots[i1] + knots[i])*0.5;
 
-    for(int p=0; p<k; ++p){
+    for(int p=0; p<glq_pt; ++p){
       x = dl*gl_x[p] + sl;    //x-transformation
       dlob = (x-xm1)*0.5*Lob4p;
       slob = (x+xm1)*0.5;
@@ -285,7 +273,7 @@ int bsp::LobSplines(int n, int k,
   return 0;
 }
 
-int bsp::GL2Splines(int n, int k, int k2,
+int bsp::GL2Splines(int n, int k, int glq_pt, int glq_pt2,
                 std::vector<double> &gl_outer,
                 std::vector<double> &gl_inner,
                 std::vector<double> &knots,
@@ -296,10 +284,10 @@ int bsp::GL2Splines(int n, int k, int k2,
   std::vector<double> Db(k);
   std::vector<double> work(len);
 
-  glsplines.reserve(n*k2*k*k);
+  glsplines.reserve(n*glq_pt2*glq_pt*k);
 
   for(int i=0; i<(k-1); ++i) {
-    for(int j=0; j<k2*k*k; ++j) { 
+    for(int j=0; j<glq_pt2*glq_pt*k; ++j) { 
       {glsplines.emplace_back(0.0);} 
     }
   }
@@ -313,10 +301,10 @@ int bsp::GL2Splines(int n, int k, int k2,
     dl = knots[i1] - knots[i];
     sl = knots[i1] + knots[i];
 
-    for(int p=0; p<k; ++p){
+    for(int p=0; p<glq_pt; ++p){
       x = dl*0.5 * gl_outer[p] + sl*0.5;    //x-transformation
 
-      for (int j=0; j<k2; ++j) {
+      for (int j=0; j<glq_pt2; ++j) {
         gl2x=(x-xm1)*0.5*gl_inner[j] + (x+xm1)*0.5;
 
         ia=i1-(knots[i]>gl2x);
@@ -365,7 +353,7 @@ int bsp::TrapSplines(int n, int k, int pt,
   return 0;
 }
 
-int bsp::SplinesP(int n, int k, 
+int bsp::SplinesP(int n, int k, int glq_pt,
                   std::vector<double> &gl_x,
                   std::vector<double> &knots,
                   std::vector<double> &splinesp) {
@@ -375,16 +363,16 @@ int bsp::SplinesP(int n, int k,
   std::vector<double> Db(k*2);
   std::vector<double> work(len);
 
-  splinesp.reserve(n*k*k);
+  splinesp.reserve(n*glq_pt*k);
 
-  for(int i=0; i<(k-1)*k*k; ++i) {splinesp.emplace_back(0.0);}
+  for(int i=0; i<(k-1)*glq_pt*k; ++i) {splinesp.emplace_back(0.0);}
 
   for(auto i=k-1; i<n; ++i){
     dl = knots[i+1] - knots[i];
     sl = knots[i+1] + knots[i];
     i1 = i + 1 ;
 
-    for(int p=0; p<k; ++p){
+    for(int p=0; p<glq_pt; ++p){
       x = dl*0.5 * gl_x[p] + sl*0.5;    //x-transformation
       
       dbspvd_(&knots[0], k, 2, x, i1, k, &Db[0], &work[0]);
@@ -395,7 +383,7 @@ int bsp::SplinesP(int n, int k,
   return 0;
 }
 
-int bsp::SplineInt(int n, int k,
+int bsp::SplineInt(int n, int k, int glq_pt,
                   std::vector<double> &gl_w,
                   std::vector<double> &gl_x,
                   std::vector<double> &ov,
@@ -417,9 +405,9 @@ int bsp::SplineInt(int n, int k,
         dl = (kkn[t] - kkn[tm1])*0.5;
         sl = (kkn[t] + kkn[tm1])*0.5;
         bsum = 0.0;
-        for(int p=0; p<k; ++p) {
+        for(int p=0; p<glq_pt; ++p) {
           x=dl*gl_x[p]+sl;
-          bsum += gl_w[p]*spl[i+1-t+k+k*(p+(tm1)*k)]*spl[j+1-t+k+k*(p+(tm1)*k)]*Vptr->V(x);
+          bsum += gl_w[p]*spl[i+1-t+k+k*(p+(tm1)*glq_pt)]*spl[j+1-t+k+k*(p+(tm1)*glq_pt)]*Vptr->V(x);
         }
         ovlp += dl*bsum;
       }

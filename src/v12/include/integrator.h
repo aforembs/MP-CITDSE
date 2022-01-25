@@ -33,7 +33,7 @@ double FsltrLob4GL(int k, int n, int bo,
             std::vector<double> &Cl2i_pt,
             std::vector<double> &Cl2p_pt);
 
-double FsltrLob3GL(int k, int n, int bo,
+double FsltrLob3GL(int k, int n, int bo, int glq_pt,
             std::vector<double> &gl_w, 
             std::vector<double> &gl_x, 
             std::vector<double> &kkn,
