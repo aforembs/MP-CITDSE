@@ -66,15 +66,19 @@ int tise::ReadConfig(std::string file,
 
   YAML::Node settings = YAML::LoadFile(file);
 
+  pot = settings["Global_Settings"]["potential"].as<std::string>();
+  std::cout << "Core Potential:                            "
+            << pot << std::endl;
+  glq_pt = settings["Global_Settings"]["GL_quad_points"].as<int>();
+  std::cout << "Number of points in the outer quadrature:  "
+            << glq_pt << std::endl;
+
   n = settings["Basis_Settings"]["state_no"].as<int>();
   std::cout << "Number of States:                          "
             << n << std::endl;
   k = settings["Basis_Settings"]["max_spline_k"].as<int>();
   std::cout << "Maximum B-splines order:                   "
             << k << std::endl;
-  glq_pt = settings["Basis_Settings"]["GL_quad_points"].as<int>();
-  std::cout << "Number of points in the outer quadrature:  "
-            << glq_pt << std::endl;
   r_max = settings["Basis_Settings"]["R_max"].as<int>();
   std::cout << "Box radius:                                "
             << r_max << std::endl;
@@ -86,9 +90,6 @@ int tise::ReadConfig(std::string file,
     std::cout << "Custom knot sequence file:     "
               << k_file << std::endl;
   }
-  pot = settings["Basis_Settings"]["potential"].as<std::string>();
-  std::cout << "Core Potential:                            "
-            << pot << std::endl;
   l_max     = settings["Basis_Settings"]["l_max"].as<int>();
   std::cout << "Maximum l:                                 "
             << l_max << std::endl;

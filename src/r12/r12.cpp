@@ -1,23 +1,29 @@
 #include "r12.h"
 #include "time_tst.h"
-#include <omp.h>
 
-// int r_12::ReadConfig(std::string file,
-//                     int &glq_pt,
-//                     std::string &pot,
-//                     int &L_max,
-//                     std::string &integrator) {
-//   YAML::Node settings = YAML::LoadFile(file);
+int r_12::ReadConfig(std::string file, int &glq_pt,
+                    std::string &pot, int &L_max,
+                    char &gauge, std::string &integrator) {
+  YAML::Node settings = YAML::LoadFile(file);
 
-//   glq_pt = settings["Basis_Settings"]["GL_quad_points"].as<int>();
-//   std::cout << "Number of points in the outer quadrature:  "
-//             << glq_pt << std::endl;
-//   pot = settings["Basis_Settings"]["potential"].as<std::string>();
-//   std::cout << "Core Potential:                            "
-//             << pot << std::endl;
-  
+  pot = settings["Global_Settings"]["potential"].as<std::string>();
+  std::cout << "Core Potential:                              "
+            << pot << std::endl;
+  glq_pt = settings["Global_Settings"]["GL_quad_points"].as<int>();
+  std::cout << "No. of GL-quadrature points between knots:   "
+            << glq_pt << std::endl;
+  L_max = settings["Global_Settings"]["L_max"].as<int>();
+  std::cout << "Maximum total two electron angular momentum: "
+            << L_max << std::endl;
+  gauge = settings["Global_Settings"]["gauge"].as<char>();
+  std::cout << "Gauge type ('l' length/'v' velocity):        "
+            << gauge << std::endl;
 
-// }
+  integrator = settings["R12_Settings"]["integrator"].as<std::string>();
+  std::cout << "Integration scheme (inner integral):         "
+            << integrator << std::endl;
+  return 0;
+}
 
 int Rpowk(std::vector<double> &r_out, std::vector<double> &r_in, 
           int n, int bo, int glq_pt, std::vector<double> &gl_x, 
@@ -55,6 +61,63 @@ int Rpowk(std::vector<double> &r_out, std::vector<double> &r_in,
       for(auto p=0; p<glq_pt; ++p){
         r_out[p+iqpt+k*nqpt] = r_out[p+iqpt+nqpt]*r_out[p+iqpt+km1*nqpt];
         r_in[p+iqpt+k*nqpt] = r_in[p+iqpt+nqpt]*r_in[p+iqpt+km1*nqpt];
+      }
+    }
+  }
+
+  return 0;
+}
+
+int Rpowklob4(std::vector<double> &r_out, std::vector<double> &r_in, 
+          int n, int bo, int glq_pt, std::vector<double> &gl_x, 
+          std::vector<double> &kkn, int k_max) {
+  auto nqpt=n*glq_pt;
+  auto nqpt2=2*nqpt;
+  r_out.reserve((k_max+1)*nqpt);
+  r_in.reserve((k_max+1)*nqpt);
+  auto km1=0;
+  auto i1=0;
+  double rm1 = 0.0;
+  double Lob4p = 0.4472135954999579392818347e0;
+
+
+  double rlm, dl, sl, ri;
+  auto ibo1bo=0, iqpt=0;
+  auto sp=0;
+  for(auto i=bo-1; i<n; ++i) {
+    i1=i+1;
+    dl = (kkn[i1] - kkn[i])*0.5;
+    sl = (kkn[i1] + kkn[i])*0.5;
+    ibo1gl = (i1-bo)*glq_pt;
+    ibo1gl2=2*ibo1gl;
+
+    sp=0;
+    for(auto p=0; p<glq_pt; ++p, sp+=2){
+      ri = dl*gl_x[p] + sl;
+      dlob = (ri-rm1)*0.5*Lob4p;
+      slob = (ri+rm1)*0.5;
+      rloba = -dlob + slob;
+      rlobb = dlob + slob;
+      r_out[p+ibo1gl+nqpt] = ri;
+      r_out[p+ibo1gl] = 1.0;
+      r_in[sp+ibo1gl2+nqpt2] = rloba;
+      r_in[sp+1+ibo1gl2+nqpt2] = rlobb;
+      r_in[sp+ibo1gl2] = 1.0;
+      r_in[sp+1+ibo1gl2] = 1.0;
+      rm1=ri;
+    }
+  }
+
+  for(auto k=2; k<=k_max; ++k) {
+    km1=k-1;
+    for(auto i=0; i<n+1-bo; ++i) {
+      iqpt = i*glq_pt;
+      iqpt2= 2*iqpt;
+      sp=0;
+      for(auto p=0; p<glq_pt; ++p, sp+=2){
+        r_out[p+iqpt+k*nqpt] = r_out[p+iqpt+nqpt]*r_out[p+iqpt+km1*nqpt];
+        r_in[sp+iqpt2+k*nqpt2] = r_in[sp+iqpt2+nqpt2]*r_in[sp+iqpt2+km1*nqpt2];
+        r_in[sp+1+iqpt2+k*nqpt2] = r_in[sp+1+iqpt2+nqpt2]*r_in[sp+1+iqpt2+km1*nqpt2];
       }
     }
   }
@@ -145,6 +208,56 @@ int Prprim(int n, int bo, int glq_pt,
             auto ai=ibo1j-(kkn[i]>rlob);
             Pl1pm += Cf[off1+ai]*Ssp[jbopi];
             Pl2pm += Cf[off2+ai]*Ssp[jbopi];
+          }
+          p1p_out[i1bo+p]=Pl1p;
+          p2p_out[i1bo+p]=Pl2p;
+          p1p_in[i1bo+p] =Pl1pm;
+          p2p_in[i1bo+p] =Pl2pm;
+          rm1=r;
+        }
+      }
+
+  return 0;
+}
+
+int Prprimlob4(int n, int bo, int glq_pt,
+           int off1, int off2, 
+           std::vector<double> &kkn, 
+           std::vector<double> &gl_x, 
+           std::vector<double> &Bsp, 
+           std::vector<double> &Ssp, 
+           std::vector<double> &Cf, 
+           std::vector<double> &p1p_out, 
+           std::vector<double> &p2p_out,
+           std::vector<double> &p1p_in, 
+           std::vector<double> &p2p_in) {
+      double rm1 = 0.0, r=0.0, rlob=0.0;
+      double Pl1p = 0, Pl2p = 0, Pl1pa=0, Pl1pb=0, Pl2pa=0, Pl2pb=0;
+      double dl, sl;
+
+      for(auto i=bo-1; i<n; ++i) {
+        auto i1=i+1;
+        auto i1bo=(i1-bo)*glq_pt;
+        dl = (kkn[i1] - kkn[i])*0.5;
+        sl = (kkn[i1] + kkn[i])*0.5;
+
+        for(auto p=0; p<glq_pt; ++p){
+          r=dl*gl_x[p] + sl;
+          rlob = (rm1+r)*0.5;
+          Pl1p = 0; Pl2p = 0; Pl2pm=0; Pl1pm=0;
+
+          for(auto j=0; j<bo; ++j) {
+            auto ibo1j=i1-bo+j;
+            auto jbopi = j+bo*(p+i*glq_pt);
+            Pl1p += Cf[off1+ibo1j]*Bsp[jbopi];
+            Pl2p += Cf[off2+ibo1j]*Bsp[jbopi];
+
+            auto ai=ibo1j-(kkn[i]>rlob);
+            bi=ibo1j-(kkn[i]>rlobb);
+            Pl1pa += Cf[off1+ai]*Ssp[jbopi];
+            Pl1pb += Cf[off1+ai]*Ssp[jbopi];
+            Pl2pa += Cf[off2+ai]*Ssp[jbopi];
+            Pl2pb += Cf[off1+ai]*Ssp[jbopi];
           }
           p1p_out[i1bo+p]=Pl1p;
           p2p_out[i1bo+p]=Pl2p;

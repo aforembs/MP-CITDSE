@@ -1,12 +1,16 @@
 #include <unistd.h>
 #include <cstdlib>
 #include <filesystem>
-#include "V12.h"
+#include "r12.h"
 
 namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
+  int glq_pt, L_max;
+  std::string pot, integrator;
+  std::string out_prefix;
+  char gauge;
 
   for(;;) {
     switch(getopt(argc, argv, "hf:")) {
@@ -22,7 +26,16 @@ int main(int argc, char *argv[]) {
     break;
   }
 
+  r_12::ReadConfig(opt_file, glq_pt, pot, L_max, gauge, integrator);
+
+  out_prefix = "dat/" + pot;
+
+  // check if he<L_max>idx.h5 exists if not create index files
+  if(!fs::exists(out_prefix + std::to_string(L_max) + "idx.h5")) {
+    cfg::GenL_idx(out_prefix, gauge, L_max, "inp");
+  }
   
+  r_12::R12(out_prefix, L_max, glq_pt, "inp"); // , integrator);
 
   return 0;
 } 

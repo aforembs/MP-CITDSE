@@ -469,7 +469,7 @@ double FsltrLob4GL(int k, int n, int bo,
   return Fk;
 }
 
-double FsltrLob4GL(int k, int n, int bo,
+double FsltrLob4GL(int k, int n, int bo, int glq_pt,
             std::vector<double> &gl_w, 
             std::vector<double> &gl_x, 
             std::vector<double> &kkn,
@@ -484,8 +484,8 @@ double FsltrLob4GL(int k, int n, int bo,
             std::vector<double> &p2p_mid,
             std::vector<double> &p2is) {
   int kp1=k+1;
-  int nbo=n*bo;
-  int nbo2=2*nbo;
+  int nqpt=n*glq_pt;
+  int nqpt2=2*nqpt;
   int i1, i1bo, i2bo;
   double Pl1i=0, Pl2i=0;
   double Pl2ira=0, Pl2pra=0, Pl2irb=0, Pl2prb=0;
@@ -510,13 +510,13 @@ double FsltrLob4GL(int k, int n, int bo,
 
   for(auto i=bo-1; i<n; ++i) {
     i1=i+1;
-    i1bo=(i1-bo)*bo;
+    i1bo=(i1-bo)*glq_pt;
     i2bo=i1bo*2;
     dl = (kkn[i1] - kkn[i])*0.5;
     sl = (kkn[i1] + kkn[i])*0.5;
 
     sp=0;
-    for(auto p=0; p<bo; ++p, sp+=2){
+    for(auto p=0; p<glq_pt; ++p, sp+=2){
       r2 = dl*gl_x[p] + sl;
       dlob = (r2-rm1)*0.5;
       slob = (r2+rm1)*0.5;
@@ -526,21 +526,21 @@ double FsltrLob4GL(int k, int n, int bo,
       Pl2ira=0; Pl2irb=0;
 
       for(auto j=0; j<bo; ++j) {
-        Pl2i += Cl2i_pt[i1-bo+j]*Bsp[j+bo*(p+i*bo)];
+        Pl2i += Cl2i_pt[i1-bo+j]*Bsp[j+bo*(p+i*glq_pt)];
         // Pl2p += Cl2p_pt[i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
         // G-Lobatto inner
         ai=ibo1j-(kkn[i]>rloba);
         bi=ibo1j-(kkn[i]>rlobb);
-        Pl2ira += Cl2i_pt[ai]*Ssp[j+bo*(sp+i*2*bo)];
-        Pl2irb += Cl2i_pt[bi]*Ssp[j+bo*(sp+1+i*2*bo)];
+        Pl2ira += Cl2i_pt[ai]*Ssp[j+bo*(sp+i*2*glq_pt)];
+        Pl2irb += Cl2i_pt[bi]*Ssp[j+bo*(sp+1+i*2*glq_pt)];
       }
       p2is[i1bo+p]=Pl2i;
 
-      Qk+=dlob*(fm1q+Lob4i*(1.0/rk_mid[sp+i2bo+kp1*nbo2])*Pl2ira*p2p_mid[i2bo+sp]+
-                Lob4i*(1.0/rk_mid[sp+1+i2bo+kp1*nbo2])*Pl2irb*p2p_mid[i2bo+sp+1]+
-                Lob4o*(1.0/rk[p+i1bo+kp1*nbo])*Pl2i*p2p_buff[i1bo+p]);
+      Qk+=dlob*(fm1q+Lob4i*(1.0/rk_mid[sp+i2bo+kp1*nqpt2])*Pl2ira*p2p_mid[i2bo+sp]+
+                Lob4i*(1.0/rk_mid[sp+1+i2bo+kp1*nqpt2])*Pl2irb*p2p_mid[i2bo+sp+1]+
+                Lob4o*(1.0/rk[p+i1bo+kp1*nqpt])*Pl2i*p2p_buff[i1bo+p]);
 
-      fm1q=Lob4o*(1.0/rk[p+i1bo+kp1*nbo])*Pl2i*p2p_buff[i1bo+p];
+      fm1q=Lob4o*(1.0/rk[p+i1bo+kp1*nqpt])*Pl2i*p2p_buff[i1bo+p];
       rm1=r2;
     }
     Qk+=dl*loc_GL;
@@ -591,12 +591,12 @@ double FsltrLob4GL(int k, int n, int bo,
       pr2b= Pl2irb*p2p_mid[i2bo+sp+1];
 
       // chi(r1)
-      pr1k = rk[p+i1bo+k*nbo];
-      pr1km= 1.0/rk[p+i1bo+kp1*nbo];
-      Jk+=dlob*(fm1j+Lob4i*rk[sp+i2bo+k*nbo2]*pr2a+
-          Lob4i*rk[sp+1+i2bo+k*nbo2]*pr2b+Lob4o*pr1k*pr2);
-      Qk-=dlob*(fm1q+Lob4i*(1.0/rk_mid[sp+i2bo+kp1*nbo2])*pr2a+
-          Lob4i*(1.0/rk_mid[sp+1+i2bo+kp1*nbo2])*pr2b+Lob4o*pr1km*pr2);
+      pr1k = rk[p+i1bo+k*nqpt];
+      pr1km= 1.0/rk[p+i1bo+kp1*nqpt];
+      Jk+=dlob*(fm1j+Lob4i*rk[sp+i2bo+k*nqpt2]*pr2a+
+          Lob4i*rk[sp+1+i2bo+k*nqpt2]*pr2b+Lob4o*pr1k*pr2);
+      Qk-=dlob*(fm1q+Lob4i*(1.0/rk_mid[sp+i2bo+kp1*nqpt2])*pr2a+
+          Lob4i*(1.0/rk_mid[sp+1+i2bo+kp1*nqpt2])*pr2b+Lob4o*pr1km*pr2);
       chi=pr1km*Jk+pr1k*Qk;
 
       // Glq outer
@@ -609,112 +609,6 @@ double FsltrLob4GL(int k, int n, int bo,
     Fk+=dl*loc_GL;
   }
 
-  return Fk;
-}
-
-// Fast slater integral code with Gauss Lobatto inner int
-double FsltrLob3GL(int k, int n, int bo,
-            std::vector<double> &gl_w, 
-            std::vector<double> &gl_x, 
-            std::vector<double> &kkn,
-            std::vector<double> &Bsp,
-            std::vector<double> &Ssp,
-            std::vector<double> &Cl1i_pt,
-            std::vector<double> &Cl1p_pt,
-            std::vector<double> &Cl2i_pt,
-            std::vector<double> &Cl2p_pt) {
-  int kp1=k+1;
-  int i1;
-  double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
-  double Pl2ira=0, Pl2pra=0;
-  double dl, sl, loc_GL, r2, r1, pr2, pr2a, chi;
-
-  // first calculate Qk for all of 0->R
-  double Qk=0.0;
-  double Jk=0;
-  double Fk=0;
-
-  constexpr double Lobo = 0.3333333333333333333333333e0;
-  constexpr double Lobi = 0.1333333333333333333333333e1;
-
-  for(auto i=bo-1; i<n; ++i) {
-    i1=i+1;
-    dl = (kkn[i1] - kkn[i])*0.5;
-    sl = (kkn[i1] + kkn[i])*0.5;
-    loc_GL=0.0;
-
-    for(auto p=0; p<bo; ++p){
-      r2 = dl*gl_x[p] + sl;
-      Pl2i = 0; Pl2p = 0;
-
-      for(auto j=0; j<bo; ++j) {
-        Pl2i += Cl2i_pt[i1-bo+j]*Bsp[j+bo*(p+i*bo)];
-        Pl2p += Cl2p_pt[i1-bo+j]*Bsp[j+bo*(p+i*bo)];
-      }
-      loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
-    }
-    Qk+=dl*loc_GL;
-  }
-
-  // std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
-  // +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
-
-  double rm1=0.0;
-  double rlob, dlob;
-  double fm1j=0.0, fm1q=0.0;
-  double pr1k, pr1km;
-  auto ibo1j=0, jbopi=0;
-  auto ai=0;
-
-  for(auto i=bo-1; i<n; ++i) {
-    i1=i+1;
-    dl = (kkn[i1] - kkn[i])*0.5;
-    sl = (kkn[i1] + kkn[i])*0.5;
-    loc_GL=0.0;
-
-    for(auto p=0; p<bo; ++p){
-      r1 = dl*gl_x[p] + sl;
-      rlob = (r1+rm1)*0.5;
-      dlob = (r1-rm1)*0.5;
-      Pl1i = 0; Pl1p = 0;
-      Pl2i = 0; Pl2p = 0;
-      Pl2ira=0; Pl2pra=0; 
-
-      for(auto j=0; j<bo; ++j) {
-        ibo1j = i1-bo+j;
-        jbopi = j+bo*(p+i*bo);
-        Pl1i += Cl1i_pt[ibo1j]*Bsp[jbopi];
-        Pl1p += Cl1p_pt[ibo1j]*Bsp[jbopi];
-        Pl2i += Cl2i_pt[ibo1j]*Bsp[jbopi];
-        Pl2p += Cl2p_pt[ibo1j]*Bsp[jbopi];
-
-        // G-Lobatto inner
-        ai=ibo1j-(kkn[i]>rlob);
-        Pl2ira += Cl2i_pt[ai]*Ssp[j+bo*(p+i*bo)];
-        Pl2pra += Cl2p_pt[ai]*Ssp[j+bo*(p+i*bo)];
-      }
-      pr2 = Pl2i*Pl2p;
-      pr2a= Pl2ira*Pl2pra;
-
-      // chi(r1)
-      pr1k = pow(r1,k);
-      pr1km= pow(r1,-kp1);
-      Jk+=dlob*(Lobo*fm1j+Lobi*pow(rlob,k)*pr2a+Lobo*pr1k*pr2);
-      Qk-=dlob*(Lobo*fm1q+Lobi*pow(rlob,-kp1)*pr2a+Lobo*pr1km*pr2);
-      chi=pr1km*Jk+pr1k*Qk;
-
-      // outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<< "\n";
-
-      // Glq outer
-      loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
-
-      rm1=r1;
-      fm1j=pr1k*pr2;
-      fm1q=pr1km*pr2;
-    }
-    Fk+=dl*loc_GL;
-  }
-  
   return Fk;
 }
 
