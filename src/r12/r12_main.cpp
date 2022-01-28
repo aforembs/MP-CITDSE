@@ -35,7 +35,12 @@ int main(int argc, char *argv[]) {
     cfg::GenL_idx(out_prefix, gauge, L_max, "inp");
   }
   
-  r_12::R12(out_prefix, L_max, glq_pt, "inp"); // , integrator);
+  if(integrator.compare("glob3")==0)
+    r_12::R12Glob3(out_prefix, L_max, glq_pt, "inp");
+  else if(integrator.compare("trapezoid")==0)
+    r_12::R12Trap(out_prefix, L_max, glq_pt, "inp");
+  else
+    std::cout << "Invalid integration scheme\n";
 
   return 0;
 } 

@@ -225,7 +225,7 @@ int bsp::Lob3Splines(int n, int k, int glq_pt,
   return 0;
 }
 
-int bsp::LobSplines(int n, int k, int glq_pt,
+int bsp::Lob4Splines(int n, int k, int glq_pt,
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,
                 std::vector<double> &lobsplines) {

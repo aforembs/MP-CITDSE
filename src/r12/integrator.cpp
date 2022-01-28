@@ -488,7 +488,7 @@ double FsltrLob4GL(int k, int n, int bo, int glq_pt,
   int nqpt2=2*nqpt;
   int i1, i1bo, i2bo;
   double Pl1i=0, Pl2i=0;
-  double Pl2ira=0, Pl2pra=0, Pl2irb=0, Pl2prb=0;
+  double Pl2ira=0, Pl2irb=0;
   double dl, sl, loc_GL, r2, r1, pr2, pr2a, pr2b, chi;
   double dlob, slob;
   double rloba, rlobb;
@@ -527,11 +527,11 @@ double FsltrLob4GL(int k, int n, int bo, int glq_pt,
 
       for(auto j=0; j<bo; ++j) {
         Pl2i += Cl2i_pt[i1-bo+j]*Bsp[j+bo*(p+i*glq_pt)];
-        // Pl2p += Cl2p_pt[i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
+
         // G-Lobatto inner
         ai=ibo1j-(kkn[i]>rloba);
         bi=ibo1j-(kkn[i]>rlobb);
-        Pl2ira += Cl2i_pt[ai]*Ssp[j+bo*(sp+i*2*glq_pt)];
+        Pl2ira += Cl2i_pt[ai]*Ssp[j+bo*(sp+i*2*glq_pt)]; // save these also
         Pl2irb += Cl2i_pt[bi]*Ssp[j+bo*(sp+1+i*2*glq_pt)];
       }
       p2is[i1bo+p]=Pl2i;
@@ -543,7 +543,6 @@ double FsltrLob4GL(int k, int n, int bo, int glq_pt,
       fm1q=Lob4o*(1.0/rk[p+i1bo+kp1*nqpt])*Pl2i*p2p_buff[i1bo+p];
       rm1=r2;
     }
-    Qk+=dl*loc_GL;
   }
 
   rm1=0.0;
@@ -573,18 +572,12 @@ double FsltrLob4GL(int k, int n, int bo, int glq_pt,
       for(auto j=0; j<bo; ++j) {
         ibo1j = i-bo+1+j;
         Pl1i += Cl1i_pt[ibo1j]*Bsp[j+bo*(p+i*bo)];
-        // Pl1p += Cl1p_pt[ibo1j]*Bsp[jbopi];
-        // Pl2i += Cl2i_pt[ibo1j]*Bsp[jbopi];
-        // Pl2p += Cl2p_pt[ibo1j]*Bsp[jbopi];
 
         // G-Lobatto inner
         ai=ibo1j-(kkn[i]>rloba);
         bi=ibo1j-(kkn[i]>rlobb);
         Pl2ira += Cl2i_pt[ai]*Ssp[j+bo*(sp+i*2*bo)];
-        // Pl2pra += Cl2p_pt[ai]*Ssp[j+bo*(sp+i*2*bo)];
-
         Pl2irb += Cl2i_pt[bi]*Ssp[j+bo*(sp+1+i*2*bo)];
-        // Pl2prb += Cl2p_pt[bi]*Ssp[j+bo*(sp+1+i*2*bo)];
       }
       pr2 = p2is[i1bo+p]*p2p_buff[i1bo+p];
       pr2a= Pl2ira*p2p_mid[i2bo+sp];
@@ -663,7 +656,7 @@ double FsltrLob3GL(int k, int n, int bo, int glq_pt,
         Pl2i += Cl2i_pt[i1-bo+j]*Bsp[jbopi];
         
         ai=i1-bo+j-(kkn[i]>rlob);
-        Pl2ira += Cl2i_pt[ai]*Ssp[jbopi];
+        Pl2ira += Cl2i_pt[ai]*Ssp[jbopi]; //save
       }
       p2is[i1bo+p]=Pl2i;
 
@@ -725,83 +718,84 @@ double FsltrLob3GL(int k, int n, int bo, int glq_pt,
   return Fk;
 }
 
-double FsltrTrapGL(int k, int n, int bo,
+double FsltrTrapGL(int k, int n, int bo, int glq_pt,
             std::vector<double> &gl_w, 
             std::vector<double> &gl_x, 
             std::vector<double> &kkn,
             std::vector<double> &Bsp,
+            std::vector<double> &rk,
             std::vector<double> &Cl1i_pt,
-            std::vector<double> &Cl1p_pt,
             std::vector<double> &Cl2i_pt,
-            std::vector<double> &Cl2p_pt) {
+            std::vector<double> &p1p_buff,
+            std::vector<double> &p2p_buff,
+            std::vector<double> &p2is) {
   int kp1=k+1;
-  double Pl1i=0, Pl1p=0, Pl2i=0, Pl2p=0;
+  int nqpt=n*glq_pt;
+  double Pl1i=0, Pl2i=0;
   double dl, sl, loc_GL, r2, r1, pr2, chi;
 
   // first calculate Qk for all of 0->R
   double Qk=0.0;
   double Jk=0;
   double Fk=0;
-
-  for(auto i=bo-1; i<n; ++i) {
-    dl = (kkn[i+1] - kkn[i])*0.5;
-    sl = (kkn[i+1] + kkn[i])*0.5;
-    loc_GL=0.0;
-
-    for(auto p=0; p<bo; ++p){
-      r2 = dl*gl_x[p] + sl;
-      Pl2i = 0; Pl2p = 0;
-
-      for(auto j=0; j<bo; ++j) {
-        Pl2i += Cl2i_pt[i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
-        Pl2p += Cl2p_pt[i-bo+1+j]*Bsp[j+bo*(p+i*bo)];
-      }
-      loc_GL+=gl_w[p]*pow(r2,-kp1)*Pl2i*Pl2p;
-    }
-    Qk+=dl*loc_GL;
-  }
-
-  // std::ofstream outFile("dat/slt_test"+std::to_string(na)+std::to_string(la)+std::to_string(nb)+std::to_string(lb)
-  // +std::to_string(nc)+std::to_string(lc)+std::to_string(nd)+std::to_string(ld)+".dat", std::ofstream::out);
-
   double rm1=0.0;
   double dltr;
   double fm1j=0.0, fm1q=0.0;
   double pr1k, pr1km;
-  auto ibo1j=0, jbopi=0;
+  auto ibo1j=0, jbopi=0, i1=0, i1bo=0;
 
   for(auto i=bo-1; i<n; ++i) {
+    i1=i+1;
+    dl = (kkn[i1] - kkn[i])*0.5;
+    sl = (kkn[i1] + kkn[i])*0.5;
+    i1bo=(i1-bo)*glq_pt;
+
+    for(auto p=0; p<glq_pt; ++p){
+      r2 = dl*gl_x[p] + sl;
+      dltr=(r2-rm1)*0.5;
+      Pl2i = 0; Pl2i = 0;
+
+      for(auto j=0; j<bo; ++j) {
+        Pl2i += Cl2i_pt[i1-bo+j]*Bsp[j+bo*(p+i*glq_pt)];
+      }
+      p2is[i1bo+p]=Pl2i;
+      Qk+=dltr*(fm1q+(1.0/rk[p+i1bo+kp1*nqpt])*Pl2i*p2p_buff[i1bo+p]);
+
+      fm1q=(1.0/rk[p+i1bo+kp1*nqpt])*Pl2i*p2p_buff[i1bo+p];
+      rm1=r2;
+    }
+  }
+
+  rm1=0.0;
+  fm1q=0.0;
+  for(auto i=bo-1; i<n; ++i) {
+    i1=i+1;
+    i1bo=(i1-bo)*glq_pt;
     dl = (kkn[i+1] - kkn[i])*0.5;
     sl = (kkn[i+1] + kkn[i])*0.5;
     loc_GL=0.0;
 
-    for(auto p=0; p<bo; ++p){
+    for(auto p=0; p<glq_pt; ++p){
       r1 = dl*gl_x[p] + sl;
       dltr=(r1-rm1)*0.5;
-      Pl1i = 0; Pl1p = 0;
-      Pl2i = 0; Pl2p = 0;
+      Pl1i = 0;
 
       for(auto j=0; j<bo; ++j) {
-        ibo1j = i-bo+1+j;
-        jbopi = j+bo*(p+i*bo);
+        ibo1j = i1-bo+j;
+        jbopi = j+bo*(p+i*glq_pt);
         Pl1i += Cl1i_pt[ibo1j]*Bsp[jbopi];
-        Pl1p += Cl1p_pt[ibo1j]*Bsp[jbopi];
-        Pl2i += Cl2i_pt[ibo1j]*Bsp[jbopi];
-        Pl2p += Cl2p_pt[ibo1j]*Bsp[jbopi];
       }
-      pr2 = Pl2i*Pl2p;
+      pr2 = p2is[i1bo+p]*p2p_buff[i1bo+p];
 
       // chi(r1)
-      pr1k = pow(r1,k);
-      pr1km= pow(r1,-kp1);
+      pr1k = rk[p+i1bo+k*nqpt];
+      pr1km= 1.0/rk[p+i1bo+kp1*nqpt];
       Jk+=dltr*(fm1j+pr1k*pr2);
       Qk-=dltr*(fm1q+pr1km*pr2);
       chi=pr1km*Jk+pr1k*Qk;
 
-      // outFile <<r1<<" "<<Jk<<" "<<Qk<<" "<<chi<< "\n";
-
       // Glq outer
-      loc_GL += gl_w[p]*Pl1i*Pl1p*chi;
+      loc_GL += gl_w[p]*Pl1i*p1p_buff[i1bo+p]*chi;
 
       rm1=r1;
       fm1j=pr1k*pr2;
@@ -809,7 +803,6 @@ double FsltrTrapGL(int k, int n, int bo,
     }
     Fk+=dl*loc_GL;
   }
-
   return Fk;
 }
 

@@ -42,7 +42,7 @@ int Lob3Splines(int n, int k, int glq_pt,
                 std::vector<double> &knots,
                 std::vector<double> &lsplines);
 
-int LobSplines(int n, int k, int glq_pt,
+int Lob4Splines(int n, int k, int glq_pt,
                 std::vector<double> &gl_x,
                 std::vector<double> &knots,
                 std::vector<double> &lobsplines);

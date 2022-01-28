@@ -20,7 +20,9 @@ int ReadConfig(std::string file, int &glq_pt,
               std::string &pot, int &L_max,
               char &gauge, std::string &integrator);
 
-int R12(std::string cpot, int L_max, int glq_pt, std::string dir);
+int R12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir);
+
+int R12Trap(std::string cpot, int L_max, int glq_pt, std::string dir);
 
 }
 
