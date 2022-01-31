@@ -1,7 +1,7 @@
 # Settings consistent among all programs
 Global_Settings:
   potential: "he"           # potential name
-  GL_quad_points: 13
+  GL_quad_points: 9
   L_max: 2                  # total L <= L_max
   gauge: 'v'                # length or velocity gauge
 # Settings for generating the 1e basis radial functions
@@ -16,7 +16,7 @@ Basis_Settings:
   mass: 0.5                 # 0.5 for atom 1 for positronium
 # Settings for the two electron interaction calculation
 R12_Settings:
-  integrator: "glob3"       # inner integral type "glob3" or "trapezoid"
+  integrator: "glob4"       # inner integral type "glo4", "glob3" or "trapezoid"
 # Settings for the TDSE solver
 Propagator_Settings:
   Lanczos_iterations: 200   # number of Lanczos basis vectors

@@ -35,7 +35,9 @@ int main(int argc, char *argv[]) {
     cfg::GenL_idx(out_prefix, gauge, L_max, "inp");
   }
   
-  if(integrator.compare("glob3")==0)
+  if(integrator.compare("glob4")==0)
+    r_12::R12Glob4(out_prefix, L_max, glq_pt, "inp");
+  else if(integrator.compare("glob3")==0)
     r_12::R12Glob3(out_prefix, L_max, glq_pt, "inp");
   else if(integrator.compare("trapezoid")==0)
     r_12::R12Trap(out_prefix, L_max, glq_pt, "inp");

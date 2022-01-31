@@ -350,6 +350,246 @@ int Prprimlob4(int n, int bo, int glq_pt,
   return 0;
 }
 
+int r_12::R12Glob4(std::string cpot, int L_max, int glq_pt, std::string dir) {
+  bool min_dir=0, min_exc=0;
+  double Y_norm=0.0;
+  std::vector<double> v_mat;
+  double sum_k=0.0;
+  idx4 e12, e12p;
+
+  int n=0;   // no. of points
+  int bo=0;   // max B-spline order
+  int nkn=0; // no. of knots
+  std::vector<double> kkn;
+
+  int L_sz=0, v_sz=0;
+  std::string filename;
+  std::string outfile_name;
+
+  // HDF5 defines
+  std::unique_ptr<H5::H5File> outfile=nullptr;
+  std::unique_ptr<H5::DataSet> V_set=nullptr;
+  std::unique_ptr<H5::DataSet> L_set=nullptr;
+  std::vector<idx4> L_idx;
+  H5::DataSpace cspace;
+  hsize_t offset[2]={0,0}, count[2], stride[2]={1,1}, block[2]={1,1};
+  hsize_t dimms[2], v_dim[1];
+  H5::DataSpace memspace;
+
+  // read knots
+  filename = cpot + std::to_string(0) + ".h5";
+  auto file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+  file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
+  file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &bo);
+  auto rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Knots")));
+  nkn = rset->getSpace().getSimpleExtentNpoints();
+
+  kkn.reserve(nkn);
+  rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
+  file->close();
+
+  int ncf, sym, max_N=0, l1_m=0, l2_m=0;
+  std::vector<cfg::line> cfgs;
+  cfg::line max_line;
+
+  for(auto li=0; li<=L_max; ++li) {
+    cfg::ReadCfg(dir, li, sym, ncf, cfgs);
+
+    max_line = *std::max_element(cfgs.begin(), cfgs.end(),
+      [](cfg::line const &a, cfg::line const &b) { return a.n2max < b.n2max; });
+    max_N = std::max(max_N,max_line.n2max);
+
+    max_line = *std::max_element(cfgs.begin(), cfgs.end(),
+      [](cfg::line const &a, cfg::line const &b) { return a.l2 < b.l2; });
+    l2_m = std::max(l2_m,max_line.l2);
+
+    max_line = *std::max_element(cfgs.begin(), cfgs.end(),
+      [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
+    l1_m = std::max(l1_m,max_line.l1);
+  }
+  auto k_max = l1_m+l2_m;
+  auto lc_sz = max_N*n;
+
+  // reserve space for coefficients
+  auto e1_lm = std::max(l1_m,l2_m);
+  std::vector<double> Cf(lc_sz*(e1_lm+1));
+
+  // read coefficients for all l
+  for(int l=0; l<=e1_lm; ++l) {
+    count[0] = max_N;
+    count[1] = n;
+    dimms[0] = count[0]; 
+    dimms[1] = count[1];
+    memspace.setExtentSimple(2, dimms, NULL);
+
+    filename = cpot + std::to_string(l) + ".h5";
+    file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+    rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
+    cspace = rset->getSpace();
+    cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+    rset->read(&Cf[l*lc_sz], H5::PredType::NATIVE_DOUBLE, memspace, cspace); //invalid read of size 8
+    file->close();
+  }
+
+  // generate GL nodes and weights over B-splines support
+  std::vector<double> gl_x(glq_pt);
+  std::vector<double> gl_w(glq_pt);
+  fastgl::QuadPair gl_i;
+  for(int i=1; i<=glq_pt; ++i) {
+    gl_i = fastgl::GLPair(glq_pt, i);
+    gl_x[glq_pt-i] = gl_i.x(); 
+    gl_w[glq_pt-i] = gl_i.weight;
+  }
+
+  // generate B-splines
+  std::vector<double> Bsplines;
+  bsp::Splines(n, bo, glq_pt, gl_x, kkn, Bsplines);
+
+  std::vector<double> Ssp;
+  bsp::Lob4Splines(n, bo, glq_pt, gl_x, kkn, Ssp);
+
+  // Precalculate r^k
+  std::vector<double> rk, rk_mid;
+  Rpowklob4(rk, rk_mid, n, bo, glq_pt, gl_x, kkn, k_max);
+
+  std::vector<double> p1p_buff(glq_pt*n), p2p_buff(glq_pt*n), 
+                      p2p_mid(2*glq_pt*n), p1p_mid(2*glq_pt*n);
+
+  omp_lock_t copylock;
+  omp_init_lock(&copylock);
+  uint64_t st_time;
+
+  wig_table_init(2*(k_max+2),6);
+  
+
+  #pragma omp parallel private(e12p)
+  {
+  wig_thread_temp_init(2*(k_max+2));
+
+  for(int L=0; L<=L_max; ++L) {
+    
+    // Read n1l1;n2l2 indices for NL states
+    #pragma omp single
+    {
+    filename = cpot + std::to_string(L) + "idx.h5";
+    file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+    L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
+    L_sz = L_set->getSpace().getSimpleExtentNpoints()/4;
+    L_idx.reserve(L_sz);
+    L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32);
+    file->close();
+
+    std::cout << "L: " << L <<" L_sz: "<< L_sz << "\n";
+
+    v_sz = L_sz*(L_sz+1)/2;
+    v_mat.reserve(v_sz); // error
+
+    st_time = GetTimeMs64();
+    }
+
+    for(int NL2=0; NL2<L_sz; ++NL2) {
+      //set n1'l1';n2'l2'
+      e12p =L_idx[NL2];
+      bool eqvp = e12p.n1==e12p.n2 && e12p.l1==e12p.l2;
+
+      #pragma omp single
+      {
+      // calculate P1' P2' here and pass it to sltr
+      Prprimlob4(n, bo, glq_pt, e12p.l1*lc_sz+e12p.n1*n, e12p.l2*lc_sz+e12p.n2*n, 
+        kkn, gl_x, Bsplines, Ssp, Cf, p1p_buff, p2p_buff, p1p_mid, p2p_mid);
+      }
+
+      #pragma omp barrier
+      #pragma omp for private(e12,Y_norm,sum_k,min_dir,min_exc)
+      for(int NL1=NL2; NL1<L_sz; ++NL1) {
+        //set n1l1;n2l2
+        e12 = L_idx[NL1];
+
+        std::vector<double> l1i_loc(n), l2i_loc(n);
+        std::vector<double> pi(glq_pt*n);
+        omp_set_lock(&copylock);
+        std::copy_n(Cf.begin()+e12.l1*lc_sz+e12.n1*n, n, l1i_loc.begin());
+        std::copy_n(Cf.begin()+e12.l2*lc_sz+e12.n2*n, n, l2i_loc.begin());
+        omp_unset_lock(&copylock);
+        // sqrt([la][lc][lb][ld])
+        Y_norm = sqrt((2*e12.l1+1)*(2*e12p.l1+1)*(2*e12.l2+1)*(2*e12p.l2+1));
+        sum_k=0.0;
+        min_dir = ((L+e12.l2+e12p.l1) >> 0) & 1; // check if L+lb+lc is odd
+        min_exc = ((L+e12.l1+e12p.l1) >> 0) & 1;
+        for(int k=0; k<=k_max; ++k) {
+          /* for direct check if:
+            (-)^{L+lb+lc}=(-)^{L+la+ld},
+            |la-lc| <= k <= la+lc,
+            |lb-ld| <= k <= lb+ld */
+          if(min_dir ==(((L+e12.l1+e12p.l2) >> 0) & 1) &&
+             ((abs(e12.l1-e12p.l1)<=k) && (k<=e12.l1+e12p.l1)) &&
+             ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2)) &&
+             !(((k+e12.l1+e12p.l1) >> 0) & 1) &&
+             !(((k+e12.l2+e12p.l2) >> 0) & 1) &&
+             !std::isinf(1.0/rk_mid[(k+1)*2*n*glq_pt])) {
+            sum_k += pow(-1,min_dir)*FsltrLob4GL(k, n, bo, glq_pt, gl_w, 
+                      gl_x, kkn, Bsplines, Ssp, rk, rk_mid, l1i_loc, 
+                      l2i_loc, p1p_buff, p2p_buff, p2p_mid, pi)
+                      *wig3jj(2*e12.l1,2*k,2*e12p.l1,0,0,0)
+                      *wig3jj(2*e12.l2,2*k,2*e12p.l2,0,0,0)
+                      *wig6jj(2*e12p.l1,2*e12p.l2,2*L,2*e12.l2,2*e12.l1,2*k);
+          }
+          /* for exchange check if:
+            (-)^{L+la+lc}=(-)^{L+lb+ld},
+            |la-ld| <= k <= la+ld,
+            |lc-lb| <= k <= lc+lb */
+          if(min_exc ==(((L+e12.l2+e12p.l2) >> 0) & 1) &&
+             ((abs(e12.l1-e12p.l2)<=k) && (k<=e12.l1+e12p.l2)) &&
+             ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1)) &&
+             !(((k+e12.l1+e12p.l2) >> 0) & 1) &&
+             !(((k+e12.l2+e12p.l1) >> 0) & 1) &&
+             !std::isinf(1.0/rk_mid[(k+1)*2*n*glq_pt])) {
+            sum_k += pow(-1,min_exc)*FsltrLob4GL(k, n, bo, glq_pt, gl_w, 
+                      gl_x, kkn, Bsplines, Ssp, rk, rk_mid, l1i_loc, 
+                      l2i_loc, p2p_buff, p1p_buff, p1p_mid, pi)
+                      *wig3jj(2*e12.l1,2*k,2*e12p.l2,0,0,0)
+                      *wig3jj(2*e12.l2,2*k,2*e12p.l1,0,0,0)
+                      *wig6jj(2*e12p.l1,2*e12p.l2,2*L,2*e12.l1,2*e12.l2,2*k);
+          }
+        }
+
+        // write symmetric V_12 as upper triangular
+        double v12 = pow(-1,e12.l1+e12.l2)*Y_norm*sum_k;
+
+        if(e12.n1==e12.n2 && e12.l1==e12.l2) 
+          v12 *= 0.7071067811865475244008444e0;
+
+        if(eqvp) 
+          v12 *= 0.7071067811865475244008444e0;
+
+        v_mat[(2*L_sz-NL2-1)*NL2/2 + NL1] = v12;
+      }
+    }
+
+    #pragma omp single
+    {
+    std::cout << "loop time: " << ((double)(GetTimeMs64()-st_time)/1000.0) << "s\n";
+    // save upper triangular V_12
+    v_dim[0] = v_sz;
+    outfile_name = cpot + "V12_" + std::to_string(L) + ".h5";
+    outfile = std::unique_ptr<H5::H5File>(new H5::H5File(outfile_name, H5F_ACC_TRUNC));
+    V_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+                    "V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim))));
+    V_set->write(&v_mat[0], H5::PredType::NATIVE_DOUBLE);
+    outfile->close();
+    v_mat.clear();
+    }
+  }
+
+  wig_temp_free();
+  }
+  
+  wig_table_free();
+  omp_destroy_lock(&copylock);
+
+  return 0;
+}
+
 int r_12::R12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
   bool min_dir=0, min_exc=0;
   double Y_norm=0.0;
@@ -526,7 +766,7 @@ int r_12::R12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
              ((abs(e12.l2-e12p.l2)<=k) && (k<=e12.l2+e12p.l2)) &&
              !(((k+e12.l1+e12p.l1) >> 0) & 1) &&
              !(((k+e12.l2+e12p.l2) >> 0) & 1) &&
-             !std::isinf(1.0/rk[(k+1)*n*glq_pt])) {
+             !std::isinf(1.0/rk_mid[(k+1)*n*glq_pt])) {
             sum_k += pow(-1,min_dir)*FsltrLob3GL(k, n, bo, glq_pt, gl_w, 
                       gl_x, kkn, Bsplines, Ssp, rk, rk_mid, l1i_loc, 
                       l2i_loc, p1p_buff, p2p_buff, p2p_mid, pi)
@@ -543,7 +783,7 @@ int r_12::R12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
              ((abs(e12.l2-e12p.l1)<=k) && (k<=e12.l2+e12p.l1)) &&
              !(((k+e12.l1+e12p.l2) >> 0) & 1) &&
              !(((k+e12.l2+e12p.l1) >> 0) & 1) &&
-             !std::isinf(1.0/rk[(k+1)*n*glq_pt])) {
+             !std::isinf(1.0/rk_mid[(k+1)*n*glq_pt])) {
             sum_k += pow(-1,min_exc)*FsltrLob3GL(k, n, bo, glq_pt, gl_w, 
                       gl_x, kkn, Bsplines, Ssp, rk, rk_mid, l1i_loc, 
                       l2i_loc, p2p_buff, p1p_buff, p1p_mid, pi)
