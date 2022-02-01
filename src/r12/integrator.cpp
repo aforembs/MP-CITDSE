@@ -325,7 +325,8 @@ double FsltrLob4GL(int k, int n, int bo, int glq_pt,
       Pl2ira=0; Pl2irb=0;
 
       for(auto j=0; j<bo; ++j) {
-        Pl2i += Cl2i_pt[i1-bo+j]*Bsp[j+bo*(p+i*glq_pt)];
+        ibo1j=i1-bo+j;
+        Pl2i += Cl2i_pt[ibo1j]*Bsp[j+bo*(p+i*glq_pt)];
 
         // G-Lobatto inner
         ai=ibo1j-(kkn[i]>rloba);
@@ -369,7 +370,7 @@ double FsltrLob4GL(int k, int n, int bo, int glq_pt,
       Pl2irb=0;
 
       for(auto j=0; j<bo; ++j) {
-        ibo1j = i-bo+1+j;
+        ibo1j = i1-bo+j;
         Pl1i += Cl1i_pt[ibo1j]*Bsp[j+bo*(p+i*glq_pt)];
 
         // G-Lobatto inner
