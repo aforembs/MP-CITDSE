@@ -16,7 +16,7 @@ Basis_Settings:
   mass: 0.5                 # 0.5 for atom 1 for positronium
 # Settings for the two electron interaction calculation
 R12_Settings:
-  integrator: "glob4"       # inner integral type "glo4", "glob3" or "trapezoid"
+  integrator: "glob3"       # inner integral type "glo4", "glob3" or "trapezoid"
 # Settings for the TDSE solver
 Propagator_Settings:
   Lanczos_iterations: 200   # number of Lanczos basis vectors
