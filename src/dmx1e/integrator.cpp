@@ -27,7 +27,7 @@ double tvelGL(int n, int glq_pt,
       r1 = dl*gl_x[p] + sl;
       pra = wfn[p1+p+i1bo];
 
-      loc_GL+=gl_w[p]*(pa*wfnp[p2+p+i1bo]-v2*pa*wfn[p2+p+i1bo]/r1);
+      loc_GL+=gl_w[p]*(pra*wfnp[p2+p+i1bo]-v2*pra*wfn[p2+p+i1bo]/r1);
     }
     t_ab+=dl*loc_GL;
   }
