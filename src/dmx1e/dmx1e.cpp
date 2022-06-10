@@ -23,6 +23,7 @@ int dmx1e::ReadConfig(std::string file, int &glq_pt,
 
 int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
   int n=0;   // no. of points
+  int nen=0;
   int bo=0;   // max B-spline order
   int nkn=0; // no. of knots
   int lp1=0;
@@ -42,17 +43,18 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
   file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &bo);
   auto rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Knots")));
   nkn = rset->getSpace().getSimpleExtentNpoints();
-
   kkn.reserve(nkn);
   rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
+  rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
+  nen = rset->getSpace().getSimpleExtentNpoints();
   file->close();
 
-  auto lc_sz = n*n*glq_pt;
+  auto lc_sz = nen*n*glq_pt;
   std::vector<double> wfn(lc_sz*(l_max+1));
-  std::vector<double> D(n*n);
+  std::vector<double> D(nen*nen);
 
-  d_dim[0]=n;
-  d_dim[1]=n;
+  d_dim[0]=nen;
+  d_dim[1]=nen;
   // read wavefunctions for all l
   for(int l=0; l<=l_max; ++l) {
     filename = cpot + "_w1e" + std::to_string(l) + ".h5";
@@ -90,12 +92,12 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
           }
           lp1=l+1;
           kl=sqrt((double)(lp1*lp1)/(4.0*lp1*lp1-1));
-          for(int n2=0; n2<n; ++n2) {
+          for(int n2=0; n2<nen; ++n2) {
             #pragma omp barrier
             #pragma omp for private(t_ab)
-            for(int n1=0; n1<n; ++n1) {
+            for(int n1=0; n1<nen; ++n1) {
               t_ab = kl*tvelGL(n,glq_pt,bo,lc_sz,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn,wfnp);
-              D[n1+n*n2]=t_ab;
+              D[n1+nen*n2]=t_ab;
             }
           }
           #pragma omp single
@@ -117,12 +119,12 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
         for(int l=0; l<l_max; ++l) {
           lp1=l+1;
           kl=sqrt((double)(lp1*lp1)/(4.0*lp1*lp1-1));
-          for(int n2=0; n2<n; ++n2) {
+          for(int n2=0; n2<nen; ++n2) {
             #pragma omp barrier
             #pragma omp for private(t_ab)
-            for(int n1=0; n1<n; ++n1) {
+            for(int n1=0; n1<nen; ++n1) {
               t_ab = kl*tlenGL(n,glq_pt,bo,lc_sz,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn);
-              D[n1+n*n2]=t_ab;
+              D[n1+nen*n2]=t_ab;
             }
           }
           #pragma omp single
