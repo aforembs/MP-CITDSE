@@ -147,7 +147,7 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
   int npt=n*glq_pt;
   int nnpt=nen*npt;
 
-  std::vector<double> wfn_o(nnpt);
+  std::vector<double> wfn_o(nnpt), wfnp(nnpt);
   std::vector<double> Cf(n*nen);
   hsize_t dimms_o[2] = {(hsize_t)nen, (hsize_t)npt};
 
@@ -162,21 +162,31 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
   }
 
   // generate B-splines
-  std::vector<double> Bsp;
+  std::vector<double> Bsp, Psp;
   bsp::Splines(n, k, glq_pt, gl_x, kkn, Bsp);
+  bsp::SplinesP(n, k, glq_pt, gl_x, kkn, Psp);
 
   if (integrator.compare("trapezoid")==0) {
-    for(auto l=0; l<l_max; ++l)  { 
+    #pragma omp parallel
+    {
+    for(auto l=0; l<=l_max; ++l)  {
+      #pragma omp single
+      {
       filename = pot + std::to_string(l) + ".h5";
       file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
       Cf_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
       Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
       file->close();
-
-      for(auto i=0; i<nen; ++i) {
-        Pr(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Bsp, Cf, wfn_o);
       }
 
+      #pragma omp parallel for
+      for(auto i=0; i<nen; ++i) {
+        Pr(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Bsp, Cf, wfn_o);
+        Pr(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Psp, Cf, wfnp);
+      }
+
+      #pragma omp single
+      {
       outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
       outfile = std::unique_ptr<H5::H5File>(
                 new H5::H5File(outfile_name, H5F_ACC_TRUNC));
@@ -185,6 +195,17 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
             H5::DataSpace(2, dimms_o))));
       Po->write(&wfn_o[0], H5::PredType::NATIVE_DOUBLE);
       outfile->close();
+
+      outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
+      outfile = std::unique_ptr<H5::H5File>(
+                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+            outfile->createDataSet("Pr_p", H5::PredType::NATIVE_DOUBLE, 
+            H5::DataSpace(2, dimms_o))));
+      Po->write(&wfnp[0], H5::PredType::NATIVE_DOUBLE);
+      outfile->close();
+      }
+    }
     }
   } else if (integrator.compare("mixed")==0||integrator.compare("glob3")==0) {
 
@@ -193,18 +214,27 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
     std::vector<double> Ssp;
     bsp::Lob3Splines(n, k, glq_pt, gl_x, kkn, Ssp);
 
-    for(auto l=0; l<l_max; ++l)  {
+    #pragma omp parallel
+    {
+    for(auto l=0; l<=l_max; ++l)  {
+      #pragma omp single
+      {
       filename = pot + std::to_string(l) + ".h5";
       file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
       Cf_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
       Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
       file->close();
+      }
 
+      #pragma omp parallel for
       for(auto i=0; i<nen; ++i) {
         Pr(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Bsp, Cf, wfn_o);
+        Pr(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Psp, Cf, wfnp);
         Prlob3(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Ssp, Cf, wfn_i);
       }
 
+      #pragma omp single
+      {
       outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
       outfile = std::unique_ptr<H5::H5File>(
                 new H5::H5File(outfile_name, H5F_ACC_TRUNC));
@@ -217,6 +247,17 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
             H5::DataSpace(2, dimms_o))));
       Pi->write(&wfn_i[0], H5::PredType::NATIVE_DOUBLE);
       outfile->close();
+
+      outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
+      outfile = std::unique_ptr<H5::H5File>(
+                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+            outfile->createDataSet("Pr_p", H5::PredType::NATIVE_DOUBLE, 
+            H5::DataSpace(2, dimms_o))));
+      Po->write(&wfnp[0], H5::PredType::NATIVE_DOUBLE);
+      outfile->close();
+      }
+    }
     }
   } else if (integrator.compare("glob4")==0) {
 
@@ -226,18 +267,27 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
     std::vector<double> Ssp;
     bsp::Lob4Splines(n, k, glq_pt, gl_x, kkn, Ssp);
 
-    for(auto l=0; l<l_max; ++l)  {
+    #pragma omp parallel
+    {
+    for(auto l=0; l<=l_max; ++l)  {
+      #pragma omp single
+      {
       filename = pot + std::to_string(l) + ".h5";
       file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
       Cf_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
       Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
       file->close();
+      }
 
+      #pragma omp parallel for
       for(auto i=0; i<nen; ++i) {
         Pr(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Bsp, Cf, wfn_o);
+        Pr(n, k, glq_pt, i*n, i*npt, kkn, gl_x, Psp, Cf, wfnp);
         Prlob4(n, k, glq_pt, i*n, i*2*npt, kkn, gl_x, Ssp, Cf, wfn_i);
       }
 
+      #pragma omp single
+      {
       outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
       outfile = std::unique_ptr<H5::H5File>(
                 new H5::H5File(outfile_name, H5F_ACC_TRUNC));
@@ -250,6 +300,17 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
             H5::DataSpace(2, dimms_i))));
       Pi->write(&wfn_i[0], H5::PredType::NATIVE_DOUBLE);
       outfile->close();
+
+      outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
+      outfile = std::unique_ptr<H5::H5File>(
+                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+            outfile->createDataSet("Pr_p", H5::PredType::NATIVE_DOUBLE, 
+            H5::DataSpace(2, dimms_o))));
+      Po->write(&wfnp[0], H5::PredType::NATIVE_DOUBLE);
+      outfile->close();
+      }
+    }
     }
   }
 

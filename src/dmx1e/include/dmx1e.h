@@ -1,4 +1,7 @@
-
+#include <iostream>
+#include <cmath>
+#include <vector>
+#include <yaml-cpp/yaml.h>
 #include "fastgl.h"
 #include "H5Cpp.h"
 #include "dmx_typ.h"

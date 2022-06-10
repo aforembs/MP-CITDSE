@@ -16,12 +16,24 @@ int dmx1e::ReadConfig(std::string file, int &glq_pt,
             << gauge << std::endl;
 
   l_max = settings["Basis_Settings"]["l_max"].as<int>();
-  std::cout << "Maximum one electron angular momentum: "
+  std::cout << "Maximum one electron angular momentum:       "
             << l_max << std::endl;            
   return 0;
 }
 
 int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
+  int n=0;   // no. of points
+  int bo=0;   // max B-spline order
+  int nkn=0; // no. of knots
+  int lp1=0;
+  double kl, t_ab;
+  std::vector<double> kkn;
+  std::string filename;
+
+  H5::DataSpace cspace;
+  H5::DataSpace memspace;
+  auto D_set = std::unique_ptr<H5::DataSet>();
+  hsize_t d_dim[2];
 
   // read knots
   filename = cpot + std::to_string(0) + ".h5";
@@ -37,20 +49,16 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
 
   auto lc_sz = n*n*glq_pt;
   std::vector<double> wfn(lc_sz*(l_max+1));
+  std::vector<double> D(n*n);
 
-  count[0] = n;
-  count[1] = n*glq_pt;
-  dimms[0] = count[0]; 
-  dimms[1] = count[1];
-  memspace.setExtentSimple(2, dimms, NULL);
+  d_dim[0]=n;
+  d_dim[1]=n;
   // read wavefunctions for all l
   for(int l=0; l<=l_max; ++l) {
     filename = cpot + "_w1e" + std::to_string(l) + ".h5";
     file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
     rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Pr_o")));
-    cspace = rset->getSpace();
-    cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    rset->read(&wfn[l*lc_sz], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
+    rset->read(&wfn[l*lc_sz], H5::PredType::NATIVE_DOUBLE);
     file->close();
   }
 
@@ -64,9 +72,11 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
     gl_w[glq_pt-i] = gl_i.weight;
   }
 
+  std::vector<double> wfnp;
+
   switch (gauge) {
     case 'v':
-      std::vector<double> wfnp(lc_sz);
+      wfnp.reserve(lc_sz);
       #pragma omp parallel
       {
         for(int l=0; l<l_max; ++l) {
@@ -75,18 +85,16 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
             filename = cpot + "_w1ep" + std::to_string(l+1) + ".h5";
             file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
             rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Pr_p")));
-            cspace = rset->getSpace();
-            cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-            rset->read(&wfnp[0], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
+            rset->read(&wfnp[0], H5::PredType::NATIVE_DOUBLE);
             file->close();
           }
           lp1=l+1;
-          kl=sqrt(lp1*lp1/(4*lp1*lp1-1));
+          kl=sqrt((double)(lp1*lp1)/(4.0*lp1*lp1-1));
           for(int n2=0; n2<n; ++n2) {
             #pragma omp barrier
             #pragma omp for private(t_ab)
             for(int n1=0; n1<n; ++n1) {
-              t_ab = kl*tvelGL(n,glq_pt,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn,wfnp);
+              t_ab = kl*tvelGL(n,glq_pt,bo,lc_sz,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn,wfnp);
               D[n1+n*n2]=t_ab;
             }
           }
@@ -94,25 +102,26 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
           {
           filename = cpot + std::to_string(l) + std::to_string(l+1) + gauge + ".h5";
           file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_TRUNC));
-          D_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
-                    "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, d_dim))));
+          D_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+                    "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d_dim))));
           D_set->write(&D[0], H5::PredType::NATIVE_DOUBLE);
           file->close();
           }
         }
       }
+      wfnp.clear();
       break;
     case 'l':
       #pragma omp parallel
       {
         for(int l=0; l<l_max; ++l) {
           lp1=l+1;
-          kl=sqrt(lp1*lp1/(4*lp1*lp1-1));
+          kl=sqrt((double)(lp1*lp1)/(4.0*lp1*lp1-1));
           for(int n2=0; n2<n; ++n2) {
             #pragma omp barrier
             #pragma omp for private(t_ab)
             for(int n1=0; n1<n; ++n1) {
-              t_ab = kl*tlenGL(n,glq_pt,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn);
+              t_ab = kl*tlenGL(n,glq_pt,bo,lc_sz,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn);
               D[n1+n*n2]=t_ab;
             }
           }
@@ -120,8 +129,8 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
           {
           filename = cpot + std::to_string(l) + std::to_string(l+1) + gauge + ".h5";
           file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_TRUNC));
-          D_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
-                    "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, d_dim))));
+          D_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+                    "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d_dim))));
           D_set->write(&D[0], H5::PredType::NATIVE_DOUBLE);
           file->close();
           }
