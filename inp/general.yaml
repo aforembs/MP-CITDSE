@@ -19,6 +19,7 @@ R12_Settings:
   integrator: "glob3"       # inner integral type "glo4", "glob3" or "trapezoid"
 # Settings for the TDSE solver
 Propagator_Settings:
+  dip_state_no: 391
   Lanczos_iterations: 200   # number of Lanczos basis vectors
   dt: 0.5                   # time step size
 Field_Parameters:

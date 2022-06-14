@@ -1,13 +1,12 @@
-
 #include <iostream>
 #include <unistd.h>
 #include <cstdlib>
-#include "dmx1e.h"
+#include "dmx2e.h"
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
-  int glq_pt, l_max, dip_n;
-  std::string pot, integrator;
+  int L_max, l_max;
+  std::string pot;
   std::string out_prefix;
   char gauge;
 
@@ -25,11 +24,13 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  dmx1e::ReadConfig(opt_file, pot, glq_pt, gauge, l_max, dip_n);
+  dmx2e::ReadConfig(opt_file, pot, L_max, l_max, gauge);
 
   out_prefix = "dat/" + pot;
 
-  dmx1e::GenDipole(out_prefix, glq_pt, gauge, l_max, dip_n);
+  dmx2e::SortL(out_prefix, L_max, gauge, "inp");
+
+  dmx2e::GenDipole(out_prefix, L_max, l_max, gauge, "inp");
 
   return 0;
 }
