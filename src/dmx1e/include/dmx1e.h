@@ -1,3 +1,6 @@
+#ifndef DMX1E_H_
+#define DMX1E_H_
+
 #include <iostream>
 #include <cmath>
 #include <vector>
@@ -8,11 +11,12 @@
 #include "integrator.h"
 
 namespace dmx1e{
-  int ReadConfig(std::string file, int &glq_pt,
-                std::string &pot, int &l_max,
-                char &gauge);
+  int ReadConfig(std::string file, std::string &pot, 
+                int &glq_pt, char &gauge, int &l_max,
+                int &dip_n);
 
-  int GenDipole(std::string cpot, int l_max, 
-                int glq_pt, char gauge);
-
+  int GenDipole(std::string cpot, int glq_pt, char gauge, 
+                int l_max, int dip_n);
 }
+
+#endif // DMX2E_H_

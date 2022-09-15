@@ -1,3 +1,6 @@
+#ifndef INTEGRATOR_H_
+#define INTEGRATOR_H_
+
 #include <vector>
 
 double tvelGL(int n, int glq_pt,
@@ -16,3 +19,5 @@ double tlenGL(int n, int glq_pt,
               std::vector<double> &gl_x,
               std::vector<double> &kkn,
               std::vector<double> &wfn);
+
+#endif // INTEGRATOR_H_
