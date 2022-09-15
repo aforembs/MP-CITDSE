@@ -12,11 +12,9 @@
 
 namespace dmx1e{
   int ReadConfig(std::string file, std::string &pot, 
-                int &glq_pt, char &gauge, int &l_max,
-                int &dip_n);
+                int &glq_pt, char &gauge, int &l_max);
 
-  int GenDipole(std::string cpot, int glq_pt, char gauge, 
-                int l_max, int dip_n);
+  int GenDipole(std::string cpot, int glq_pt, char gauge, int l_max);
 }
 
 #endif // DMX2E_H_

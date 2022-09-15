@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
-  int glq_pt, l_max, dip_n;
+  int glq_pt, l_max;
   std::string pot, integrator;
   std::string out_prefix;
   char gauge;
@@ -14,8 +14,8 @@ int main(int argc, char *argv[]) {
   for(;;) {
     switch(getopt(argc, argv, "hf:")) {
       case 'h':
-        std::cout << "Program for calculating the inter-electronic interaction\n"
-                  << "coefficients <n1l1;n2l2|r_12|n'1l'1;n'2l'2>\n"
+        std::cout << "Program for calculating the 1e dipole matrix\n"
+                  << "elements <nl|d_(v/l)|n'l'>\n"
                   << "-f <path> yaml input file with the input settings\n";
         return -1;
       case 'f':
@@ -25,11 +25,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  dmx1e::ReadConfig(opt_file, pot, glq_pt, gauge, l_max, dip_n);
+  dmx1e::ReadConfig(opt_file, pot, glq_pt, gauge, l_max);
 
   out_prefix = "dat/" + pot;
 
-  dmx1e::GenDipole(out_prefix, glq_pt, gauge, l_max, dip_n);
+  dmx1e::GenDipole(out_prefix, glq_pt, gauge, l_max);
 
   return 0;
 }

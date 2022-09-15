@@ -1,8 +1,7 @@
 #include "dmx1e.h"
 
 int dmx1e::ReadConfig(std::string file, std::string &pot, 
-                      int &glq_pt, char &gauge, int &l_max,
-                      int &dip_n) {
+                      int &glq_pt, char &gauge, int &l_max) {
   YAML::Node settings = YAML::LoadFile(file);
 
   pot = settings["Global_Settings"]["potential"].as<std::string>();
@@ -18,14 +17,11 @@ int dmx1e::ReadConfig(std::string file, std::string &pot,
   l_max = settings["Basis_Settings"]["l_max"].as<int>();
   std::cout << "Maximum one electron angular momentum:       "
             << l_max << std::endl;
-
-  dip_n = settings["Propagator_Settings"]["dip_state_no"].as<int>();
-  std::cout << "Dimension of 1e dipole matrix:               "
-            << dip_n << std::endl;
+  
   return 0;
 }
 
-int dmx1e::GenDipole(std::string cpot, int glq_pt, char gauge, int l_max, int dip_n) {
+int dmx1e::GenDipole(std::string cpot, int glq_pt, char gauge, int l_max) {
   int n=0;   // no. of B-splines
   int bo=0;  // max B-spline order
   int nen=0; // no. of basis states
@@ -55,10 +51,10 @@ int dmx1e::GenDipole(std::string cpot, int glq_pt, char gauge, int l_max, int di
 
   auto lc_sz = nen*n*glq_pt;
   std::vector<double> wfn(lc_sz*(l_max+1));
-  std::vector<double> D(dip_n*dip_n);
+  std::vector<double> D(nen*nen);
 
-  d_dim[0]=dip_n;
-  d_dim[1]=dip_n;
+  d_dim[0]=nen;
+  d_dim[1]=nen;
   // read wavefunctions for all l
   for(int l=0; l<=l_max; ++l) {
     filename = cpot + "_w1e" + std::to_string(l) + ".h5";
@@ -96,12 +92,11 @@ int dmx1e::GenDipole(std::string cpot, int glq_pt, char gauge, int l_max, int di
           }
           lp1=l+1;
           kl=sqrt((double)(lp1*lp1)/(4.0*lp1*lp1-1));
-          for(int n1=0; n1<dip_n; ++n1) {
-            #pragma omp barrier
+          for(int n1=0; n1<nen; ++n1) {
             #pragma omp for private(t_ab)
-            for(int n2=0; n2<dip_n; ++n2) {
+            for(int n2=0; n2<nen; ++n2) {
               t_ab = kl*tvelGL(n,glq_pt,bo,lc_sz,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn,wfnp);
-              D[n2+dip_n*n1]=t_ab;
+              D[n2+nen*n1]=t_ab;
             }
           }
           #pragma omp single
@@ -123,12 +118,11 @@ int dmx1e::GenDipole(std::string cpot, int glq_pt, char gauge, int l_max, int di
         for(int l=0; l<l_max; ++l) {
           lp1=l+1;
           kl=sqrt((double)(lp1*lp1)/(4.0*lp1*lp1-1));
-          for(int n1=0; n1<dip_n; ++n1) {
-            #pragma omp barrier
+          for(int n1=0; n1<nen; ++n1) {
             #pragma omp for private(t_ab)
-            for(int n2=0; n2<dip_n; ++n2) {
+            for(int n2=0; n2<nen; ++n2) {
               t_ab = kl*tlenGL(n,glq_pt,bo,lc_sz,n1,l,n2,lp1,gl_w,gl_x,kkn,wfn);
-              D[n2+dip_n*n1]=t_ab;
+              D[n2+nen*n1]=t_ab;
             }
           }
           #pragma omp single
