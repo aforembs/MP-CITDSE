@@ -32,16 +32,16 @@ int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf, std::vector<cfg::li
 
   for(auto i=0; i<ncf; ++i) {
     std::getline(cfgfile, line);
-    std::istringstream iss(line);
-    if(iss >> val) {
+    std::istringstream liss(line);
+    if(liss >> val) {
       cf_l.n1 = val-1; // -1 for C indexing
-      iss >> val;
+      liss >> val;
       cf_l.l1 = val;
-      iss >> val;
+      liss >> val;
       cf_l.l2 = val;
-      iss >> val;
+      liss >> val;
       cf_l.n2min = val-1;
-      iss >> val;
+      liss >> val;
       cf_l.n2max = val;
       if(abs(cf_l.l1-cf_l.l2)<=L && L<=(cf_l.l1+cf_l.l2) && ((L>>0)&1)==(((cf_l.l1+cf_l.l2)>>0)&1)) 
         cfgs.emplace_back(cf_l);

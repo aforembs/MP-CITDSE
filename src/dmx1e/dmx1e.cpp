@@ -33,19 +33,19 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
 
   H5::DataSpace cspace;
   H5::DataSpace memspace;
-  auto D_set = std::unique_ptr<H5::DataSet>();
+  auto D_set = std::make_unique<H5::DataSet>();
   hsize_t d_dim[2];
 
   // read knots
   filename = cpot + std::to_string(0) + ".h5";
-  auto file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+  auto file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
   file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
   file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &bo);
-  auto rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Knots")));
+  auto rset = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Knots")));
   nkn = rset->getSpace().getSimpleExtentNpoints();
   kkn.reserve(nkn);
   rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
-  rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
+  rset = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
   nen = rset->getSpace().getSimpleExtentNpoints();
   file->close();
 
@@ -58,8 +58,8 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
   // read wavefunctions for all l
   for(int l=0; l<=l_max; ++l) {
     filename = cpot + "_w1e" + std::to_string(l) + ".h5";
-    file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-    rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Pr_o")));
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    rset = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
     rset->read(&wfn[l*lc_sz], H5::PredType::NATIVE_DOUBLE);
     file->close();
   }
@@ -85,8 +85,8 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
           #pragma omp single
           {
             filename = cpot + "_w1ep" + std::to_string(l+1) + ".h5";
-            file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-            rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Pr_p")));
+            file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+            rset = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_p")));
             rset->read(&wfnp[0], H5::PredType::NATIVE_DOUBLE);
             file->close();
           }
@@ -103,8 +103,8 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
           #pragma omp single
           {
           filename = cpot + std::to_string(l) + std::to_string(l+1) + gauge + ".h5";
-          file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_TRUNC));
-          D_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+          file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
+          D_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
                     "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d_dim))));
           D_set->write(&D[0], H5::PredType::NATIVE_DOUBLE);
           file->close();
@@ -130,8 +130,8 @@ int dmx1e::GenDipole(std::string cpot, int l_max, int glq_pt, char gauge) {
           #pragma omp single
           {
           filename = cpot + std::to_string(l) + std::to_string(l+1) + gauge + ".h5";
-          file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_TRUNC));
-          D_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+          file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
+          D_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
                     "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d_dim))));
           D_set->write(&D[0], H5::PredType::NATIVE_DOUBLE);
           file->close();

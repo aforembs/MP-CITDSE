@@ -47,7 +47,7 @@ class V_c: public ModelV {
 	public :
 		V_c(const double& c) : c_(c) {} 
 
-		virtual double V(const double& x)  { return  c_ ; } 
+		virtual double V([[maybe_unused]] const double& x)  { return  c_ ; } 
 		virtual void   plotV() {}
 };
 

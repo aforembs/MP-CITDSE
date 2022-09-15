@@ -132,15 +132,15 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
 
   // read knots
   filename = pot + std::to_string(0) + ".h5";
-  file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
+  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
   file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
   file->openAttribute("K").read(H5::PredType::NATIVE_INT32, &k);
-  auto rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Knots")));
+  auto rset = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Knots")));
   auto nkn = rset->getSpace().getSimpleExtentNpoints();
 
   std::vector<double> kkn(nkn);
   rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); //read knots
-  rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
+  rset = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
   nen = rset->getSpace().getSimpleExtentNpoints();
   file->close();
 
@@ -173,8 +173,8 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
       #pragma omp single
       {
       filename = pot + std::to_string(l) + ".h5";
-      file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      Cf_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
+      file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+      Cf_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Coeff")));
       Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
       file->close();
       }
@@ -188,18 +188,18 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
       #pragma omp single
       {
       outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
-      outfile = std::unique_ptr<H5::H5File>(
-                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      outfile = std::make_unique<H5::H5File>(
+                H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::make_unique<H5::DataSet>(H5::DataSet(
             outfile->createDataSet("Pr_o", H5::PredType::NATIVE_DOUBLE, 
             H5::DataSpace(2, dimms_o))));
       Po->write(&wfn_o[0], H5::PredType::NATIVE_DOUBLE);
       outfile->close();
 
       outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
-      outfile = std::unique_ptr<H5::H5File>(
-                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      outfile = std::make_unique<H5::H5File>(
+                H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::make_unique<H5::DataSet>(H5::DataSet(
             outfile->createDataSet("Pr_p", H5::PredType::NATIVE_DOUBLE, 
             H5::DataSpace(2, dimms_o))));
       Po->write(&wfnp[0], H5::PredType::NATIVE_DOUBLE);
@@ -220,8 +220,8 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
       #pragma omp single
       {
       filename = pot + std::to_string(l) + ".h5";
-      file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      Cf_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
+      file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+      Cf_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Coeff")));
       Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
       file->close();
       }
@@ -236,22 +236,22 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
       #pragma omp single
       {
       outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
-      outfile = std::unique_ptr<H5::H5File>(
-                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      outfile = std::make_unique<H5::H5File>(
+                H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::make_unique<H5::DataSet>(H5::DataSet(
           outfile->createDataSet("Pr_o", H5::PredType::NATIVE_DOUBLE, 
           H5::DataSpace(2, dimms_o))));
       Po->write(&wfn_o[0], H5::PredType::NATIVE_DOUBLE);
-      Pi = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      Pi = std::make_unique<H5::DataSet>(H5::DataSet(
             outfile->createDataSet("Pr_i", H5::PredType::NATIVE_DOUBLE, 
             H5::DataSpace(2, dimms_o))));
       Pi->write(&wfn_i[0], H5::PredType::NATIVE_DOUBLE);
       outfile->close();
 
       outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
-      outfile = std::unique_ptr<H5::H5File>(
-                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      outfile = std::make_unique<H5::H5File>(
+                H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::make_unique<H5::DataSet>(H5::DataSet(
             outfile->createDataSet("Pr_p", H5::PredType::NATIVE_DOUBLE, 
             H5::DataSpace(2, dimms_o))));
       Po->write(&wfnp[0], H5::PredType::NATIVE_DOUBLE);
@@ -273,8 +273,8 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
       #pragma omp single
       {
       filename = pot + std::to_string(l) + ".h5";
-      file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      Cf_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Coeff")));
+      file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+      Cf_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Coeff")));
       Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
       file->close();
       }
@@ -289,22 +289,22 @@ int w1e::GenWfn(std::string pot, int glq_pt, int l_max, std::string integrator) 
       #pragma omp single
       {
       outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
-      outfile = std::unique_ptr<H5::H5File>(
-                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      outfile = std::make_unique<H5::H5File>(
+                H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::make_unique<H5::DataSet>(H5::DataSet(
             outfile->createDataSet("Pr_o", H5::PredType::NATIVE_DOUBLE, 
             H5::DataSpace(2, dimms_o))));
       Po->write(&wfn_o[0], H5::PredType::NATIVE_DOUBLE);
-      Pi = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      Pi = std::make_unique<H5::DataSet>(H5::DataSet(
             outfile->createDataSet("Pr_i", H5::PredType::NATIVE_DOUBLE, 
             H5::DataSpace(2, dimms_i))));
       Pi->write(&wfn_i[0], H5::PredType::NATIVE_DOUBLE);
       outfile->close();
 
       outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
-      outfile = std::unique_ptr<H5::H5File>(
-                new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-      Po = std::unique_ptr<H5::DataSet>(new H5::DataSet(
+      outfile = std::make_unique<H5::H5File>(
+                H5::H5File(outfile_name, H5F_ACC_TRUNC));
+      Po = std::make_unique<H5::DataSet>(H5::DataSet(
             outfile->createDataSet("Pr_p", H5::PredType::NATIVE_DOUBLE, 
             H5::DataSpace(2, dimms_o))));
       Po->write(&wfnp[0], H5::PredType::NATIVE_DOUBLE);

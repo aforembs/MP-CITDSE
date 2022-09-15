@@ -10,7 +10,7 @@ VPATH := ../
 SRC =dmx1e_main.cpp dmx1e.cpp integrator.cpp
 SRC_SH=fastgl.cpp
 
-CPPFLAGS = -Wall -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I/opt/OpenBLAS/include -g
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I/opt/OpenBLAS/include -g
 LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 #OBJ+= $(addprefix ../, $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_SHARED)))

@@ -8,15 +8,15 @@ int CalcCI(std::string pot, char gauge, int L_max) {
   std::vector<double> ens, v12, eig, vecs;
   std::vector<int> ifail;
   std::vector<idx4> L_idx;
-  int m, L_sz, v_sz, w_sz;
+  int L_sz, v_sz;
   std::ofstream dat_fl;
 
   for(auto L=0; L<L_max; ++L) {
 
     // read sum energies
     filename = pot + "2_" + std::to_string(L) + std::to_string(L+1) + gauge + ".h5";
-    efile = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-    edata = std::unique_ptr<H5::DataSet>(new H5::DataSet(efile->openDataSet("e_i")));
+    efile = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    edata = std::make_unique<H5::DataSet>(H5::DataSet(efile->openDataSet("e_i")));
     L_sz = edata->getSpace().getSimpleExtentNpoints();
     ens.reserve(L_sz);
     edata->read(&ens[0], H5::PredType::NATIVE_DOUBLE);
@@ -28,16 +28,16 @@ int CalcCI(std::string pot, char gauge, int L_max) {
 
     // read V_12
     filename = pot + "V12_" + std::to_string(L) + ".h5";
-    file = std::unique_ptr<H5::H5File>(
-            new H5::H5File(filename, H5F_ACC_RDONLY));
-    v12data=std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("V_12")));
+    file = std::make_unique<H5::H5File>(
+            H5::H5File(filename, H5F_ACC_RDONLY));
+    v12data=std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("V_12")));
     v12data->read(&v12[0], H5::PredType::NATIVE_DOUBLE);
     file->close();
 
     // get idx 
     filename = pot + std::to_string(L) + "idx.h5";
-    file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-    L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    L_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
     L_idx.reserve(L_sz);
     L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32);
     file->close();
@@ -72,16 +72,16 @@ int CalcCI(std::string pot, char gauge, int L_max) {
 
     std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, &vecs[0], L_sz, &eig[0]) << "\n";
 
-    hsize_t d1[1] = {L_sz};
-    hsize_t d2[2] = {L_sz,L_sz};
+    hsize_t d1[1] = {static_cast<hsize_t>(L_sz)};
+    // hsize_t d2[2] = {static_cast<hsize_t>(L_sz),static_cast<hsize_t>(L_sz)};
 
     filename = pot + "_diag" + std::to_string(L) + ".h5";
-    file = std::unique_ptr<H5::H5File>(
-            new H5::H5File(filename, H5F_ACC_TRUNC));
-    diag_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+    file = std::make_unique<H5::H5File>(
+            H5::H5File(filename, H5F_ACC_TRUNC));
+    diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
                     "En", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, d1))));
     diag_set->write(&eig[0], H5::PredType::NATIVE_DOUBLE);
-    // diag_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+    // diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
     //                 "EnVec", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d2))));
     // diag_set->write(&vecs[0], H5::PredType::NATIVE_DOUBLE);
     file->close();
@@ -89,8 +89,8 @@ int CalcCI(std::string pot, char gauge, int L_max) {
   }
 
   filename = pot + "2_" + std::to_string(L_max-1) + std::to_string(L_max) + gauge + ".h5";
-  efile = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-  edata = std::unique_ptr<H5::DataSet>(new H5::DataSet(efile->openDataSet("e_f")));
+  efile = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+  edata = std::make_unique<H5::DataSet>(H5::DataSet(efile->openDataSet("e_f")));
   L_sz = edata->getSpace().getSimpleExtentNpoints();
   ens.reserve(L_sz);
   edata->read(&ens[0], H5::PredType::NATIVE_DOUBLE);
@@ -102,16 +102,16 @@ int CalcCI(std::string pot, char gauge, int L_max) {
 
   // read V_12
   filename = pot + "V12_" + std::to_string(L_max) + ".h5";
-  file = std::unique_ptr<H5::H5File>(
-          new H5::H5File(filename, H5F_ACC_RDONLY));
-  v12data=std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("V_12")));
+  file = std::make_unique<H5::H5File>(
+          H5::H5File(filename, H5F_ACC_RDONLY));
+  v12data=std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("V_12")));
   v12data->read(&v12[0], H5::PredType::NATIVE_DOUBLE);
   file->close();
 
   // get idx 
   filename = pot + std::to_string(L_max) + "idx.h5";
-  file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-  L_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("idx")));
+  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+  L_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
   L_idx.reserve(L_sz);
   L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32);
   file->close();
@@ -143,16 +143,16 @@ int CalcCI(std::string pot, char gauge, int L_max) {
 
   std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, &vecs[0], L_sz, &eig[0]) << "\n";
 
-  hsize_t d1[1] = {L_sz};
-  hsize_t d2[2] = {L_sz,L_sz};
+  hsize_t d1[1] = {static_cast<hsize_t>(L_sz)};
+  // hsize_t d2[2] = {L_sz,L_sz};
 
   filename = pot + "_diag" + std::to_string(L_max) + ".h5";
-  file = std::unique_ptr<H5::H5File>(
-          new H5::H5File(filename, H5F_ACC_TRUNC));
-  diag_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+  file = std::make_unique<H5::H5File>(
+          H5::H5File(filename, H5F_ACC_TRUNC));
+  diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
                   "En", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, d1))));
   diag_set->write(&eig[0], H5::PredType::NATIVE_DOUBLE);
-  // diag_set = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->createDataSet(
+  // diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
   //                 "EnVec", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d2))));
   // diag_set->write(&vecs[0], H5::PredType::NATIVE_DOUBLE);
   file->close();

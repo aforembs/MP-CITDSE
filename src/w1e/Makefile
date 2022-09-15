@@ -9,8 +9,8 @@ VPATH := ../
 
 SRC = w1e_main.cpp w1e.cpp
 SRC_SH = fastgl.cpp bsplines.cpp
-
-CPPFLAGS = -Wall -pedantic -O3 -march=native -std=c++17 -I$(IDIR) -I$(SH_IDIR) -fopenmp
+# get rid of slatec!!!!!!!!
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -I$(IDIR) -I$(SH_IDIR) -fopenmp
 LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -L$(VPATH) -lslatec -lgfortran -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
