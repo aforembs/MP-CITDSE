@@ -1,4 +1,4 @@
-#include "dmx2e.h"
+#include "dmx2e.hpp"
 
 int dmx2e::ReadConfig(std::string file, std::string &pot, int &L_max,
                       int &l_max, char &gauge) {

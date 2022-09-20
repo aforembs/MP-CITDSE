@@ -1,7 +1,7 @@
 #ifndef TD_READ_HPP_
 #define TD_READ_HPP_
 
-#include "dmx_typ.h"
+#include "dmx_typ.hpp"
 #include <H5Cpp.h>
 #include <cassert>
 #include <complex>

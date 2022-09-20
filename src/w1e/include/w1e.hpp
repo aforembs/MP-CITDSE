@@ -1,8 +1,8 @@
 #ifndef W1E_H
 #define W1E_H
 
-#include "bsplines.h"
-#include "fastgl.h"
+#include "bsplines.hpp"
+#include "fastgl.hpp"
 #include <H5Cpp.h>
 #include <vector>
 #include <yaml-cpp/yaml.h>

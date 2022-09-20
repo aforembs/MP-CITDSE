@@ -1,7 +1,7 @@
 #ifndef PULSE_H_
 #define PULSE_H_
 
-#include "au.h"
+#include "au.hpp"
 #include <cmath>
 
 namespace pulse {

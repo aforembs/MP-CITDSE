@@ -1,4 +1,4 @@
-#include "pes2e.h"
+#include "pes2e.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <unistd.h>

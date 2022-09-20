@@ -1,9 +1,9 @@
 #ifndef DMX1E_H_
 #define DMX1E_H_
 
-#include "dmx_typ.h"
-#include "fastgl.h"
-#include "integrator.h"
+#include "dmx_typ.hpp"
+#include "fastgl.hpp"
+#include "integrator.hpp"
 #include <H5Cpp.h>
 #include <cmath>
 #include <iostream>

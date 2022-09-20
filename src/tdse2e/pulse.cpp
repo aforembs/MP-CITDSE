@@ -1,4 +1,4 @@
-#include "pulse.h"
+#include "pulse.hpp"
 
 // double pulse::Gauss_A() {
 

@@ -1,7 +1,7 @@
 #ifndef TD2E_HPP_
 #define TD2E_HPP_
 
-#include "pulse.h"
+#include "pulse.hpp"
 #include <boost/numeric/odeint.hpp>
 #include <complex>
 #include <fstream>

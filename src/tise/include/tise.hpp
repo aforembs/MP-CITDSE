@@ -1,8 +1,8 @@
 #ifndef TISE_H_
 #define TISE_H_
 
-#include "ModelV.h"
-#include "bsplines.h"
+#include "ModelV.hpp"
+#include "bsplines.hpp"
 #include <H5Cpp.h>
 #include <algorithm>
 #include <execution>

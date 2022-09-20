@@ -1,7 +1,7 @@
 #ifndef CIDIAG_H_
 #define CIDIAG_H_
 
-#include "dmx_typ.h"
+#include "dmx_typ.hpp"
 #include <H5Cpp.h>
 #include <fstream>
 #include <iostream>

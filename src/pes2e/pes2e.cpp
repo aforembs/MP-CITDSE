@@ -55,6 +55,13 @@ int pes2e::genPES(std::string pot, int l_max, int L_max,
   auto max_N = 0, max_nl = 0;
   cfg::line max_n2l;
 
+  std::string filename;
+  std::unique_ptr<H5::H5File> file = nullptr;
+  std::unique_ptr<H5::DataSet> L_set = nullptr;
+  hsize_t offset[1] = {0}, stride[1] = {1}, block[1] = {1};
+  hsize_t count[1], dimms[1];
+  H5::DataSpace memspace, e_space, L_space;
+
   for (auto L = 0; L <= L_max; ++L) {
     cfg::ReadCfg(dir, L, sym, ncf, cfgs);
 
@@ -68,6 +75,7 @@ int pes2e::genPES(std::string pot, int l_max, int L_max,
   auto max_Nsz = max_nl * max_N;
   std::vector<double> en_1e(l_max * max_N);
 
+  count[0] = max_N;
   dimms[0] = max_N;
   memspace.setExtentSimple(1, dimms, NULL);
 
@@ -87,6 +95,7 @@ int pes2e::genPES(std::string pot, int l_max, int L_max,
     L_sz = state_sz[L];
     sum += L_sz;
     offs.push_back(sum);
+    count[0] = L_sz * 4;
     dimms[0] = L_sz * 4;
     memspace.setExtentSimple(1, dimms, NULL);
 

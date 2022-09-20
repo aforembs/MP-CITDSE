@@ -1,8 +1,8 @@
 #ifndef DMX2E_H_
 #define DMX2E_H_
 
-#include "cfg_in.h"
-#include "dmx_typ.h"
+#include "cfg_in.hpp"
+#include "dmx_typ.hpp"
 #include "wigxjpf.h"
 #include <H5Cpp.h>
 #include <algorithm>

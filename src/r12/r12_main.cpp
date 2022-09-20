@@ -1,7 +1,7 @@
-#include <unistd.h>
+#include "r12.hpp"
 #include <cstdlib>
 #include <filesystem>
-#include "r12.h"
+#include <unistd.h>
 
 namespace fs = std::filesystem;
 
@@ -12,16 +12,16 @@ int main(int argc, char *argv[]) {
   std::string out_prefix;
   char gauge;
 
-  for(;;) {
-    switch(getopt(argc, argv, "hf:")) {
-      case 'h':
-        std::cout << "Program for calculating the inter-electronic interaction\n"
-                  << "coefficients <n1l1;n2l2|r_12|n'1l'1;n'2l'2>\n"
-                  << "-f <path> yaml input file with the input settings\n";
-        return -1;
-      case 'f':
-        opt_file = optarg; 
-        continue;
+  for (;;) {
+    switch (getopt(argc, argv, "hf:")) {
+    case 'h':
+      std::cout << "Program for calculating the inter-electronic interaction\n"
+                << "coefficients <n1l1;n2l2|r_12|n'1l'1;n'2l'2>\n"
+                << "-f <path> yaml input file with the input settings\n";
+      return -1;
+    case 'f':
+      opt_file = optarg;
+      continue;
     }
     break;
   }
@@ -31,20 +31,20 @@ int main(int argc, char *argv[]) {
   out_prefix = "dat/" + pot;
 
   // check if he<L_max>idx.h5 exists if not create index files
-  if(!fs::exists(out_prefix + std::to_string(L_max) + "idx.h5")) {
+  if (!fs::exists(out_prefix + std::to_string(L_max) + "idx.h5")) {
     cfg::GenL_idx(out_prefix, gauge, L_max, "inp");
   }
-  
-  if(integrator.compare("mixed")==0)
+
+  if (integrator.compare("mixed") == 0)
     r_12::R12MM(out_prefix, L_max, glq_pt, "inp");
-  else if(integrator.compare("glob4")==0)
+  else if (integrator.compare("glob4") == 0)
     r_12::R12Glob4(out_prefix, L_max, glq_pt, "inp");
-  else if(integrator.compare("glob3")==0)
+  else if (integrator.compare("glob3") == 0)
     r_12::R12Glob3(out_prefix, L_max, glq_pt, "inp");
-  else if(integrator.compare("trapezoid")==0)
+  else if (integrator.compare("trapezoid") == 0)
     r_12::R12Trap(out_prefix, L_max, glq_pt, "inp");
   else
     std::cout << "Invalid integration scheme\n";
 
   return 0;
-} 
+}

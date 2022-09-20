@@ -1,7 +1,7 @@
 #ifndef PES2E_HPP_
 #define PES2E_HPP_
 
-#include "dmx_typ.h"
+#include "dmx_typ.hpp"
 #include <cassert>
 #include <complex>
 #include <iostream>

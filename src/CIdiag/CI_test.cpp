@@ -1,8 +1,8 @@
-#include "CIdiag.h"
+#include "CIdiag.hpp"
 
 int main() {
 
-  CalcCI("dat/he", 'v',2);
+  CalcCI("dat/he", 'v', 2);
 
   return 0;
 }
