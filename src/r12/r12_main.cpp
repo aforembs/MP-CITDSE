@@ -26,23 +26,23 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  r_12::ReadConfig(opt_file, glq_pt, pot, L_max, gauge, integrator);
+  r_12::readConfig(opt_file, glq_pt, pot, L_max, gauge, integrator);
 
   out_prefix = "dat/" + pot;
 
   // check if he<L_max>idx.h5 exists if not create index files
   if (!fs::exists(out_prefix + std::to_string(L_max) + "idx.h5")) {
-    cfg::GenL_idx(out_prefix, gauge, L_max, "inp");
+    cfg::genL_idx(out_prefix, gauge, L_max, "inp");
   }
 
   if (integrator.compare("mixed") == 0)
-    r_12::R12MM(out_prefix, L_max, glq_pt, "inp");
+    r_12::r12MM(out_prefix, L_max, glq_pt, "inp");
   else if (integrator.compare("glob4") == 0)
-    r_12::R12Glob4(out_prefix, L_max, glq_pt, "inp");
+    r_12::r12Glob4(out_prefix, L_max, glq_pt, "inp");
   else if (integrator.compare("glob3") == 0)
-    r_12::R12Glob3(out_prefix, L_max, glq_pt, "inp");
+    r_12::r12Glob3(out_prefix, L_max, glq_pt, "inp");
   else if (integrator.compare("trapezoid") == 0)
-    r_12::R12Trap(out_prefix, L_max, glq_pt, "inp");
+    r_12::r12Trap(out_prefix, L_max, glq_pt, "inp");
   else
     std::cout << "Invalid integration scheme\n";
 

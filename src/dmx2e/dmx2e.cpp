@@ -100,7 +100,7 @@ int dmx2e::SortL(std::string cpot, int L_max, char gauge, std::string dir) {
 
   int ncf, sym;
   std::vector<cfg::line> cfgs;
-  cfg::ReadCfg(dir, 0, sym, ncf, cfgs);
+  cfg::readCfg(dir, 0, sym, ncf, cfgs);
 
   en_data en_d;
   idx4 idx_elm;
@@ -223,7 +223,7 @@ int dmx2e::SortL(std::string cpot, int L_max, char gauge, std::string dir) {
   cfgs.clear();
 
   // L final sort & save
-  cfg::ReadCfg(dir, 1, sym, ncf, cfgs);
+  cfg::readCfg(dir, 1, sym, ncf, cfgs);
 
   t_sz = 0;
   for (auto i = 0; i < ncf; ++i) {
@@ -346,7 +346,7 @@ int dmx2e::SortL(std::string cpot, int L_max, char gauge, std::string dir) {
     Lf_dat.clear();
     cfgs.clear();
 
-    cfg::ReadCfg(dir, L_itr, sym, ncf, cfgs);
+    cfg::readCfg(dir, L_itr, sym, ncf, cfgs);
 
     t_sz = 0;
     for (auto i = 0; i < ncf; ++i) {
@@ -491,7 +491,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
   cfg::line max_n2l;
 
   for (auto Li = 0; Li <= L_max; ++Li) {
-    cfg::ReadCfg(dir, Li, sym, ncf, cfgs);
+    cfg::readCfg(dir, Li, sym, ncf, cfgs);
 
     max_n2l = *std::max_element(cfgs.begin(), cfgs.end(),
                                 [](cfg::line const &a, cfg::line const &b) {

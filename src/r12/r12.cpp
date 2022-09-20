@@ -1,7 +1,7 @@
 #include "r12.hpp"
 #include "time_tst.hpp"
 
-int r_12::ReadConfig(std::string file, int &glq_pt, std::string &pot,
+int r_12::readConfig(std::string file, int &glq_pt, std::string &pot,
                      int &L_max, char &gauge, std::string &integrator) {
   YAML::Node settings = YAML::LoadFile(file);
 
@@ -213,7 +213,7 @@ int Rpowk(std::vector<double> &r_out, std::vector<double> &r_in, int n, int bo,
   return 0;
 }
 
-int r_12::R12MM(std::string cpot, int L_max, int glq_pt, std::string dir) {
+int r_12::r12MM(std::string cpot, int L_max, int glq_pt, std::string dir) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
   std::vector<double> v_mat;
@@ -258,7 +258,7 @@ int r_12::R12MM(std::string cpot, int L_max, int glq_pt, std::string dir) {
   cfg::line max_line;
 
   for (auto li = 0; li <= L_max; ++li) {
-    cfg::ReadCfg(dir, li, sym, ncf, cfgs);
+    cfg::readCfg(dir, li, sym, ncf, cfgs);
 
     max_line = *std::max_element(cfgs.begin(), cfgs.end(),
                                  [](cfg::line const &a, cfg::line const &b) {
@@ -454,7 +454,7 @@ int r_12::R12MM(std::string cpot, int L_max, int glq_pt, std::string dir) {
   return 0;
 }
 
-int r_12::R12Glob4(std::string cpot, int L_max, int glq_pt, std::string dir) {
+int r_12::r12Glob4(std::string cpot, int L_max, int glq_pt, std::string dir) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
   std::vector<double> v_mat;
@@ -499,7 +499,7 @@ int r_12::R12Glob4(std::string cpot, int L_max, int glq_pt, std::string dir) {
   cfg::line max_line;
 
   for (auto li = 0; li <= L_max; ++li) {
-    cfg::ReadCfg(dir, li, sym, ncf, cfgs);
+    cfg::readCfg(dir, li, sym, ncf, cfgs);
 
     max_line = *std::max_element(cfgs.begin(), cfgs.end(),
                                  [](cfg::line const &a, cfg::line const &b) {
@@ -702,7 +702,7 @@ int r_12::R12Glob4(std::string cpot, int L_max, int glq_pt, std::string dir) {
   return 0;
 }
 
-int r_12::R12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
+int r_12::r12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
   std::vector<double> v_mat;
@@ -747,7 +747,7 @@ int r_12::R12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
   cfg::line max_line;
 
   for (auto li = 0; li <= L_max; ++li) {
-    cfg::ReadCfg(dir, li, sym, ncf, cfgs);
+    cfg::readCfg(dir, li, sym, ncf, cfgs);
 
     max_line = *std::max_element(cfgs.begin(), cfgs.end(),
                                  [](cfg::line const &a, cfg::line const &b) {
@@ -945,7 +945,7 @@ int r_12::R12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
   return 0;
 }
 
-int r_12::R12Trap(std::string cpot, int L_max, int glq_pt, std::string dir) {
+int r_12::r12Trap(std::string cpot, int L_max, int glq_pt, std::string dir) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
   std::vector<double> v_mat;
@@ -990,7 +990,7 @@ int r_12::R12Trap(std::string cpot, int L_max, int glq_pt, std::string dir) {
   cfg::line max_line;
 
   for (auto li = 0; li <= L_max; ++li) {
-    cfg::ReadCfg(dir, li, sym, ncf, cfgs);
+    cfg::readCfg(dir, li, sym, ncf, cfgs);
 
     max_line = *std::max_element(cfgs.begin(), cfgs.end(),
                                  [](cfg::line const &a, cfg::line const &b) {

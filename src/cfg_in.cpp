@@ -1,6 +1,6 @@
 #include "cfg_in.hpp"
 
-int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf,
+int cfg::readCfg(std::string dir, int L, int &sym, int &ncf,
                  std::vector<cfg::line> &cfgs) {
   std::string filename = dir + "/cfg-" + std::to_string(L) + ".inp";
   std::ifstream cfgfile(filename);
@@ -56,7 +56,7 @@ int cfg::ReadCfg(std::string dir, int L, int &sym, int &ncf,
   return 0;
 }
 
-int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
+int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   int l1 = 0;
   int l2 = 0;
   std::string filename;
@@ -70,7 +70,7 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
 
   int ncf, sym;
   std::vector<cfg::line> cfgs;
-  cfg::ReadCfg(dir, 0, sym, ncf, cfgs);
+  cfg::readCfg(dir, 0, sym, ncf, cfgs);
 
   en_data en_d;
   idx4 idx_elm;
@@ -105,12 +105,13 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   // memspace_l1.setExtentSimple(1, dimms1, NULL);
 
   // Sort the energies in parallel using C++17 built in parallel sort
-  // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-  //       [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
+  std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
+            [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
 
-  // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-  //       [](cfg::line const &a, cfg::line const &b) {return (a.l2 < b.l2) &&
-  //       (a.l1==b.l1);});
+  std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
+            [](cfg::line const &a, cfg::line const &b) {
+              return (a.l2 < b.l2) && (a.l1 == b.l1);
+            });
 
   // L initial sort & save
   Li_dat.reserve(t_sz);
@@ -169,8 +170,8 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   }
 
   // Sort the energies in parallel using C++17 built in parallel sort
-  // std::sort(std::execution::par_unseq, Li_dat.begin(), Li_dat.end(),
-  //       [](en_data const &a, en_data const &b) { return a.en < b.en; });
+  std::sort(std::execution::par_unseq, Li_dat.begin(), Li_dat.end(),
+            [](en_data const &a, en_data const &b) { return a.en < b.en; });
 
   // Separate the sorted energies from the sorted indices
   for (auto i : Li_dat) {
@@ -204,7 +205,7 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   cfgs.clear();
 
   // L final sort & save
-  cfg::ReadCfg(dir, 1, sym, ncf, cfgs);
+  cfg::readCfg(dir, 1, sym, ncf, cfgs);
 
   t_sz = 0;
   for (auto i = 0; i < ncf; ++i) {
@@ -229,12 +230,13 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   // memspace_l1.setExtentSimple(1, dimms1, NULL);
 
   // Sort the energies in parallel using C++17 built in parallel sort
-  // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-  //       [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
+  std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
+            [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
 
-  // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-  //       [](cfg::line const &a, cfg::line const &b) {return (a.l2 < b.l2) &&
-  //       (a.l1==b.l1);});
+  std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
+            [](cfg::line const &a, cfg::line const &b) {
+              return (a.l2 < b.l2) && (a.l1 == b.l1);
+            });
 
   Lf_dat.reserve(t_sz);
   en_srtd.reserve(t_sz);
@@ -295,8 +297,8 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     last_l2 = l2;
   }
 
-  // std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(),
-  //       [](en_data const &a, en_data const &b) { return a.en < b.en; });
+  std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(),
+            [](en_data const &a, en_data const &b) { return a.en < b.en; });
 
   for (auto i : Lf_dat) {
     en_srtd.emplace_back(i.en);
@@ -338,7 +340,7 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     Lf_dat.clear();
     cfgs.clear();
 
-    cfg::ReadCfg(dir, L_itr, sym, ncf, cfgs);
+    cfg::readCfg(dir, L_itr, sym, ncf, cfgs);
 
     t_sz = 0;
     for (auto i = 0; i < ncf; ++i) {
@@ -365,13 +367,14 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     // memspace_l1.setExtentSimple(1, dimms1, NULL);
 
     // Sort the energies in parallel using C++17 built in parallel sort
-    // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-    //       [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1;
-    //       });
+    std::sort(
+        std::execution::par_unseq, cfgs.begin(), cfgs.end(),
+        [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
 
-    // std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-    //       [](cfg::line const &a, cfg::line const &b) {return (a.l2 < b.l2) &&
-    //       (a.l1==b.l1);});
+    std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
+              [](cfg::line const &a, cfg::line const &b) {
+                return (a.l2 < b.l2) && (a.l1 == b.l1);
+              });
 
     Lf_dat.reserve(t_sz);
     en_srtd.reserve(t_sz);
@@ -433,8 +436,8 @@ int cfg::GenL_idx(std::string pot, char gauge, int L_max, std::string dir) {
       last_l2 = l2;
     }
 
-    // std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(),
-    //     [](en_data const &a, en_data const &b) { return a.en < b.en; });
+    std::sort(std::execution::par_unseq, Lf_dat.begin(), Lf_dat.end(),
+              [](en_data const &a, en_data const &b) { return a.en < b.en; });
 
     for (auto i : Lf_dat) {
       en_srtd.emplace_back(i.en);

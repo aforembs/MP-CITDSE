@@ -97,12 +97,12 @@ int dmx1e::GenDipole(std::string cpot, int glq_pt, char gauge, int l_max) {
         }
         lp1 = l + 1;
         kl = sqrt((double)(lp1 * lp1) / (4.0 * lp1 * lp1 - 1));
-        for (int n1 = 0; n1 < nen; ++n1) {
+        for (int n2 = 0; n2 < nen; ++n2) {
 #pragma omp for private(t_ab)
-          for (int n2 = 0; n2 < nen; ++n2) {
+          for (int n1 = 0; n1 < nen; ++n1) {
             t_ab = kl * tvelGL(n, glq_pt, bo, lc_sz, n1, l, n2, lp1, gl_w, gl_x,
                                kkn, wfn, wfnp);
-            D[n2 + nen * n1] = t_ab;
+            D[n1 + nen * n2] = t_ab;
           }
         }
 #pragma omp single
@@ -126,12 +126,12 @@ int dmx1e::GenDipole(std::string cpot, int glq_pt, char gauge, int l_max) {
     for (int l = 0; l < l_max; ++l) {
       lp1 = l + 1;
       kl = sqrt((double)(lp1 * lp1) / (4.0 * lp1 * lp1 - 1));
-      for (int n1 = 0; n1 < nen; ++n1) {
+      for (int n2 = 0; n2 < nen; ++n2) {
 #pragma omp for private(t_ab)
-        for (int n2 = 0; n2 < nen; ++n2) {
+        for (int n1 = 0; n1 < nen; ++n1) {
           t_ab = kl * tlenGL(n, glq_pt, bo, lc_sz, n1, l, n2, lp1, gl_w, gl_x,
                              kkn, wfn);
-          D[n2 + nen * n1] = t_ab;
+          D[n1 + nen * n2] = t_ab;
         }
       }
 #pragma omp single

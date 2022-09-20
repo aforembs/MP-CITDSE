@@ -25,7 +25,7 @@ public:
                 reinterpret_cast<double *>(&beta),
                 reinterpret_cast<double *>(&dxdt[0]), 1);
 
-    cblas_zgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0],
+    cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0],
                 reinterpret_cast<double *>(&alpha),
                 reinterpret_cast<double *>(cdipole[0]), state_sz[1],
                 reinterpret_cast<double *>(&x[offs[1]]), 1,
@@ -33,7 +33,7 @@ public:
                 reinterpret_cast<double *>(&dxdt[0]), 1);
 
     for (auto L = 1; L < L_max; ++L) {
-      cblas_zgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
+      cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
                   reinterpret_cast<double *>(&alpha),
                   reinterpret_cast<double *>(cdipole[L - 1]), state_sz[L],
                   reinterpret_cast<double *>(&x[offs[L - 1]]), 1,
@@ -47,7 +47,7 @@ public:
                   reinterpret_cast<double *>(&bt2),
                   reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
 
-      cblas_zgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L],
+      cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
                   reinterpret_cast<double *>(&alpha),
                   reinterpret_cast<double *>(cdipole[L]), state_sz[L + 1],
                   reinterpret_cast<double *>(&x[offs[L + 1]]), 1,
@@ -55,7 +55,7 @@ public:
                   reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
     }
 
-    cblas_zgemv(CblasColMajor, CblasNoTrans, state_sz[L_max],
+    cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
                 state_sz[L_max - 1], reinterpret_cast<double *>(&alpha),
                 reinterpret_cast<double *>(cdipole[L_max - 1]), state_sz[L_max],
                 reinterpret_cast<double *>(&x[offs[L_max - 1]]), 1,
@@ -86,7 +86,8 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
   for (auto k = 0; k < ct_sz; ++k) {
-    f_out << k << "  " << ct[k].real() << "  " << ct[k].imag() << "\n";
+    f_out << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
+          << std::norm(ct[k]) << "\n";
   }
   f_out.close();
 
@@ -151,7 +152,8 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
       std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
       for (auto k = 0; k < ct_sz; ++k) {
-        f_ct << k << "  " << ct[k].real() << "  " << ct[k].imag() << "\n";
+        f_ct << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
+             << std::norm(ct[k]) << "\n";
       }
       f_ct.close();
     }

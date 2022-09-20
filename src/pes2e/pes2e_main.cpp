@@ -5,7 +5,7 @@
 
 int main(int argc, char *argv[]) {
   std::string opt_file, in_file = "dat/ct.dat";
-  int l_max;
+  int L_max, l_max;
   std::string pot;
   std::string file_prefix;
   std::vector<int> state_sz;
@@ -27,7 +27,7 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  pes2e::readConfig(opt_file, pot, l_max, state_sz);
+  pes2e::readConfig(opt_file, pot, L_max, l_max, state_sz);
 
   file_prefix = "dat/" + pot;
 
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
   pes2e::readCt(in_file, ct);
 
-  pes2e::genPES(file_prefix, l_max, state_sz, ct);
+  pes2e::genPES(file_prefix, "inp/", L_max, l_max, state_sz, ct);
 
   return 0;
 }
