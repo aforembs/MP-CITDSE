@@ -53,7 +53,8 @@ int main(int argc, char *argv[]) {
   tdrd::readDipoles(file_prefix, gauge, L_max, state_sz, dipoles);
 
   std::vector<std::complex<double>> ct(ct_sz);
-  ct[0] = std::complex<double>(1.0, 0.0);
+
+  tdrd::readGrCt(file_prefix, state_sz, ct);
 
   double t = 0.0;
   double tau = pulse::Sine_T(w * conv::En_ev_au_, cycles);

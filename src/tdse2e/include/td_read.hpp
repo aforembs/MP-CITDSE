@@ -5,6 +5,7 @@
 #include <H5Cpp.h>
 #include <cassert>
 #include <complex>
+#include <fstream>
 #include <iostream>
 #include <memory>
 #include <numeric>
@@ -25,6 +26,9 @@ int readStructure(std::string pot, char gauge, int L_max, int &ct_sz,
 
 int readDipoles(std::string pot, char gauge, int L_max,
                 std::vector<int> &state_sz, stvupt &dipoles);
+
+int readGrCt(std::string pot, std::vector<int> &state_sz,
+             std::vector<std::complex<double>> &ct);
 } // namespace tdrd
 
 #endif // TD_READ_HPP_

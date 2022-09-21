@@ -150,7 +150,7 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
   // Write PES for energies > 0
   std::fstream outfile(pot + "_pes.dat", std::ios::out);
   for (auto i = 0; i < static_cast<int>(PES_En.size()) - 1; ++i) {
-    if (PES_En[i] > 0.0) {
+    if (PES_En[i] > 0.0 && PES[i] > 0.0) {
       outfile << PES_En[i] << " " << PES[i] << "\n";
     }
   }
