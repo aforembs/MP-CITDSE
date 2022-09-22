@@ -121,8 +121,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   hsize_t idx_sz[] = {t_sz * 4};
 
   filename = pot + "0.h5";
-  file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-  e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
+  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+  e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
   e_space = e1->getSpace();
   e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
   e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
@@ -139,9 +139,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     if (l1 != last_l1) {
       filename = pot + std::to_string(l1) + ".h5";
       file =
-          std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(
-          new H5::DataSet(file->openDataSet("En")));
+          std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+      e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
       e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
@@ -150,9 +149,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     if (l2 != last_l2) {
       filename = pot + std::to_string(l2) + ".h5";
       file =
-          std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(
-          new H5::DataSet(file->openDataSet("En")));
+          std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+      e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
       e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l,
@@ -183,8 +181,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   // write the energies to a file
   outfile_name = pot + "2_01" + gauge + ".h5";
   outfile =
-      std::unique_ptr<H5::H5File>(new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-  ei = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+      std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
+  ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
       "e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz))));
   ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
   outfile->close();
@@ -194,8 +192,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   // write indices to file
   outfile_name = pot + "0idx.h5";
   outfile =
-      std::unique_ptr<H5::H5File>(new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-  ei = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+      std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
+  ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
       "idx", H5::PredType::NATIVE_INT32, H5::DataSpace(1, idx_sz))));
   ei->write(&idx_data[0], H5::PredType::NATIVE_INT32);
   outfile->close();
@@ -245,8 +243,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   idx_sz[0] = t_sz * 4;
 
   filename = pot + "0.h5";
-  file = std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-  e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
+  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+  e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
   e_space = e1->getSpace();
   e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
   e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
@@ -265,9 +263,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     if (l1 != last_l1) {
       filename = pot + std::to_string(l1) + ".h5";
       file =
-          std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(
-          new H5::DataSet(file->openDataSet("En")));
+          std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+      e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
       e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
@@ -277,9 +274,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     if (l2 != last_l2) {
       filename = pot + std::to_string(l2) + ".h5";
       file =
-          std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-      e1 = std::unique_ptr<H5::DataSet>(
-          new H5::DataSet(file->openDataSet("En")));
+          std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+      e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
       e_space = e1->getSpace();
       e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
       e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l,
@@ -308,8 +304,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
 
   outfile_name = pot + "2_01" + gauge + ".h5";
   outfile =
-      std::unique_ptr<H5::H5File>(new H5::H5File(outfile_name, H5F_ACC_RDWR));
-  ei = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+      std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_RDWR));
+  ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
       "e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz))));
   ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
   outfile->close();
@@ -317,8 +313,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
   // write indices to file
   outfile_name = pot + "1idx.h5";
   outfile =
-      std::unique_ptr<H5::H5File>(new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-  ei = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+      std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
+  ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
       "idx", H5::PredType::NATIVE_INT32, H5::DataSpace(1, idx_sz))));
   ei->write(&idx_data[0], H5::PredType::NATIVE_INT32);
   outfile->close();
@@ -331,7 +327,7 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
                    std::to_string(L_itr) + gauge + ".h5";
     outfile = std::unique_ptr<H5::H5File>(
         new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-    ei = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+    ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
         "e_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz))));
     ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
 
@@ -384,8 +380,8 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
 
     filename = pot + "0.h5";
     file =
-        std::unique_ptr<H5::H5File>(new H5::H5File(filename, H5F_ACC_RDONLY));
-    e1 = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
+        std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
     e_space = e1->getSpace();
     e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
@@ -445,7 +441,7 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
       idx_data.emplace_back(idx_elm);
     }
 
-    ei = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+    ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
         "e_f", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz))));
     ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
     outfile->close();
@@ -454,7 +450,7 @@ int cfg::genL_idx(std::string pot, char gauge, int L_max, std::string dir) {
     outfile_name = pot + std::to_string(L_itr) + "idx.h5";
     outfile = std::unique_ptr<H5::H5File>(
         new H5::H5File(outfile_name, H5F_ACC_TRUNC));
-    ei = std::unique_ptr<H5::DataSet>(new H5::DataSet(outfile->createDataSet(
+    ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
         "idx", H5::PredType::NATIVE_INT32, H5::DataSpace(1, idx_sz))));
     ei->write(&idx_data[0], H5::PredType::NATIVE_INT32);
     outfile->close();

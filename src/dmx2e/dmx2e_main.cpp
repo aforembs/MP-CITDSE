@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 
   out_prefix = "dat/" + pot;
 
-  dmx2e::SortL(out_prefix, L_max, gauge, "inp");
+  // dmx2e::SortL(out_prefix, L_max, gauge, "inp");
 
   dmx2e::GenDipole(out_prefix, L_max, l_max, gauge, "inp");
 

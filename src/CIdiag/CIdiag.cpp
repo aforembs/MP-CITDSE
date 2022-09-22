@@ -76,22 +76,22 @@ int CalcCI(std::string pot, char gauge, int L_max) {
     //   0.0, 0.0, 1, L_sz, 0.0, &m, &eig[0], &vecs[0], L_sz, &ifail[0]) <<
     //   "\n";
 
-    std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, &vecs[0],
+    std::cout << LAPACKE_dsyevd(LAPACK_COL_MAJOR, 'V', 'L', L_sz, &vecs[0],
                                 L_sz, &eig[0])
               << "\n";
 
     hsize_t d1[1] = {static_cast<hsize_t>(L_sz)};
-    // hsize_t d2[2] = {static_cast<hsize_t>(L_sz),static_cast<hsize_t>(L_sz)};
+    hsize_t d2[2] = {static_cast<hsize_t>(L_sz),static_cast<hsize_t>(L_sz)};
 
     filename = pot + "_diag" + std::to_string(L) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
     diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
         "En", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, d1))));
     diag_set->write(&eig[0], H5::PredType::NATIVE_DOUBLE);
-    // diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
-    //                 "EnVec", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2,
-    //                 d2))));
-    // diag_set->write(&vecs[0], H5::PredType::NATIVE_DOUBLE);
+    diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
+                    "EnVec", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2,
+                    d2))));
+    diag_set->write(&vecs[0], H5::PredType::NATIVE_DOUBLE);
     file->close();
     vecs.clear();
   }
@@ -155,17 +155,17 @@ int CalcCI(std::string pot, char gauge, int L_max) {
             << "\n";
 
   hsize_t d1[1] = {static_cast<hsize_t>(L_sz)};
-  // hsize_t d2[2] = {L_sz,L_sz};
+  hsize_t d2[2] = {static_cast<hsize_t>(L_sz),static_cast<hsize_t>(L_sz)};
 
   filename = pot + "_diag" + std::to_string(L_max) + ".h5";
   file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
   diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
       "En", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, d1))));
   diag_set->write(&eig[0], H5::PredType::NATIVE_DOUBLE);
-  // diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
-  //                 "EnVec", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2,
-  //                 d2))));
-  // diag_set->write(&vecs[0], H5::PredType::NATIVE_DOUBLE);
+  diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
+                  "EnVec", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2,
+                  d2))));
+  diag_set->write(&vecs[0], H5::PredType::NATIVE_DOUBLE);
   file->close();
 
   return 0;

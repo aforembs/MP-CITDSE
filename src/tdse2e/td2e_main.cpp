@@ -10,7 +10,7 @@ int main(int argc, char *argv[]) {
 
   std::string opt_file;
   int L_max, Lanc_iter, num_eval, cycles;
-  std::string pot, integrator;
+  std::string pot;
   std::string file_prefix;
   char gauge;
   double dt, w, Io, cepd;
