@@ -26,7 +26,7 @@ int conv::readConfig(std::string file, std::string &pot, char &gauge,
   return 0;
 }
 
-int conv::calcEvecs(std::string pot, char gauge, int L_max, 
+int conv::calcEvecs(std::string pot, char gauge, int L_max,
                     std::vector<int> &state_sz, stvupt &vecs) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
@@ -77,16 +77,18 @@ int conv::calcEvecs(std::string pot, char gauge, int L_max,
 
     for (auto i = 0; i < L_sz; ++i) {
       v12[(2 * L_full_sz - i - 1) * i / 2 + i] += ens[i];
-      vecs[L].get()->at(i * L_sz + i) = v12[(2 * L_full_sz - i - 1) * i / 2 + i];
+      vecs[L].get()->at(i * L_sz + i) =
+          v12[(2 * L_full_sz - i - 1) * i / 2 + i];
       for (auto j = i + 1; j < L_sz; ++j) {
-        vecs[L].get()->at(i * L_sz + j) = v12[(2 * L_full_sz - i - 1) * i / 2 + j];
+        vecs[L].get()->at(i * L_sz + j) =
+            v12[(2 * L_full_sz - i - 1) * i / 2 + j];
       }
     }
 
     eig.resize(L_sz);
 
-    std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, vecs[L]->data(),
-                                L_sz, &eig[0])
+    std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz,
+                                vecs[L]->data(), L_sz, &eig[0])
               << "\n";
   }
 
@@ -120,18 +122,20 @@ int conv::calcEvecs(std::string pot, char gauge, int L_max,
   v12data->read(&v12[0], H5::PredType::NATIVE_DOUBLE);
   file->close();
 
-    for (auto i = 0; i < L_sz; ++i) {
-      v12[(2 * L_full_sz - i - 1) * i / 2 + i] += ens[i];
-      vecs[L_max].get()->at(i * L_sz + i) = v12[(2 * L_full_sz - i - 1) * i / 2 + i];
-      for (auto j = i + 1; j < L_sz; ++j) {
-        vecs[L_max].get()->at(i * L_sz + j) = v12[(2 * L_full_sz - i - 1) * i / 2 + j];
-      }
+  for (auto i = 0; i < L_sz; ++i) {
+    v12[(2 * L_full_sz - i - 1) * i / 2 + i] += ens[i];
+    vecs[L_max].get()->at(i * L_sz + i) =
+        v12[(2 * L_full_sz - i - 1) * i / 2 + i];
+    for (auto j = i + 1; j < L_sz; ++j) {
+      vecs[L_max].get()->at(i * L_sz + j) =
+          v12[(2 * L_full_sz - i - 1) * i / 2 + j];
     }
+  }
 
   eig.resize(L_sz);
 
-  std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, vecs[L_max]->data(), L_sz,
-                              &eig[0])
+  std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz,
+                              vecs[L_max]->data(), L_sz, &eig[0])
             << "\n";
 
   return 0;
@@ -172,9 +176,11 @@ int conv::readDipoles(std::string pot, char gauge, int L_max,
 
 int conv::transDip(std::vector<int> &state_sz, stvupt &vecs, stvupt &dipoles) {
 
-  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, state_sz[L], );
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasTrans, state_sz[L + 1],
+              state_sz[L], state_sz[L], alpha, dipoles[L]->data(), state_sz[L],
+              vecs[L]->data(), state_sz[L], beta, Res.data(), state_sz[L]);
 
-  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans,);
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, state_sz[L + 1], );
 
   return 0;
 }

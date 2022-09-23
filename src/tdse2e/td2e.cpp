@@ -129,8 +129,30 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
 
   boost::numeric::odeint::runge_kutta_fehlberg78<state_type> rkf;
 
+  std::vector<std::complex<double>> c_ground(state_sz[0]);
+  for (auto i = 0; i < state_sz[0]; ++i) {
+    c_ground[i] = ct[i];
+  }
+
+  auto ctnrm =
+      cblas_dznrm2(state_sz[0], reinterpret_cast<double *>(&c_ground[0]), 1);
+
+  for (auto &n : c_ground) {
+    n /= ctnrm;
+  }
+
   field_fl.open(output + "_field.dat", std::ios::out);
   f_pop.open(output + "_pop.dat", std::ios::out);
+
+  auto sum = 0.0;
+  for (auto i = 0; i < state_sz[0]; ++i) {
+    auto diffi = std::norm(c_ground[i]) - std::norm(ct[i]);
+    sum += diffi * diffi;
+  }
+  auto diff = sqrt(sum);
+
+  f_pop << t << " " << 1 - diff << "\n";
+
   for (auto st = 0; st < steps; ++st) {
     field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
     MV.field = field(Ao, wA, cepds, Wenv, t + dt);
@@ -139,13 +161,20 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
 
     t += dt;
 
-    auto ctnrm = cblas_dznrm2(ct_sz, reinterpret_cast<double *>(&ct[0]), 1);
+    ctnrm = cblas_dznrm2(ct_sz, reinterpret_cast<double *>(&ct[0]), 1);
 
     for (auto &n : ct) {
       n /= ctnrm;
     }
 
-    f_pop << t << " " << std::norm(ct[0]) << "\n";
+    sum = 0.0;
+    for (auto i = 0; i < state_sz[0]; ++i) {
+      auto diffi = std::norm(c_ground[i]) - std::norm(ct[i]);
+      sum += diffi * diffi;
+    }
+    diff = sqrt(sum);
+
+    f_pop << t << " " << 1 - diff << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";
