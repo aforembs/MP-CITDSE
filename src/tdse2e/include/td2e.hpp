@@ -6,6 +6,7 @@
 #include <complex>
 #include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 extern "C" {
@@ -19,7 +20,7 @@ using fieldFcn = std::function<double(double, double, double, double, double)>;
 
 namespace td2e {
 int prop(std::string output, int L_max, double t, double dt, int steps,
-         fieldInit fieldst, fieldFcn field, double Io, double w, double cepd,
+         fieldInit fieldst, fieldFcn field, double w, double Io, double cepd,
          int cycles, int ct_sz, std::vector<int> &offs,
          std::vector<int> &state_sz, stvupt &blocks, stvupt &dipoles,
          std::vector<std::complex<double>> &ct);

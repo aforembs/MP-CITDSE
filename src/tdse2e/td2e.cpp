@@ -72,7 +72,7 @@ public:
 };
 
 int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
-               fieldInit fieldst, fieldFcn field, double Io, double w,
+               fieldInit fieldst, fieldFcn field, double w, double Io,
                double cepd, int cycles, int ct_sz, std::vector<int> &offs,
                std::vector<int> &state_sz, stvupt &blocks, stvupt &dipoles,
                std::vector<std::complex<double>> &ct) {
@@ -82,6 +82,8 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
   int print = steps / 10;
 
   fieldst(IoA, wA, cepd, cycles, Ao, cepds, Wenv);
+
+  std::cout << "Io (a.u.): " << IoA << " w (a.u.): " << wA << "\n";
 
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
@@ -144,14 +146,14 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
   field_fl.open(output + "_field.dat", std::ios::out);
   f_pop.open(output + "_pop.dat", std::ios::out);
 
-  auto sum = 0.0;
-  for (auto i = 0; i < state_sz[0]; ++i) {
-    auto diffi = std::norm(c_ground[i]) - std::norm(ct[i]);
-    sum += diffi * diffi;
-  }
-  auto diff = sqrt(sum);
+  std::complex<double> cdiff;
+  cblas_zdotc_sub(state_sz[0], reinterpret_cast<double *>(&c_ground[0]), 1,
+                  reinterpret_cast<double *>(&ct[0]), 1,
+                  reinterpret_cast<double *>(&cdiff));
 
-  f_pop << t << " " << 1 - diff << "\n";
+  f_pop << t << " " << std::norm(cdiff) << " "
+        << cblas_dznrm2(state_sz[0], reinterpret_cast<double *>(&ct[0]), 1)
+        << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
@@ -167,14 +169,16 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
       n /= ctnrm;
     }
 
-    sum = 0.0;
-    for (auto i = 0; i < state_sz[0]; ++i) {
-      auto diffi = std::norm(c_ground[i]) - std::norm(ct[i]);
-      sum += diffi * diffi;
-    }
-    diff = sqrt(sum);
+    cblas_zdotc_sub(state_sz[0], reinterpret_cast<double *>(&c_ground[0]), 1,
+                    reinterpret_cast<double *>(&ct[0]), 1,
+                    reinterpret_cast<double *>(&cdiff));
 
-    f_pop << t << " " << 1 - diff << "\n";
+    auto L0n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[0]), 1);
+    auto L1n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[2500]), 1);
+    auto L2n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[5000]), 1);
+
+    f_pop << std::setprecision(16) << t << " " << std::norm(cdiff) << " " << L0n
+          << " " << L1n << " " << L2n << " " << L0n + L1n + L2n << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";

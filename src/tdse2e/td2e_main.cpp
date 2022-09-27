@@ -59,9 +59,10 @@ int main(int argc, char *argv[]) {
   double t = 0.0;
   double tau = pulse::Sine_T(w * conv::En_ev_au_, cycles);
   int steps = tau / dt;
+  steps = steps + steps / 2;
 
-  td2e::prop(file_prefix, L_max, t, dt, steps, pulse::SineE_Setup,
-             pulse::SineE_A, Io, w, cepd, cycles, ct_sz, offs, state_sz, blocks,
+  td2e::prop(file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
+             pulse::SineA_A, w, Io, cepd, cycles, ct_sz, offs, state_sz, blocks,
              dipoles, ct);
 
   return 0;
