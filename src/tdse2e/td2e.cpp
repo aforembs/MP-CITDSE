@@ -177,8 +177,9 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
     auto L1n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[2500]), 1);
     auto L2n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[5000]), 1);
 
-    f_pop << std::setprecision(16) << t << " " << std::norm(cdiff) << " " << L0n
-          << " " << L1n << " " << L2n << " " << L0n + L1n + L2n << "\n";
+    f_pop << std::setprecision(16) << t << " " << std::norm(cdiff) << " "
+          << L0n * L0n << " " << L1n * L1n << " " << L2n * L2n << " "
+          << L0n * L0n + L1n * L1n + L2n * L2n << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";

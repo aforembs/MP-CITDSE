@@ -23,15 +23,14 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  conv::readConfig(opt_file, pot, gauge, L_max, state_sz);
+  conv::readConfig(opt_file, pot, L_max, gauge, state_sz);
 
   file_prefix = "dat/" + pot;
 
   stvupt vecs;
   stvupt dipoles;
 
-  vecs.push_back(
-      std::make_unique<std::vector<double>>(std::vector<double>()));
+  vecs.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
   for (auto i = 0; i < L_max; ++i) {
     vecs.push_back(
         std::make_unique<std::vector<double>>(std::vector<double>()));
@@ -39,9 +38,11 @@ int main(int argc, char *argv[]) {
         std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
-  conv::calcEvecs(pot, gauge, L_max, state_sz, vecs);
+  conv::calcEvecs(file_prefix, gauge, L_max, state_sz, vecs);
 
-  conv::transDip();
+  conv::readDipoles(file_prefix, gauge, L_max, state_sz, dipoles);
+
+  conv::transDip(file_prefix, gauge, L_max, state_sz, vecs, dipoles);
 
   return 0;
 }

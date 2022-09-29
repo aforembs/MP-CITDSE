@@ -1,5 +1,5 @@
 CPPC = g++
-EXEC = ../../bin/CI_test
+EXEC = ../../bin/conv_dmx
 
 IDIR = include
 SH_IDIR = ../include
@@ -10,8 +10,8 @@ VPATH := ../
 SRC = conv_main.cpp conv.cpp
 SRC_SH = 
 
-CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -g
-LDFLAGS = -lhdf5 -lhdf5_cpp -llapacke -fopenmp
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I/opt/OpenBLAS/include -g
+LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -llapacke -lopenblas -L/opt/OpenBLAS/lib -fopenmp -g
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
