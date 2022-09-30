@@ -197,19 +197,13 @@ int conv::transDip(std::string pot, char gauge, int L_max,
     D_dimms[0] = L1_sz;
     D_dimms[1] = L_sz;
 
-    for (auto m = 0; m < L1_sz; ++m) {
-      for (auto n = 0; n < L_sz; ++n) {
-        Res.at(n * L1_sz + m) = Dd.at(m * L_sz + n);
-      }
-    }
-
     auto outfile_name = pot + "2_" + std::to_string(L) + std::to_string(L + 1) +
                         gauge + "_diag.h5";
     auto outfile =
         std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
     auto dmx = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
         "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, D_dimms))));
-    dmx->write(Res.data(), H5::PredType::NATIVE_DOUBLE);
+    dmx->write(Dd.data(), H5::PredType::NATIVE_DOUBLE);
     outfile->close();
   }
 

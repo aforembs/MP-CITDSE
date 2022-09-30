@@ -24,9 +24,7 @@ int gr2e::prop(std::string output, int L_sz, double t, double dt,
 
   c0.resize(L_sz);
 
-  for (auto i = 0; i < L_sz; ++i) {
-    c0[i] = 1.0;
-  }
+  c0[0] = 1.0;
 
   auto c0nrm = cblas_dnrm2(L_sz, c0.data(), 1);
 

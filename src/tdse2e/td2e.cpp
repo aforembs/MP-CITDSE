@@ -14,19 +14,20 @@ public:
   void operator()(state_type &x, state_type &dxdt,
                   [[maybe_unused]] double t) const {
     constexpr std::complex<double> mI(0.0, -1.0);
-    auto alpha = mI * std::complex<double>(field, 0.0);
+    auto alp_fl = mI * std::complex<double>(field, 0.0);
+    auto alpha = mI;
     auto beta = std::complex<double>(0.0, 0.0);
     auto bt2 = std::complex<double>(1.0, 0.0);
 
-    cblas_zhpmv(CblasRowMajor, CblasUpper, state_sz[0],
+    cblas_zhemv(CblasRowMajor, CblasUpper, state_sz[0],
                 reinterpret_cast<double *>(&alpha),
-                reinterpret_cast<double *>(cblock[0]),
+                reinterpret_cast<double *>(cblock[0]), state_sz[0],
                 reinterpret_cast<double *>(&x[0]), 1,
                 reinterpret_cast<double *>(&beta),
                 reinterpret_cast<double *>(&dxdt[0]), 1);
 
     cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0],
-                reinterpret_cast<double *>(&alpha),
+                reinterpret_cast<double *>(&alp_fl),
                 reinterpret_cast<double *>(cdipole[0]), state_sz[1],
                 reinterpret_cast<double *>(&x[offs[1]]), 1,
                 reinterpret_cast<double *>(&bt2),
@@ -34,21 +35,21 @@ public:
 
     for (auto L = 1; L < L_max; ++L) {
       cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  reinterpret_cast<double *>(&alpha),
+                  reinterpret_cast<double *>(&alp_fl),
                   reinterpret_cast<double *>(cdipole[L - 1]), state_sz[L],
                   reinterpret_cast<double *>(&x[offs[L - 1]]), 1,
                   reinterpret_cast<double *>(&beta),
                   reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
 
-      cblas_zhpmv(CblasRowMajor, CblasUpper, state_sz[L],
+      cblas_zhemv(CblasRowMajor, CblasUpper, state_sz[L],
                   reinterpret_cast<double *>(&alpha),
-                  reinterpret_cast<double *>(cblock[L]),
+                  reinterpret_cast<double *>(cblock[L]), state_sz[L],
                   reinterpret_cast<double *>(&x[offs[L]]), 1,
                   reinterpret_cast<double *>(&bt2),
                   reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
 
       cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  reinterpret_cast<double *>(&alpha),
+                  reinterpret_cast<double *>(&alp_fl),
                   reinterpret_cast<double *>(cdipole[L]), state_sz[L + 1],
                   reinterpret_cast<double *>(&x[offs[L + 1]]), 1,
                   reinterpret_cast<double *>(&bt2),
@@ -56,15 +57,15 @@ public:
     }
 
     cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], reinterpret_cast<double *>(&alpha),
+                state_sz[L_max - 1], reinterpret_cast<double *>(&alp_fl),
                 reinterpret_cast<double *>(cdipole[L_max - 1]), state_sz[L_max],
                 reinterpret_cast<double *>(&x[offs[L_max - 1]]), 1,
                 reinterpret_cast<double *>(&beta),
                 reinterpret_cast<double *>(&dxdt[offs[L_max]]), 1);
 
-    cblas_zhpmv(CblasRowMajor, CblasUpper, state_sz[L_max],
+    cblas_zhemv(CblasRowMajor, CblasUpper, state_sz[L_max],
                 reinterpret_cast<double *>(&alpha),
-                reinterpret_cast<double *>(cblock[L_max]),
+                reinterpret_cast<double *>(cblock[L_max]), state_sz[L_max],
                 reinterpret_cast<double *>(&x[offs[L_max]]), 1,
                 reinterpret_cast<double *>(&bt2),
                 reinterpret_cast<double *>(&dxdt[offs[L_max]]), 1);

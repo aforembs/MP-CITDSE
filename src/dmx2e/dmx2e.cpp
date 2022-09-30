@@ -550,7 +550,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
   wig_table_init(2 * l_m, 6);
 
   // calculate 2e dipoles
-  Lsq = 2 * sqrt(Lf_i);
+  Lsq = sqrt(Lf_i);
 #pragma omp parallel
   {
     wig_thread_temp_init(2 * l_m);
@@ -568,14 +568,14 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
               wig6jj(0, 2, 2, 2 * l1f, 2 * l1i,
                      2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
               D_data[l1i * max2 + Li_idx[idLi].n1 + max_N * Lf_idx[idLf].n1] /
-              sqrt(l1f) / sqrt(2.0);
+              sqrt(l1f);
         } else if (l2i + 1 == l2f && l1i == l1f) {
           T[idLi + idLf * Li_sz] =
               Lsq * pow(-1, l1i + l2f) * sqrt(4 * l2f * l2f - 1) *
               wig6jj(0, 2, 2, 2 * l2f, 2 * l2i,
                      2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
               D_data[l2i * max2 + Li_idx[idLi].n2 + max_N * Lf_idx[idLf].n2] /
-              sqrt(l2f) / sqrt(2.0);
+              sqrt(l2f);
         } else {
           T[idLi + Li_sz * idLf] = 0.0;
         }
@@ -623,7 +623,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
     T_dimms[1] = Li_sz;
 
     // calculate 2e dipoles
-    Lsq = 2 * sqrt(Lf_i);
+    Lsq = sqrt(Lf_i);
 #pragma omp parallel
     {
       wig_thread_temp_init(2 * l_m);
@@ -641,7 +641,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                        2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
                 D_data[l1i * max2 + buffs.at(buf_Li)[idLi].n1 +
                        max_N * buffs.at(buf_Lf)[idLf].n1] /
-                sqrt(l1f) / sqrt(2.0);
+                sqrt(l1f);
           } else if (l2i + 1 == l2f && l1i == l1f) {
             T[idLi + idLf * Li_sz] =
                 Lsq * pow(-1, l1i + l2f) * sqrt(4 * l2f * l2f - 1) *
@@ -649,7 +649,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                        2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
                 D_data[l2i * max2 + buffs.at(buf_Li)[idLi].n2 +
                        max_N * buffs.at(buf_Lf)[idLf].n2] /
-                sqrt(l2f) / sqrt(2.0);
+                sqrt(l2f);
           } else {
             T[idLi + Li_sz * idLf] = 0.0;
           }
