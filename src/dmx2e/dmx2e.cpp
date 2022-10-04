@@ -562,23 +562,27 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
         l2i = Li_idx[idLi].l2;
         l1f = Lf_idx[idLf].l1;
         l2f = Lf_idx[idLf].l2;
+        auto Tif = 0.0;
         if (l1i + 1 == l1f && l2i == l2f) {
-          T[idLi + idLf * Li_sz] =
-              Lsq * pow(-1, l2i + l1f) * sqrt(4 * l1f * l1f - 1) *
-              wig6jj(0, 2, 2, 2 * l1f, 2 * l1i,
-                     2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
-              D_data[l1i * max2 + Li_idx[idLi].n1 + max_N * Lf_idx[idLf].n1] /
-              sqrt(l1f);
+          Tif = Lsq * pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
+                wig6jj(0, 2, 2, 2 * l1f, 2 * l1i,
+                       2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
+                D_data[l1i * max2 + Li_idx[idLi].n1 + max_N * Lf_idx[idLf].n1] /
+                sqrt(static_cast<double>(l1f));
         } else if (l2i + 1 == l2f && l1i == l1f) {
-          T[idLi + idLf * Li_sz] =
-              Lsq * pow(-1, l1i + l2f) * sqrt(4 * l2f * l2f - 1) *
-              wig6jj(0, 2, 2, 2 * l2f, 2 * l2i,
-                     2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
-              D_data[l2i * max2 + Li_idx[idLi].n2 + max_N * Lf_idx[idLf].n2] /
-              sqrt(l2f);
-        } else {
-          T[idLi + Li_sz * idLf] = 0.0;
+          Tif = Lsq * pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
+                wig6jj(0, 2, 2, 2 * l2f, 2 * l2i,
+                       2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
+                D_data[l2i * max2 + Li_idx[idLi].n2 + max_N * Lf_idx[idLf].n2] /
+                sqrt(static_cast<double>(l2f));
         }
+        if (l1i == l2i) {
+          Tif *= 0.7071067811865475244008444e0;
+        }
+        if (l1f == l2f) {
+          Tif *= 0.7071067811865475244008444e0;
+        }
+        T[idLi + idLf * Li_sz] = Tif;
       }
     }
 
@@ -634,25 +638,29 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
           l2i = buffs.at(buf_Li)[idLi].l2;
           l1f = buffs.at(buf_Lf)[idLf].l1;
           l2f = buffs.at(buf_Lf)[idLf].l2;
+          auto Tif = 0.0;
           if (l1i + 1 == l1f && l2i == l2f) {
-            T[idLi + idLf * Li_sz] =
-                Lsq * pow(-1, l2i + l1f) * sqrt(4 * l1f * l1f - 1) *
-                wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l1i,
-                       2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
-                D_data[l1i * max2 + buffs.at(buf_Li)[idLi].n1 +
-                       max_N * buffs.at(buf_Lf)[idLf].n1] /
-                sqrt(l1f);
+            Tif = Lsq * pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
+                  wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l1i,
+                         2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
+                  D_data[l1i * max2 + buffs.at(buf_Li)[idLi].n1 +
+                         max_N * buffs.at(buf_Lf)[idLf].n1] /
+                  sqrt(static_cast<double>(l1f));
           } else if (l2i + 1 == l2f && l1i == l1f) {
-            T[idLi + idLf * Li_sz] =
-                Lsq * pow(-1, l1i + l2f) * sqrt(4 * l2f * l2f - 1) *
-                wig6jj(L2, L2 + 2, 2, 2 * l2f, 2 * l2i,
-                       2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
-                D_data[l2i * max2 + buffs.at(buf_Li)[idLi].n2 +
-                       max_N * buffs.at(buf_Lf)[idLf].n2] /
-                sqrt(l2f);
-          } else {
-            T[idLi + Li_sz * idLf] = 0.0;
+            Tif = Lsq * pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
+                  wig6jj(L2, L2 + 2, 2, 2 * l2f, 2 * l2i,
+                         2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
+                  D_data[l2i * max2 + buffs.at(buf_Li)[idLi].n2 +
+                         max_N * buffs.at(buf_Lf)[idLf].n2] /
+                  sqrt(static_cast<double>(l2f));
           }
+          if (l1i == l2i) {
+            Tif *= 0.7071067811865475244008444e0;
+          }
+          if (l1f == l2f) {
+            Tif *= 0.7071067811865475244008444e0;
+          }
+          T[idLi + idLf * Li_sz] = Tif;
         }
       }
       wig_temp_free();
