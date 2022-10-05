@@ -20,7 +20,7 @@ int readConfig(std::string file, std::string &pot, char &gauge, int &l_max,
                double &timestep, double &w, double &Io, double &cepd,
                int &cycles);
 
-int readStructure(std::string pot, char gauge, int L_max, int &ct_sz,
+int readStructure(std::string pot, int L_max, int &ct_sz,
                   std::vector<int> &state_sz, std::vector<int> &offs,
                   stvupt &blocks);
 

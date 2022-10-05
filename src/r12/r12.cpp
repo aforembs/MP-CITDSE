@@ -583,7 +583,7 @@ int r_12::r12Glob4(std::string cpot, int L_max, int glq_pt, std::string dir) {
 // Read n1l1;n2l2 indices for NL states
 #pragma omp single
       {
-        filename = cpot + std::to_string(L) + "idx.h5";
+        filename = cpot + "2_" + std::to_string(L) + "En.h5";
         file =
             std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
         L_set = std::make_unique<H5::DataSet>(
@@ -826,7 +826,7 @@ int r_12::r12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir) {
 // Read n1l1;n2l2 indices for NL states
 #pragma omp single
       {
-        filename = cpot + std::to_string(L) + "idx.h5";
+        filename = cpot + "2_" + std::to_string(L) + "En.h5";
         file =
             std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
         L_set = std::make_unique<H5::DataSet>(
@@ -1062,7 +1062,7 @@ int r_12::r12Trap(std::string cpot, int L_max, int glq_pt, std::string dir) {
 // Read n1l1;n2l2 indices for NL states
 #pragma omp single
       {
-        filename = cpot + std::to_string(L) + "idx.h5";
+        filename = cpot + "2_" + std::to_string(L) + "En.h5";
         file =
             std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
         L_set = std::make_unique<H5::DataSet>(

@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<double> ens, block, c0;
 
-  grrd::readStructure(file_prefix, gauge, L0_sz, ens, block);
+  grrd::readStructure(file_prefix, L0_sz, ens, block);
 
   gr2e::prop(file_prefix, L0_sz, 0.0, dt, block, c0);
 

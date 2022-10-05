@@ -55,11 +55,11 @@ constexpr auto element_of(const Container &, ElementType v = 0) {
   return v;
 }
 
-int tdrd::readStructure(std::string pot, char gauge, int L_max, int &ct_sz,
+int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
                         std::vector<int> &state_sz, std::vector<int> &offs,
                         stvupt &blocks) {
   std::string filename;
-  std::unique_ptr<H5::H5File> efile = nullptr, file = nullptr;
+  std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> edata = nullptr, v12data = nullptr;
   std::unique_ptr<H5::DataSet> diag_set = nullptr;
   std::unique_ptr<H5::DataSet> L_set = nullptr;
@@ -77,7 +77,7 @@ int tdrd::readStructure(std::string pot, char gauge, int L_max, int &ct_sz,
   auto sum = 0;
   offs.push_back(sum);
 
-  for (auto L = 0; L < L_max; ++L) {
+  for (auto L = 0; L <= L_max; ++L) {
     L_sz = state_sz[L];
     count1[0] = L_sz;
     dimms1[0] = L_sz;
@@ -90,16 +90,25 @@ int tdrd::readStructure(std::string pot, char gauge, int L_max, int &ct_sz,
     memspace.setExtentSimple(1, dimms1, NULL);
 
     // read sum energies
-    filename =
-        pot + "2_" + std::to_string(L) + std::to_string(L + 1) + gauge + ".h5";
-    efile = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    filename = pot + "2_" + std::to_string(L) + "En.h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
     edata =
-        std::make_unique<H5::DataSet>(H5::DataSet(efile->openDataSet("e_i")));
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
     L_full_sz = edata->getSpace().getSimpleExtentNpoints();
     espace = edata->getSpace();
     espace.selectHyperslab(H5S_SELECT_SET, count1, offset1, stride1, block1);
     edata->read(&ens[0], H5::PredType::NATIVE_DOUBLE, memspace, espace);
-    efile->close();
+
+    count1[0] = L_sz * 4;
+    dimms1[0] = L_sz * 4;
+    memspace.setExtentSimple(1, dimms1, NULL);
+    
+    L_set =
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
+    lspace = L_set->getSpace();
+    lspace.selectHyperslab(H5S_SELECT_SET, count1, offset1, stride1, block1);
+    L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32, memspace, lspace);
+    file->close();
 
     v_sz = L_full_sz * (L_full_sz + 1) / 2;
     v12.reserve(v_sz);
@@ -110,19 +119,6 @@ int tdrd::readStructure(std::string pot, char gauge, int L_max, int &ct_sz,
     v12data =
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("V_12")));
     v12data->read(&v12[0], H5::PredType::NATIVE_DOUBLE);
-    file->close();
-
-    // get idx
-    count1[0] = L_sz * 4;
-    dimms1[0] = L_sz * 4;
-    memspace.setExtentSimple(1, dimms1, NULL);
-    filename = pot + std::to_string(L) + "idx.h5";
-    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    L_set =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
-    lspace = L_set->getSpace();
-    lspace.selectHyperslab(H5S_SELECT_SET, count1, offset1, stride1, block1);
-    L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32, memspace, lspace);
     file->close();
 
     // #pragma omp parallel
@@ -140,65 +136,6 @@ int tdrd::readStructure(std::string pot, char gauge, int L_max, int &ct_sz,
     }
     v12.clear();
   }
-
-  L_sz = state_sz[L_max];
-  count1[0] = L_sz;
-  dimms1[0] = L_sz;
-  sum += L_sz;
-  offs.push_back(sum);
-
-  ens.reserve(L_sz);
-  blocks[L_max].get()->resize(L_sz * L_sz);
-  L_idx.reserve(L_sz);
-  memspace.setExtentSimple(1, dimms1, NULL);
-
-  filename = pot + "2_" + std::to_string(L_max - 1) + std::to_string(L_max) +
-             gauge + ".h5";
-  efile = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  edata = std::make_unique<H5::DataSet>(H5::DataSet(efile->openDataSet("e_f")));
-  L_full_sz = edata->getSpace().getSimpleExtentNpoints();
-  espace = edata->getSpace();
-  espace.selectHyperslab(H5S_SELECT_SET, count1, offset1, stride1, block1);
-  edata->read(&ens[0], H5::PredType::NATIVE_DOUBLE, memspace, espace);
-  efile->close();
-
-  v_sz = L_full_sz * (L_full_sz + 1) / 2;
-  v12.reserve(v_sz);
-
-  // read V_12
-  filename = pot + "V12_" + std::to_string(L_max) + ".h5";
-  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  v12data =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("V_12")));
-  v12data->read(&v12[0], H5::PredType::NATIVE_DOUBLE);
-  file->close();
-
-  // get idx
-  count1[0] = L_sz * 4;
-  dimms1[0] = L_sz * 4;
-  memspace.setExtentSimple(1, dimms1, NULL);
-  filename = pot + std::to_string(L_max) + "idx.h5";
-  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  L_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
-  lspace = L_set->getSpace();
-  lspace.selectHyperslab(H5S_SELECT_SET, count1, offset1, stride1, block1);
-  L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32, memspace, lspace);
-  file->close();
-
-  // #pragma omp parallel
-  {
-    for (auto i = 0; i < L_sz; ++i) {
-      v12[(2 * L_full_sz - i - 1) * i / 2 + i] += ens[i];
-      blocks[L_max].get()->at(i * L_sz + i) =
-          v12[(2 * L_full_sz - i - 1) * i / 2 + i];
-      // #pragma omp for
-      for (auto j = i + 1; j < L_sz; ++j) {
-        blocks[L_max].get()->at(i * L_sz + j) =
-            v12[(2 * L_full_sz - i - 1) * i / 2 + j];
-      }
-    }
-  }
-  v12.clear();
 
   return 0;
 }

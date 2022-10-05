@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
         std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
-  tdrd::readStructure(file_prefix, gauge, L_max, ct_sz, state_sz, offs, blocks);
+  tdrd::readStructure(file_prefix, L_max, ct_sz, state_sz, offs, blocks);
 
   tdrd::readDipoles(file_prefix, gauge, L_max, state_sz, dipoles);
 

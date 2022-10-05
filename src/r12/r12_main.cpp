@@ -30,11 +30,6 @@ int main(int argc, char *argv[]) {
 
   out_prefix = "dat/" + pot;
 
-  // check if he<L_max>idx.h5 exists if not create index files
-  if (!fs::exists(out_prefix + std::to_string(L_max) + "idx.h5")) {
-    cfg::genL_idx(out_prefix, gauge, L_max, "inp");
-  }
-
   if (integrator.compare("mixed") == 0)
     r_12::r12MM(out_prefix, L_max, glq_pt, "inp");
   else if (integrator.compare("glob4") == 0)

@@ -20,7 +20,7 @@ int grrd::readConfig(std::string file, std::string &pot, char &gauge,
   return 0;
 }
 
-int grrd::readStructure(std::string pot, char gauge, int L0_sz,
+int grrd::readStructure(std::string pot, int L0_sz,
                         std::vector<double> &ens, std::vector<double> &block) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
@@ -38,34 +38,26 @@ int grrd::readStructure(std::string pot, char gauge, int L0_sz,
   memspace.setExtentSimple(1, dimms, NULL);
 
   L_idx.resize(L0_sz);
-  ens.resize(L0_sz);
-  v_sz = L0_sz * (L0_sz + 1) / 2;
-  v12.resize(v_sz);
   block.resize(L0_sz * L0_sz);
 
   // get idx
-  filename = pot + std::to_string(L) + "idx.h5";
+  filename = pot + "2_" + std::to_string(L) + "En.h5";
   file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  L_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
+  edata =
+      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
+  L_sz = edata->getSpace().getSimpleExtentNpoints();
+  ens.resize(L_sz);
+  espace = edata->getSpace();
+  edata->read(ens.data(), H5::PredType::NATIVE_DOUBLE); 
+  L_set =
+      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
   lspace = L_set->getSpace();
   lspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, hblock);
   L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32, memspace, lspace);
   file->close();
 
-  count[0] = {static_cast<hsize_t>(L0_sz)};
-  dimms[0] = {static_cast<hsize_t>(L0_sz)};
-  memspace.setExtentSimple(1, dimms, NULL);
-
-  // read sum energies
-  filename =
-      pot + "2_" + std::to_string(L) + std::to_string(L + 1) + gauge + ".h5";
-  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  edata = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_i")));
-  espace = edata->getSpace();
-  L_sz = edata->getSpace().getSimpleExtentNpoints();
-  espace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, hblock);
-  edata->read(ens.data(), H5::PredType::NATIVE_DOUBLE, memspace, espace);
-  file->close();
+  v_sz = L_sz * (L_sz + 1) / 2;
+  v12.resize(v_sz);
 
   // read V_12 triangular format
   filename = pot + "V12_" + std::to_string(L) + ".h5";

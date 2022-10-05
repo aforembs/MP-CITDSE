@@ -1,14 +1,11 @@
-#include "dmx2e.hpp"
+#include "srt2e.hpp"
 #include <cstdlib>
-#include <iostream>
+#include <filesystem>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
-  std::string opt_file;
-  int L_max, l_max;
-  std::string pot;
-  std::string out_prefix;
-  char gauge;
+  std::string opt_file, pot, out_prefix;
+  int L_max;
 
   for (;;) {
     switch (getopt(argc, argv, "hf:")) {
@@ -24,11 +21,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  dmx2e::ReadConfig(opt_file, pot, L_max, l_max, gauge);
+  srt2e::readConfig(opt_file, pot, L_max);
 
   out_prefix = "dat/" + pot;
 
-  dmx2e::GenDipole(out_prefix, L_max, l_max, gauge, "inp");
+  srt2e::sortEn(out_prefix, L_max, "inp");
 
   return 0;
 }
