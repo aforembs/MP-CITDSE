@@ -20,8 +20,8 @@ namespace conv {
 int readConfig(std::string file, std::string &pot, int &L_max, char &gauge,
                std::vector<int> &state_sz);
 
-int calcEvecs(std::string pot, char gauge, int L_max,
-              std::vector<int> &state_sz, stvupt &vecs);
+int calcEvecs(std::string pot, int L_max, std::vector<int> &state_sz,
+              stvupt &vecs);
 
 int readDipoles(std::string pot, char gauge, int L_max,
                 std::vector<int> &state_sz, stvupt &dipoles);

@@ -103,7 +103,7 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
     dimms[0] = L_sz * 4;
     memspace.setExtentSimple(1, dimms, NULL);
 
-    filename = pot + std::to_string(L) + "idx.h5";
+    filename = pot + "2_" + std::to_string(L) + "En.h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
     L_set =
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));

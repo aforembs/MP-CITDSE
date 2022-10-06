@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
         std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
-  conv::calcEvecs(file_prefix, gauge, L_max, state_sz, vecs);
+  conv::calcEvecs(file_prefix, L_max, state_sz, vecs);
 
   conv::readDipoles(file_prefix, gauge, L_max, state_sz, dipoles);
 

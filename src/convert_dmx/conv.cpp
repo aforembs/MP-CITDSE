@@ -30,8 +30,8 @@ int conv::readConfig(std::string file, std::string &pot, int &L_max,
   return 0;
 }
 
-int conv::calcEvecs(std::string pot, char gauge, int L_max,
-                    std::vector<int> &state_sz, stvupt &vecs) {
+int conv::calcEvecs(std::string pot, int L_max, std::vector<int> &state_sz,
+                    stvupt &vecs) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> edata = nullptr, v12data = nullptr,
@@ -42,23 +42,16 @@ int conv::calcEvecs(std::string pot, char gauge, int L_max,
   std::vector<int> ifail;
   int L_sz, L_full_sz, v_sz;
 
-  // hsize_t offset[] = {0}, stride[] = {1}, block[] = {1};
-  // hsize_t count[1], dimms[1];
-
-  for (auto L = 0; L < L_max; ++L) {
+  for (auto L = 0; L <= L_max; ++L) {
     L_sz = state_sz[L];
-    // count[0] = L_sz;
-    // dimms[0] = L_sz;
 
     vecs[L].get()->resize(L_sz * L_sz);
-    // memspace.setExtentSimple(1, dimms, NULL);
 
     // read sum energies
-    filename =
-        pot + "2_" + std::to_string(L) + std::to_string(L + 1) + gauge + ".h5";
+    filename = pot + "2_" + std::to_string(L) + "En.h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
     edata =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_i")));
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
     L_full_sz = edata->getSpace().getSimpleExtentNpoints();
     ens.resize(L_full_sz);
     edata->read(ens.data(), H5::PredType::NATIVE_DOUBLE);
@@ -90,50 +83,21 @@ int conv::calcEvecs(std::string pot, char gauge, int L_max,
     std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz,
                                 vecs[L].get()->data(), L_sz, eig.data())
               << " " << L << "\n";
+
+    hsize_t d1[1] = {static_cast<hsize_t>(L_sz)};
+    hsize_t d2[2] = {static_cast<hsize_t>(L_sz), static_cast<hsize_t>(L_sz)};
+
+    filename = pot + "_diag" + std::to_string(L) + ".h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
+    diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
+        "En", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, d1))));
+    diag_set->write(eig.data(), H5::PredType::NATIVE_DOUBLE);
+    diag_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
+        "EnVec", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d2))));
+    diag_set->write(vecs[L].get()->data(), H5::PredType::NATIVE_DOUBLE);
+    file->close();
+    eig.clear();
   }
-
-  L_sz = state_sz[L_max];
-  // count[0] = L_sz;
-  // dimms[0] = L_sz;
-
-  vecs[L_max].get()->resize(L_sz * L_sz);
-  // memspace.setExtentSimple(1, dimms, NULL);
-
-  filename = pot + "2_" + std::to_string(L_max - 1) + std::to_string(L_max) +
-             gauge + ".h5";
-  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  edata = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_f")));
-  L_full_sz = edata->getSpace().getSimpleExtentNpoints();
-  ens.resize(L_full_sz);
-  edata->read(ens.data(), H5::PredType::NATIVE_DOUBLE);
-  file->close();
-
-  v_sz = L_full_sz * (L_full_sz + 1) / 2;
-  v12.reserve(v_sz);
-
-  // read V_12
-  filename = pot + "V12_" + std::to_string(L_max) + ".h5";
-  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  v12data =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("V_12")));
-  v12data->read(v12.data(), H5::PredType::NATIVE_DOUBLE);
-  file->close();
-
-  for (auto i = 0; i < L_sz; ++i) {
-    v12[(2 * L_full_sz - i - 1) * i / 2 + i] += ens[i];
-    vecs[L_max].get()->at(i * L_sz + i) =
-        v12[(2 * L_full_sz - i - 1) * i / 2 + i];
-    for (auto j = i + 1; j < L_sz; ++j) {
-      vecs[L_max].get()->at(i * L_sz + j) =
-          v12[(2 * L_full_sz - i - 1) * i / 2 + j];
-    }
-  }
-
-  eig.resize(L_sz);
-
-  std::cout << LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz,
-                              vecs[L_max].get()->data(), L_sz, eig.data())
-            << " " << L_max << "\n";
 
   return 0;
 }

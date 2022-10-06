@@ -192,14 +192,12 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
         auto Tif = 0.0;
         if (l1i + 1 == l1f && l2i == l2f) {
           Tif = Lsq * pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
-                wig6jj(0, 2, 2, 2 * l1f, 2 * l1i,
-                       2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
+                wig6jj(0, 2, 2, 2 * l1f, 2 * l1i, 2 * l2i) *
                 D_data[l1i * max2 + Li_idx[idLi].n1 + max_N * Lf_idx[idLf].n1] /
                 sqrt(static_cast<double>(l1f));
         } else if (l2i + 1 == l2f && l1i == l1f) {
           Tif = Lsq * pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
-                wig6jj(0, 2, 2, 2 * l2f, 2 * l2i,
-                       2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
+                wig6jj(0, 2, 2, 2 * l2f, 2 * l2i, 2 * l1i) *
                 D_data[l2i * max2 + Li_idx[idLi].n2 + max_N * Lf_idx[idLf].n2] /
                 sqrt(static_cast<double>(l2f));
         }
@@ -222,7 +220,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
       std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
   dmx = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
       "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms))));
-  dmx->write(&T[0], H5::PredType::NATIVE_DOUBLE);
+  dmx->write(T.data(), H5::PredType::NATIVE_DOUBLE);
   outfile->close();
 
   T.clear();
@@ -268,15 +266,13 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
           auto Tif = 0.0;
           if (l1i + 1 == l1f && l2i == l2f) {
             Tif = Lsq * pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
-                  wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l1i,
-                         2 * l2i) * // wigner_6j_2e(L,l1f,l1i,l2i)*
+                  wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l1i, 2 * l2i) *
                   D_data[l1i * max2 + buffs.at(buf_Li)[idLi].n1 +
                          max_N * buffs.at(buf_Lf)[idLf].n1] /
                   sqrt(static_cast<double>(l1f));
           } else if (l2i + 1 == l2f && l1i == l1f) {
             Tif = Lsq * pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
-                  wig6jj(L2, L2 + 2, 2, 2 * l2f, 2 * l2i,
-                         2 * l1i) * // wigner_6j_2e(L,l2f,l2i,l1i)*
+                  wig6jj(L2, L2 + 2, 2, 2 * l2f, 2 * l2i, 2 * l1i) *
                   D_data[l2i * max2 + buffs.at(buf_Li)[idLi].n2 +
                          max_N * buffs.at(buf_Lf)[idLf].n2] /
                   sqrt(static_cast<double>(l2f));
@@ -299,7 +295,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
         std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
     dmx = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
         "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, T_dimms))));
-    dmx->write(&T[0], H5::PredType::NATIVE_DOUBLE);
+    dmx->write(T.data(), H5::PredType::NATIVE_DOUBLE);
     outfile->close();
 
     T.clear();
