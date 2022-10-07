@@ -88,6 +88,7 @@ en_L make_enL(int L, int l1e_max) {
 
 int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                      std::string dir) {
+  constexpr double sq2 = 1.4142135623730950488016887;
   int l1i = 0, l2i = 0, l1f = 0, l2f = 0;
   int Li_sz = 0;
   int Lf_sz = 0;
@@ -177,7 +178,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
   wig_table_init(2 * l_m, 6);
 
   // calculate 2e dipoles
-  Lsq = sqrt(Lf_i);
+  Lsq = 0.5 * sqrt(Lf_i);
 #pragma omp parallel
   {
     wig_thread_temp_init(2 * l_m);
@@ -202,10 +203,10 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                 sqrt(static_cast<double>(l2f));
         }
         if (l1i == l2i) {
-          Tif *= 0.7071067811865475244008444e0;
+          Tif *= sq2;
         }
         if (l1f == l2f) {
-          Tif *= 0.7071067811865475244008444e0;
+          Tif *= sq2;
         }
         T[idLi + idLf * Li_sz] = Tif;
       }
@@ -252,7 +253,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
     T_dimms[1] = Li_sz;
 
     // calculate 2e dipoles
-    Lsq = sqrt(Lf_i);
+    Lsq = 0.5 * sqrt(Lf_i);
 #pragma omp parallel
     {
       wig_thread_temp_init(2 * l_m);
@@ -278,10 +279,10 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                   sqrt(static_cast<double>(l2f));
           }
           if (l1i == l2i) {
-            Tif *= 0.7071067811865475244008444e0;
+            Tif *= sq2;
           }
           if (l1f == l2f) {
-            Tif *= 0.7071067811865475244008444e0;
+            Tif *= sq2;
           }
           T[idLi + idLf * Li_sz] = Tif;
         }
