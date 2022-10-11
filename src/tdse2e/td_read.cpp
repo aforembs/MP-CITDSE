@@ -102,7 +102,7 @@ int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
     count1[0] = L_sz * 4;
     dimms1[0] = L_sz * 4;
     memspace.setExtentSimple(1, dimms1, NULL);
-    
+
     L_set =
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
     lspace = L_set->getSpace();

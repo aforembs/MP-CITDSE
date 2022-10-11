@@ -88,8 +88,10 @@ en_L make_enL(int L, int l1e_max) {
 
 int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                      std::string dir) {
-  constexpr double sq2 = 1.4142135623730950488016887;
+  // constexpr double sq2 = 1.4142135623730950488016887;
+  constexpr double sq2 = 0.7071067811865475244008444e0;
   int l1i = 0, l2i = 0, l1f = 0, l2f = 0;
+  int n1i = 0, n2i = 0, n1f = 0, n2f = 0;
   int Li_sz = 0;
   int Lf_sz = 0;
   double Lsq = 0.0;
@@ -178,29 +180,42 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
   wig_table_init(2 * l_m, 6);
 
   // calculate 2e dipoles
-  Lsq = 0.5 * sqrt(Lf_i);
+  Lsq = sqrt(Lf_i);
 #pragma omp parallel
   {
     wig_thread_temp_init(2 * l_m);
 
     for (int idLf = 0; idLf < Lf_sz; ++idLf) { // up to sz Lf
-#pragma omp for private(l1i, l2i, l1f, l2f)
+#pragma omp for private(l1i, l2i, l1f, l2f, n1i, n2i, n1f, n2f)
       for (int idLi = 0; idLi < Li_sz; ++idLi) { // up to sz Li
         l1i = Li_idx[idLi].l1;
+        n1i = Li_idx[idLi].n1;
         l2i = Li_idx[idLi].l2;
+        n2i = Li_idx[idLi].n2;
         l1f = Lf_idx[idLf].l1;
+        n1f = Lf_idx[idLf].n1;
         l2f = Lf_idx[idLf].l2;
+        n2f = Lf_idx[idLf].n2;
         auto Tif = 0.0;
-        if (l1i + 1 == l1f && l2i == l2f) {
-          Tif = Lsq * pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
-                wig6jj(0, 2, 2, 2 * l1f, 2 * l1i, 2 * l2i) *
-                D_data[l1i * max2 + Li_idx[idLi].n1 + max_N * Lf_idx[idLf].n1] /
-                sqrt(static_cast<double>(l1f));
-        } else if (l2i + 1 == l2f && l1i == l1f) {
-          Tif = Lsq * pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
-                wig6jj(0, 2, 2, 2 * l2f, 2 * l2i, 2 * l1i) *
-                D_data[l2i * max2 + Li_idx[idLi].n2 + max_N * Lf_idx[idLf].n2] /
-                sqrt(static_cast<double>(l2f));
+        if (l1i + 1 == l1f && l2i == l2f && n2i == n2f) {
+          Tif += pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
+                 wig6jj(0, 2, 2, 2 * l1f, 2 * l1i, 2 * l2i) *
+                 D_data[l1i * max2 + n1i + max_N * n1f] / sqrt(l1f);
+        }
+        if (l2i + 1 == l2f && l1i == l1f && n1i == n1f) {
+          Tif += pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
+                 wig6jj(0, 2, 2, 2 * l2f, 2 * l2i, 2 * l1i) *
+                 D_data[l2i * max2 + n2i + max_N * n2f] / sqrt(l2f);
+        }
+        if (l1i + 1 == l2f && l2i == l1f && n2i == n1f) {
+          Tif += pow(-1, l2i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
+                 wig6jj(0, 2, 2, 2 * l2f, 2 * l1i, 2 * l2i) *
+                 D_data[l1i * max2 + n1i + max_N * n2f] / sqrt(l2f);
+        }
+        if (l2i + 1 == l1f && l1i == l2f && n1i == n2f) {
+          Tif += pow(-1, l1i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
+                 wig6jj(0, 2, 2, 2 * l1f, 2 * l2i, 2 * l1i) *
+                 D_data[l2i * max2 + n2i + max_N * n1f] / sqrt(l1f);
         }
         if (l1i == l2i) {
           Tif *= sq2;
@@ -208,7 +223,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
         if (l1f == l2f) {
           Tif *= sq2;
         }
-        T[idLi + idLf * Li_sz] = Tif;
+        T[idLi + idLf * Li_sz] = Tif * Lsq;
       }
     }
 
@@ -253,30 +268,41 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
     T_dimms[1] = Li_sz;
 
     // calculate 2e dipoles
-    Lsq = 0.5 * sqrt(Lf_i);
+    Lsq = sqrt(Lf_i);
 #pragma omp parallel
     {
       wig_thread_temp_init(2 * l_m);
       for (int idLf = 0; idLf < Lf_sz; ++idLf) { // up to sz Lf
-#pragma omp for private(l1i, l2i, l1f, l2f)
+#pragma omp for private(l1i, l2i, l1f, l2f, n1i, n2i, n1f, n2f)
         for (int idLi = 0; idLi < Li_sz; ++idLi) { // up to sz Li
           l1i = buffs.at(buf_Li)[idLi].l1;
+          n1i = buffs.at(buf_Li)[idLi].n1;
           l2i = buffs.at(buf_Li)[idLi].l2;
+          n2i = buffs.at(buf_Li)[idLi].n2;
           l1f = buffs.at(buf_Lf)[idLf].l1;
+          n1f = buffs.at(buf_Lf)[idLf].n1;
           l2f = buffs.at(buf_Lf)[idLf].l2;
+          n2f = buffs.at(buf_Lf)[idLf].n2;
           auto Tif = 0.0;
-          if (l1i + 1 == l1f && l2i == l2f) {
-            Tif = Lsq * pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
-                  wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l1i, 2 * l2i) *
-                  D_data[l1i * max2 + buffs.at(buf_Li)[idLi].n1 +
-                         max_N * buffs.at(buf_Lf)[idLf].n1] /
-                  sqrt(static_cast<double>(l1f));
-          } else if (l2i + 1 == l2f && l1i == l1f) {
-            Tif = Lsq * pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
-                  wig6jj(L2, L2 + 2, 2, 2 * l2f, 2 * l2i, 2 * l1i) *
-                  D_data[l2i * max2 + buffs.at(buf_Li)[idLi].n2 +
-                         max_N * buffs.at(buf_Lf)[idLf].n2] /
-                  sqrt(static_cast<double>(l2f));
+          if (l1i + 1 == l1f && l2i == l2f && n2i == n2f) {
+            Tif += pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
+                   wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l1i, 2 * l2i) *
+                   D_data[l1i * max2 + n1i + max_N * n1f] / sqrt(l1f);
+          }
+          if (l2i + 1 == l2f && l1i == l1f && n1i == n1f) {
+            Tif += pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
+                   wig6jj(L2, L2 + 2, 2, 2 * l2f, 2 * l2i, 2 * l1i) *
+                   D_data[l2i * max2 + n2i + max_N * n2f] / sqrt(l2f);
+          }
+          if (l1i + 1 == l2f && l2i == l1f && n2i == n1f) {
+            Tif += pow(-1, l2i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
+                   wig6jj(L2, L2 + 2, 2, 2 * l2f, 2 * l1i, 2 * l2i) *
+                   D_data[l1i * max2 + n1i + max_N * n2f] / sqrt(l2f);
+          }
+          if (l2i + 1 == l1f && l1i == l2f && n1i == n2f) {
+            Tif += pow(-1, l1i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
+                   wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l2i, 2 * l1i) *
+                   D_data[l2i * max2 + n2i + max_N * n1f] / sqrt(l1f);
           }
           if (l1i == l2i) {
             Tif *= sq2;
@@ -284,7 +310,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
           if (l1f == l2f) {
             Tif *= sq2;
           }
-          T[idLi + idLf * Li_sz] = Tif;
+          T[idLi + idLf * Li_sz] = Tif * Lsq;
         }
       }
       wig_temp_free();

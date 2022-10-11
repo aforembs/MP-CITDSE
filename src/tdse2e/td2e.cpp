@@ -152,7 +152,7 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
                   reinterpret_cast<double *>(&ct[0]), 1,
                   reinterpret_cast<double *>(&cdiff));
 
-  f_pop << t << " " << std::abs(cdiff) << " "
+  f_pop << t << " " << std::norm(cdiff) << " "
         << cblas_dznrm2(state_sz[0], reinterpret_cast<double *>(&ct[0]), 1)
         << "\n";
 
@@ -178,7 +178,7 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
     auto L1n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[2500]), 1);
     auto L2n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[5000]), 1);
 
-    f_pop << std::setprecision(16) << t << " " << std::abs(cdiff) << " "
+    f_pop << std::setprecision(16) << t << " " << std::norm(cdiff) << " "
           << L0n * L0n << " " << L1n * L1n << " " << L2n * L2n << " "
           << L0n * L0n + L1n * L1n + L2n * L2n << "\n";
 
