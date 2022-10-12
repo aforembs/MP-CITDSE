@@ -217,10 +217,10 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                  wig6jj(0, 2, 2, 2 * l1f, 2 * l2i, 2 * l1i) *
                  D_data[l2i * max2 + n2i + max_N * n1f] / sqrt(l1f);
         }
-        if (l1i == l2i) {
+        if (l1i == l2i && n1i == n2i) {
           Tif *= sq2;
         }
-        if (l1f == l2f) {
+        if (l1f == l2f && n1f == n2f) {
           Tif *= sq2;
         }
         T[idLi + idLf * Li_sz] = Tif * Lsq;
@@ -304,10 +304,10 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                    wig6jj(L2, L2 + 2, 2, 2 * l1f, 2 * l2i, 2 * l1i) *
                    D_data[l2i * max2 + n2i + max_N * n1f] / sqrt(l1f);
           }
-          if (l1i == l2i) {
+          if (l1i == l2i && n1i == n2i) {
             Tif *= sq2;
           }
-          if (l1f == l2f) {
+          if (l1f == l2f && n1f == n2f) {
             Tif *= sq2;
           }
           T[idLi + idLf * Li_sz] = Tif * Lsq;
