@@ -6,6 +6,7 @@
 #include <H5Cpp.h>
 #include <cassert>
 #include <complex>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <yaml-cpp/yaml.h>

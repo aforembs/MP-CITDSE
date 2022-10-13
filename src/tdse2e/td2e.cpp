@@ -58,7 +58,8 @@ public:
 
     cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
                 state_sz[L_max - 1], reinterpret_cast<double *>(&alp_fl),
-                reinterpret_cast<double *>(cdipole[L_max - 1]), state_sz[L_max - 1],
+                reinterpret_cast<double *>(cdipole[L_max - 1]),
+                state_sz[L_max - 1],
                 reinterpret_cast<double *>(&x[offs[L_max - 1]]), 1,
                 reinterpret_cast<double *>(&beta),
                 reinterpret_cast<double *>(&dxdt[offs[L_max]]), 1);
@@ -174,9 +175,11 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
                     reinterpret_cast<double *>(&ct[0]), 1,
                     reinterpret_cast<double *>(&cdiff));
 
-    auto L0n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[0]), 1);
-    auto L1n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[2500]), 1);
-    auto L2n = cblas_dznrm2(2500, reinterpret_cast<double *>(&ct[5000]), 1);
+    auto L0n = cblas_dznrm2(state_sz[0], reinterpret_cast<double *>(&ct[0]), 1);
+    auto L1n =
+        cblas_dznrm2(state_sz[1], reinterpret_cast<double *>(&ct[offs[1]]), 1);
+    auto L2n =
+        cblas_dznrm2(state_sz[2], reinterpret_cast<double *>(&ct[offs[2]]), 1);
 
     f_pop << std::setprecision(16) << t << " " << std::norm(cdiff) << " "
           << L0n * L0n << " " << L1n * L1n << " " << L2n * L2n << " "

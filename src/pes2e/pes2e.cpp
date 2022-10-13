@@ -95,7 +95,7 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
   }
 
   // Read indices
-  for (auto L = 0; L < L_max; ++L) {
+  for (auto L = 0; L <= L_max; ++L) {
     L_sz = state_sz[L];
     sum += L_sz;
     offs.push_back(sum);
@@ -163,8 +163,7 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
   }
 
   // Print the ground population and the norm of c(t)
-  std::cout << std::setprecision(15) << "ground_pop: " << std::norm(ct[0])
-            << " norm: " << nrm << "\n";
+  std::cout << std::setprecision(15) << " norm: " << nrm << "\n";
 
   return 0;
 }

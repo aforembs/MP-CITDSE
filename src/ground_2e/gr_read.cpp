@@ -20,8 +20,8 @@ int grrd::readConfig(std::string file, std::string &pot, char &gauge,
   return 0;
 }
 
-int grrd::readStructure(std::string pot, int L0_sz,
-                        std::vector<double> &ens, std::vector<double> &block) {
+int grrd::readStructure(std::string pot, int L0_sz, std::vector<double> &ens,
+                        std::vector<double> &block) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> edata = nullptr, v12data = nullptr;
@@ -43,14 +43,12 @@ int grrd::readStructure(std::string pot, int L0_sz,
   // get idx
   filename = pot + "2_" + std::to_string(L) + "En.h5";
   file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  edata =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
+  edata = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
   L_sz = edata->getSpace().getSimpleExtentNpoints();
   ens.resize(L_sz);
   espace = edata->getSpace();
-  edata->read(ens.data(), H5::PredType::NATIVE_DOUBLE); 
-  L_set =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
+  edata->read(ens.data(), H5::PredType::NATIVE_DOUBLE);
+  L_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
   lspace = L_set->getSpace();
   lspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, hblock);
   L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32, memspace, lspace);
