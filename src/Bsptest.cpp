@@ -1,5 +1,5 @@
 #include "H5Cpp.h"
-#include "bsplines.hpp"
+#include "bsp_gsl.hpp"
 #include "fastgl.hpp"
 #include "slatec_f.hpp"
 #include <algorithm>
@@ -44,7 +44,7 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
       std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("Knots")));
   nkn = rset->getSpace().getSimpleExtentNpoints();
 
-  kkn.reserve(nkn);
+  kkn.resize(nkn);
   rset->read(&kkn[0], H5::PredType::NATIVE_DOUBLE); // read knots
 
   rset = std::unique_ptr<H5::DataSet>(new H5::DataSet(file->openDataSet("En")));
@@ -83,12 +83,12 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
   }
 
   std::vector<double> Bsplines;
-  bsp::Splines(n, k, gl_x, kkn, Bsplines);
+  bsp::Splines(n, k, k, gl_x, kkn, Bsplines);
   double dl, sl, x;
 
   std::cout << Cf[0] << " " << Cf[n] << " " << Cf[2 * n] << "\n";
 
-  std::ofstream outFile("dat/wfn_n10l0.dat", std::ofstream::out);
+  std::ofstream outFile("dat/wfn_n0l0.dat", std::ofstream::out);
   // Output ground state wfn
   double x_val = 0;
   for (auto i = k - 1; i < n; ++i) {
@@ -113,7 +113,6 @@ int bsptest(std::string cpot, uint l1e_max, std::vector<uint> &N_max) {
 int main() {
   std::vector<uint> Nm;
   Nm.push_back(1);
-  Nm.push_back(1);
-  bsptest("dat/he", 1, Nm);
+  bsptest("dat/he", 0, Nm);
   return 0;
 }

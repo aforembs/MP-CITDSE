@@ -2,7 +2,7 @@
 #define TISE_H_
 
 #include "ModelV.hpp"
-#include "bsplines.hpp"
+#include "bsp_gsl.hpp"
 #include <H5Cpp.h>
 #include <algorithm>
 #include <execution>

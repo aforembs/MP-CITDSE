@@ -1,4 +1,4 @@
-#include "bsplines.hpp"
+#include "bsp_gsl.hpp"
 
 int bsp::GenKnots(int n, int k, double r_max, double fkn, char type,
                   std::vector<double> &kkn) {
@@ -129,21 +129,25 @@ int bsp::WrKnotsH5(int n, int k, double r_max, double fkn, char type,
 
 int bsp::Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
                  std::vector<double> &knots, std::vector<double> &splines) {
-  int i1;
+  int i1, B_sz = n * glq_pt * k;
   double dl, sl, x;
-  int len = (k + 1) * (k + 2) / 2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
+  auto kn = gsl_vector_alloc(knots.size());
+  kn->size = knots.size();
+  kn->stride=1;
+  kn->data = knots.data();
+  kn->owner=0;
 
-  size_t nbreak = knots.size() - 2;
+  size_t nbreak = n+2-k;
+  auto B  = gsl_vector_alloc(k);
   gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
-  bw->knots = knots.data();
+  bw->knots = kn;
 
-  splines.reserve(n * glq_pt * k);
+  splines.reserve(B_sz);
 
-  // for (int i = 0; i < (k - 1) * glq_pt * k; ++i)
-  //   splines.emplace_back(0.0);
+  for (int i = 0; i < (k - 1) * glq_pt * k; ++i)
+    splines.emplace_back(0.0);
 
+  size_t pi =0;
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
     dl = knots[i1] - knots[i];
@@ -152,10 +156,15 @@ int bsp::Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
     for (int p = 0; p < glq_pt; ++p) {
       x = dl * 0.5 * gl_x[p] + sl * 0.5; // x-transformation
 
-      gsl_bspline_eval(x, splines.data(), bw);
+      pi = i;
+      gsl_bspline_eval_nonzero(x, B, &pi, &pi, bw);
+      for (int j=0; j<k; ++j) {
+        splines.emplace_back(B->data[j]);
+      }
     }
   }
   gsl_bspline_free(bw);
+  gsl_vector_free(B);
 
   return 0;
 }
@@ -163,20 +172,27 @@ int bsp::Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
 int bsp::SimpSplines(int n, int k, int glq_pt, std::vector<double> &gl_x,
                      std::vector<double> &knots,
                      std::vector<double> &sisplines) {
-  int i1;
+  int i1, B_sz = 2* n * glq_pt * k;
   double dl, sl, x;
-  int len = (k + 1) * (k + 2) / 2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
+  auto kn = gsl_vector_alloc(knots.size());
+  kn->size = knots.size();
+  kn->stride=1;
+  kn->data = knots.data();
+  kn->owner=0;
 
-  size_t nbreak = knots.size() - 2;
+  size_t nbreak = n+2-k;
+  auto B  = gsl_vector_alloc(k);
   gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
-  bw->knots = knots.data();
+  bw->knots = kn;
 
-  sisplines.reserve(n * 2 * glq_pt * k);
+  sisplines.reserve(B_sz);
+
+  for (int i = 0; i < (k - 1) * 2 * glq_pt * k; ++i)
+    sisplines.emplace_back(0.0);
 
   double xm1 = 0.0;
   double xs38a, xs38b;
+  size_t pi=0;
 
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
@@ -188,13 +204,22 @@ int bsp::SimpSplines(int n, int k, int glq_pt, std::vector<double> &gl_x,
       xs38a = (2 * xm1 + x) / 3;
       xs38b = (xm1 + 2 * x) / 3;
 
-      gsl_bspline_eval(xs38a, sisplines.data(), bw);
+      pi = i;
 
-      gsl_bspline_eval(xs38b, sisplines.data(), bw);
+      gsl_bspline_eval_nonzero(xs38a, B, &pi, &pi, bw);
+      for (int j=0; j<k; ++j) {
+        sisplines.emplace_back(B->data[j]);
+      }
+
+      gsl_bspline_eval_nonzero(xs38b, B, &pi, &pi, bw);
+      for (int j=0; j<k; ++j) {
+        sisplines.emplace_back(B->data[j]);
+      }
       xm1 = x;
     }
   }
   gsl_bspline_free(bw);
+  gsl_vector_free(B);
 
   return 0;
 }
@@ -202,21 +227,27 @@ int bsp::SimpSplines(int n, int k, int glq_pt, std::vector<double> &gl_x,
 int bsp::Lob3Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
                      std::vector<double> &knots,
                      std::vector<double> &lsplines) {
-  int i1;
+  int i1, B_sz = n * glq_pt * k;
   double dl, sl, x;
-  int len = (k + 1) * (k + 2) / 2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
+  auto kn = gsl_vector_alloc(knots.size());
+  kn->size = knots.size();
+  kn->stride=1;
+  kn->data = knots.data();
+  kn->owner=0;
 
-  size_t nbreak = knots.size() - 2;
+  size_t nbreak = n+2-k;
+  auto B  = gsl_vector_alloc(k);
   gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
-  bw->knots = knots.data();
+  bw->knots = kn;
 
-  lsplines.reserve(n * glq_pt * k);
+  lsplines.reserve(B_sz);
+
+  for (int i = 0; i < (k - 1) * glq_pt * k; ++i)
+    lsplines.emplace_back(0.0);
 
   double xm1 = 0.0;
   double xlm;
-  auto ia = 0;
+  size_t ia = 0;
 
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
@@ -227,11 +258,16 @@ int bsp::Lob3Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
       x = dl * 0.5 * gl_x[p] + sl * 0.5; // x-transformation
       xlm = (xm1 + x) * 0.5;
 
-      gsl_bspline_eval(xlm, lsplines.data(), bw);
+      ia = i1 - (knots[i] > xlm);
+      gsl_bspline_eval_nonzero(xlm, B, &ia, &ia, bw);
+      for (int j=0; j<k; ++j) {
+        lsplines.emplace_back(B->data[j]);
+      }
       xm1 = x;
     }
   }
   gsl_bspline_free(bw);
+  gsl_vector_free(B);
 
   return 0;
 }
@@ -239,13 +275,20 @@ int bsp::Lob3Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
 int bsp::Lob4Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
                      std::vector<double> &knots,
                      std::vector<double> &lobsplines) {
-  int i1;
+  int i1, B_sz = 2* n * glq_pt * k;
   double dl, sl, x;
-  int len = (k + 1) * (k + 2) / 2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
+  auto kn = gsl_vector_alloc(knots.size());
+  kn->size = knots.size();
+  kn->stride=1;
+  kn->data = knots.data();
+  kn->owner=0;
 
-  lobsplines.reserve(n * 2 * glq_pt * k);
+  size_t nbreak = n+2-k;
+  auto B  = gsl_vector_alloc(k);
+  gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
+  bw->knots = kn;
+
+  lobsplines.reserve(B_sz);
 
   for (int i = 0; i < (k - 1) * 2 * glq_pt * k; ++i)
     lobsplines.emplace_back(0.0);
@@ -255,8 +298,8 @@ int bsp::Lob4Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
   double dlob = 0.0;
   double slob = 0.0;
   double xloba, xlobb;
-  auto ia = 0;
-  auto ib = 0;
+  size_t ia = 0;
+  size_t ib = 0;
 
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
@@ -272,14 +315,21 @@ int bsp::Lob4Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
 
       ia = i1 - (knots[i] > xloba);
       ib = i1 - (knots[i] > xlobb);
-      dbspvd_(&knots[0], k, 1, xloba, ia, k, &Db[0], &work[0]);
-      lobsplines.insert(std::end(lobsplines), std::begin(Db), std::end(Db));
+      gsl_bspline_eval_nonzero(xloba, B, &ia, &ia, bw);
+      for (int j=0; j<k; ++j) {
+        lobsplines.emplace_back(B->data[j]);
+      }
 
-      dbspvd_(&knots[0], k, 1, xlobb, ib, k, &Db[0], &work[0]);
-      lobsplines.insert(std::end(lobsplines), std::begin(Db), std::end(Db));
+      gsl_bspline_eval_nonzero(xlobb, B, &ib, &ib, bw);
+      for (int j=0; j<k; ++j) {
+        lobsplines.emplace_back(B->data[j]);
+      }
       xm1 = x;
     }
   }
+  gsl_bspline_free(bw);
+  gsl_vector_free(B);
+
   return 0;
 }
 
@@ -287,13 +337,20 @@ int bsp::GL2Splines(int n, int k, int glq_pt, int glq_pt2,
                     std::vector<double> &gl_outer,
                     std::vector<double> &gl_inner, std::vector<double> &knots,
                     std::vector<double> &glsplines) {
-  int i1;
+  int i1, B_sz = n * glq_pt2 * glq_pt * k;
   double dl, sl, x;
-  int len = (k + 1) * (k + 2) / 2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
+  auto kn = gsl_vector_alloc(knots.size());
+  kn->size = knots.size();
+  kn->stride=1;
+  kn->data = knots.data();
+  kn->owner=0;
 
-  glsplines.reserve(n * glq_pt2 * glq_pt * k);
+  size_t nbreak = n+2-k;
+  auto B  = gsl_vector_alloc(k);
+  gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
+  bw->knots = kn;
+
+  glsplines.reserve(B_sz);
 
   for (int i = 0; i < (k - 1); ++i) {
     for (int j = 0; j < glq_pt2 * glq_pt * k; ++j) {
@@ -303,7 +360,7 @@ int bsp::GL2Splines(int n, int k, int glq_pt, int glq_pt2,
 
   double xm1 = 0.0;
   double gl2x;
-  auto ia = 0;
+  size_t ia = 0;
 
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
@@ -317,30 +374,45 @@ int bsp::GL2Splines(int n, int k, int glq_pt, int glq_pt2,
         gl2x = (x - xm1) * 0.5 * gl_inner[j] + (x + xm1) * 0.5;
 
         ia = i1 - (knots[i] > gl2x);
-        dbspvd_(&knots[0], k, 1, gl2x, ia, k, &Db[0], &work[0]);
-        glsplines.insert(std::end(glsplines), std::begin(Db), std::end(Db));
+        gsl_bspline_eval_nonzero(gl2x, B, &ia, &ia, bw);
+        for (int jb=0; jb<k; ++j) {
+          glsplines.emplace_back(B->data[jb]);
+        }
       }
       xm1 = x;
     }
   }
+  gsl_bspline_free(bw);
+  gsl_vector_free(B);
+
   return 0;
 }
 
 int bsp::TrapSplines(int n, int k, int pt, std::vector<double> &knots,
                      std::vector<double> &splines) {
-  int i1;
+  int i1, B_sz = n * pt * k;
   double a, b, x;
   double step = 0.0;
-  int len = (k + 1) * (k + 2) / 2;
-  std::vector<double> Db(k);
-  std::vector<double> work(len);
+  auto kn = gsl_vector_alloc(knots.size());
+  kn->size = knots.size();
+  kn->stride=1;
+  kn->data = knots.data();
+  kn->owner=0;
 
-  size_t nbreak = knots.size() - 2;
+  size_t nbreak = n+2-k;
+  auto B  = gsl_vector_alloc(k);
   gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
-  bw->knots = knots.data();
+  bw->knots = kn;
 
-  splines.reserve(n * pt * k);
+  splines.reserve(B_sz);
 
+  for (auto i = 0; i < (k - 1); ++i) {
+    for (auto j = 0; j < pt * k; ++j) {
+      { splines.emplace_back(0.0); }
+    }
+  }
+
+  size_t pi = 0;
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
     b = knots[i1];
@@ -350,40 +422,58 @@ int bsp::TrapSplines(int n, int k, int pt, std::vector<double> &knots,
     for (auto p = 1; p <= pt; ++p) {
       x = a + p * step; // x-transformation
 
-      gsl_bspline_eval(x, splines.data(), bw);
+      pi = i;
+      gsl_bspline_eval_nonzero(x, B, &pi, &pi, bw);
+      for (int j=0; j<k; ++j) {
+        splines.emplace_back(B->data[j]);
+      }
     }
   }
   gsl_bspline_free(bw);
+  gsl_vector_free(B);
 
   return 0;
 }
 
 int bsp::SplinesP(int n, int k, int glq_pt, std::vector<double> &gl_x,
                   std::vector<double> &knots, std::vector<double> &splinesp) {
-  int i1;
+  int i1, B_sz = n * glq_pt * k;
   double dl, sl, x;
-  int len = (k + 1) * (k + 2) / 2;
-  std::vector<double> Db(k * 2);
-  std::vector<double> work(len);
+  auto kn = gsl_vector_alloc(knots.size());
+  kn->size = knots.size();
+  kn->stride=1;
+  kn->data = knots.data();
+  kn->owner=0;
 
-  size_t nbreak = knots.size() - 2;
+  size_t nbreak = n+2-k;
+  auto dB  = gsl_matrix_alloc(k, 2);
   gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
-  bw->knots = knots.data();
+  bw->knots = kn;
 
-  splinesp.reserve(n * glq_pt * k);
+  splinesp.reserve(B_sz);
 
+  for (int i = 0; i < (k - 1) * glq_pt * k; ++i) {
+    splinesp.emplace_back(0.0);
+  }
+
+  size_t pi = 0;
   for (auto i = k - 1; i < n; ++i) {
-    dl = knots[i + 1] - knots[i];
-    sl = knots[i + 1] + knots[i];
     i1 = i + 1;
+    dl = knots[i1] - knots[i];
+    sl = knots[i1] + knots[i];
 
     for (int p = 0; p < glq_pt; ++p) {
       x = dl * 0.5 * gl_x[p] + sl * 0.5; // x-transformation
 
-      gsl_bspline_deriv_eval(x, 1, splinesp.data(), bw);
+      pi = i;
+      gsl_bspline_deriv_eval_nonzero(x, 1, dB, &pi, &pi, bw);
+      for (int j=0; j<k; ++j) {
+        splinesp.emplace_back(gsl_matrix_get(dB, j, 1));
+      }
     }
   }
   gsl_bspline_free(bw);
+  gsl_matrix_free(dB);
 
   return 0;
 }

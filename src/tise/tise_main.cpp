@@ -1,4 +1,3 @@
-#include "bsplines.hpp"
 #include "fastgl.hpp"
 #include "tise.hpp"
 #include <cstdlib>

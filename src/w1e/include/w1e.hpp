@@ -1,7 +1,7 @@
 #ifndef W1E_H
 #define W1E_H
 
-#include "bsplines.hpp"
+#include "bsp_gsl.hpp"
 #include "fastgl.hpp"
 #include <H5Cpp.h>
 #include <vector>

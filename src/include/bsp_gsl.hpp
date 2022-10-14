@@ -1,5 +1,5 @@
-#ifndef BSPLINES_H_
-#define BSPLINES_H_
+#ifndef BSP_GSL_H_
+#define BSP_GSL_H_
 
 #include "H5Cpp.h"
 #include "ModelV.hpp"
@@ -8,7 +8,7 @@
 #include <iostream>
 #include <iterator>
 #include <memory>
-#include <string>
+#include <cstring>
 #include <vector>
 extern "C" {
 #include <gsl/gsl_bspline.h>
@@ -58,4 +58,4 @@ int SplineInt(int n, int k, std::vector<double> &gl_w,
               std::vector<double> &kkn, ModelV *V);
 } // namespace bsp
 
-#endif // BSPLINES_H_
+#endif // BSP_GSL_H_

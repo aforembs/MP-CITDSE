@@ -8,10 +8,10 @@ ODIR = obj
 VPATH := ../
 
 SRC =tise_main.cpp tise.cpp 
-SRC_SH=fastgl.cpp bsplines.cpp
+SRC_SH=fastgl.cpp bsp_gsl.cpp
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I/opt/OpenBLAS/include -g
-LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -llapacke -fopenmp -L../ -lslatec -lgfortran #-lopenblas -L/opt/OpenBLAS/lib
+LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -llapacke -fopenmp -lgsl -L/opt/OpenBLAS/lib -lopenblas 
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 #OBJ+= $(addprefix ../, $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_SHARED)))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))

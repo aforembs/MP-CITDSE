@@ -1,7 +1,7 @@
 #ifndef V_12_H_
 #define V_12_H_
 
-#include "bsplines.hpp"
+#include "bsp_gsl.hpp"
 #include "cfg_in.hpp"
 #include "dmx_typ.hpp"
 #include "fastgl.hpp"
