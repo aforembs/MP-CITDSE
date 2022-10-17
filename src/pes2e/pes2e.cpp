@@ -76,7 +76,6 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
   }
 
   std::vector<double> en_1e((l_max + 1) * max_N);
-  std::vector<double> PES(max_N);
 
   count[0] = max_N;
   dimms[0] = max_N;
@@ -114,14 +113,21 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
     file->close();
   }
 
-  std::vector<double> PES_En(max_N);
-  int st_idx = l_max * max_N;
-  for (auto i = 0; i < max_N; ++i) {
-    PES_En[i] = en_1e[st_idx + i];
+  std::vector<double> PES_En;
+  // int st_idx = l_max * max_N;
+  for (auto i = 0; i < static_cast<int>(en_1e.size()); ++i) {
+    PES_En.push_back(en_1e[i]);
   }
 
+  std::sort(std::execution::par_unseq, PES_En.begin(), PES_En.end());
+  PES_En.erase(
+      std::unique(std::execution::par_unseq, PES_En.begin(), PES_En.end()),
+      PES_En.end());
+  std::cout << PES_En.size() << "\n";
+  std::vector<double> PES(PES_En.size());
+
   // Loop for calculating dP/dEk = 2*|c_i|^2/|E_{i+1}-E_{i-1}|
-  for (auto L = 0; L <= L_max; ++L) {
+  for (auto L = 0; L <= 0; ++L) {
     for (auto i = 1; i < state_sz[L]; ++i) {
       for (auto k = 1; k < static_cast<int>(PES_En.size()) - 1; ++k) {
         auto ndiff = std::abs(PES_En[k] - PES_En[k - 1]);
@@ -150,7 +156,7 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
   // Write PES for energies > 0
   std::fstream outfile(pot + "_pes.dat", std::ios::out);
   for (auto i = 0; i < static_cast<int>(PES_En.size()) - 1; ++i) {
-    if (PES_En[i] > 0.0 && PES[i] > 0.0) {
+    if (PES_En[i] > 0.0) {
       outfile << PES_En[i] << " " << PES[i] << "\n";
     }
   }
@@ -164,6 +170,97 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
 
   // Print the ground population and the norm of c(t)
   std::cout << std::setprecision(15) << " norm: " << nrm << "\n";
+
+  return 0;
+}
+
+int pes2e::genPES2eb(std::string pot, std::string dir, int L_max, int l_max,
+                     std::vector<int> &state_sz,
+                     std::vector<std::complex<double>> &ct) {
+  std::vector<idx4> ct_idx(ct.size());
+  std::vector<int> offs;
+  auto sum = 0;
+  offs.push_back(sum);
+  int L_sz;
+
+  int ncf, sym;
+  std::vector<cfg::line> cfgs;
+  auto max_N = 0, max_nl = 0;
+  cfg::line max_n2l;
+
+  std::string filename;
+  std::unique_ptr<H5::H5File> file = nullptr;
+  std::unique_ptr<H5::DataSet> e_set = nullptr, L_set = nullptr;
+  hsize_t offset[1] = {0}, stride[1] = {1}, block[1] = {1};
+  hsize_t count[1], dimms[1];
+  H5::DataSpace memspace, e_space, L_space;
+
+  for (auto L = 0; L <= L_max; ++L) {
+    cfg::readCfg(dir, L, sym, ncf, cfgs);
+
+    max_n2l = *std::max_element(cfgs.begin(), cfgs.end(),
+                                [](cfg::line const &a, cfg::line const &b) {
+                                  return a.n2max < b.n2max;
+                                });
+    max_N = std::max(max_n2l.n2max, max_N);
+    max_nl = std::max(ncf, max_nl);
+  }
+
+  std::vector<double> en_2e(ct.size());
+
+  // Read 1e energies
+  for (auto L = 0; L <= L_max; ++L) {
+    count[0] = max_N;
+    dimms[0] = max_N;
+    memspace.setExtentSimple(1, dimms, NULL);
+
+    filename = pot + "2_" + std::to_string(L) + "En.h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    e_set =
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
+    e_space = e_set->getSpace();
+    e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+    e_set->read(&en_2e[L * 2500], H5::PredType::NATIVE_DOUBLE, memspace,
+                e_space);
+    file->close();
+  }
+
+  // Read indices
+  for (auto L = 0; L <= L_max; ++L) {
+    L_sz = state_sz[L];
+    sum += L_sz;
+    offs.push_back(sum);
+    count[0] = L_sz * 4;
+    dimms[0] = L_sz * 4;
+    memspace.setExtentSimple(1, dimms, NULL);
+
+    filename = pot + "2_" + std::to_string(L) + "En.h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    L_set =
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
+    L_space = L_set->getSpace();
+    L_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+    L_set->read(&ct_idx[offs[L]], H5::PredType::NATIVE_INT32, memspace,
+                L_space);
+    file->close();
+  }
+
+  // Write PES for energies > 0
+  std::fstream outfile(pot + "_pes.dat", std::ios::out);
+  for (auto i = 1; i < static_cast<int>(ct.size()) - 1; ++i) {
+    outfile << std::setprecision(16) << en_2e[i] << " " << std::norm(ct[i])
+            << "\n";
+  }
+  outfile.close();
+
+  // Get the norm of c(t)
+  double nrm = 0;
+  for (auto &v : ct) {
+    nrm += std::norm(v);
+  }
+
+  // Print the ground population and the norm of c(t)
+  std::cout << std::setprecision(16) << " norm: " << nrm << "\n";
 
   return 0;
 }
