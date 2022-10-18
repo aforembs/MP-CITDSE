@@ -174,19 +174,13 @@ int pes2e::genPES(std::string pot, std::string dir, int L_max, int l_max,
   return 0;
 }
 
-int pes2e::genPES2eb(std::string pot, std::string dir, int L_max, int l_max,
-                     std::vector<int> &state_sz,
+int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
                      std::vector<std::complex<double>> &ct) {
   std::vector<idx4> ct_idx(ct.size());
   std::vector<int> offs;
   auto sum = 0;
   offs.push_back(sum);
   int L_sz;
-
-  int ncf, sym;
-  std::vector<cfg::line> cfgs;
-  auto max_N = 0, max_nl = 0;
-  cfg::line max_n2l;
 
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
@@ -195,23 +189,15 @@ int pes2e::genPES2eb(std::string pot, std::string dir, int L_max, int l_max,
   hsize_t count[1], dimms[1];
   H5::DataSpace memspace, e_space, L_space;
 
-  for (auto L = 0; L <= L_max; ++L) {
-    cfg::readCfg(dir, L, sym, ncf, cfgs);
-
-    max_n2l = *std::max_element(cfgs.begin(), cfgs.end(),
-                                [](cfg::line const &a, cfg::line const &b) {
-                                  return a.n2max < b.n2max;
-                                });
-    max_N = std::max(max_n2l.n2max, max_N);
-    max_nl = std::max(ncf, max_nl);
-  }
-
   std::vector<double> en_2e(ct.size());
 
-  // Read 1e energies
+  // Read 2e energies
   for (auto L = 0; L <= L_max; ++L) {
-    count[0] = max_N;
-    dimms[0] = max_N;
+    L_sz = state_sz[L];
+    count[0] = L_sz;
+    dimms[0] = L_sz;
+    sum += L_sz;
+    offs.push_back(sum);
     memspace.setExtentSimple(1, dimms, NULL);
 
     filename = pot + "2_" + std::to_string(L) + "En.h5";
@@ -220,7 +206,7 @@ int pes2e::genPES2eb(std::string pot, std::string dir, int L_max, int l_max,
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
     e_space = e_set->getSpace();
     e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    e_set->read(&en_2e[L * 2500], H5::PredType::NATIVE_DOUBLE, memspace,
+    e_set->read(&en_2e[offs[L]], H5::PredType::NATIVE_DOUBLE, memspace,
                 e_space);
     file->close();
   }
@@ -228,8 +214,6 @@ int pes2e::genPES2eb(std::string pot, std::string dir, int L_max, int l_max,
   // Read indices
   for (auto L = 0; L <= L_max; ++L) {
     L_sz = state_sz[L];
-    sum += L_sz;
-    offs.push_back(sum);
     count[0] = L_sz * 4;
     dimms[0] = L_sz * 4;
     memspace.setExtentSimple(1, dimms, NULL);
@@ -245,13 +229,87 @@ int pes2e::genPES2eb(std::string pot, std::string dir, int L_max, int l_max,
     file->close();
   }
 
-  // Write PES for energies > 0
-  std::fstream outfile(pot + "_pes.dat", std::ios::out);
-  for (auto i = 1; i < static_cast<int>(ct.size()) - 1; ++i) {
-    outfile << std::setprecision(16) << en_2e[i] << " " << std::norm(ct[i])
-            << "\n";
+  std::vector<std::complex<double>> cg(state_sz[0]);
+  // Read Ground State
+  std::ifstream fl(pot + "_c0.dat");
+  std::string temp;
+  for (auto i = 0; i < state_sz[0]; ++i) {
+    std::getline(fl, temp);
+    std::istringstream iss(temp);
+    int idx;
+    double real;
+    iss >> idx >> real;
+    cg[i] = std::complex<double>(real, 0.0);
   }
-  outfile.close();
+
+  std::vector<double> ens, v12, eig, vecs;
+  std::vector<std::complex<double>> cvecs, c_proj;
+  int L_full_sz, v_sz;
+  // read sum energies
+  for (auto L = 0; L <= L_max; ++L) {
+    L_sz = state_sz[L];
+    vecs.resize(L_sz * L_sz);
+    cvecs.resize(L_sz * L_sz);
+    c_proj.resize(L_sz);
+    filename = pot + "2_" + std::to_string(L) + "En.h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    auto en_data =
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
+    L_full_sz = en_data->getSpace().getSimpleExtentNpoints();
+    ens.resize(L_full_sz);
+    en_data->read(ens.data(), H5::PredType::NATIVE_DOUBLE);
+    file->close();
+
+    v_sz = L_full_sz * (L_full_sz + 1) / 2;
+    v12.reserve(v_sz);
+
+    // read V_12
+    filename = pot + "V12_" + std::to_string(L) + ".h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    auto v12data =
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("V_12")));
+    v12data->read(v12.data(), H5::PredType::NATIVE_DOUBLE);
+    file->close();
+
+    for (auto i = 0; i < L_sz; ++i) {
+      v12[(2 * L_full_sz - i - 1) * i / 2 + i] += ens[i];
+      vecs.at(i * L_sz + i) = v12[(2 * L_full_sz - i - 1) * i / 2 + i];
+      for (auto j = i + 1; j < L_sz; ++j) {
+        vecs.at(i * L_sz + j) = v12[(2 * L_full_sz - i - 1) * i / 2 + j];
+      }
+    }
+
+    eig.resize(L_sz);
+    LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, vecs.data(), L_sz,
+                   eig.data());
+
+    std::complex<double> alp(1.0, 0.0);
+    std::complex<double> bet(0.0, 0.0);
+
+    for (auto i = 0; i < static_cast<int>(vecs.size()); ++i) {
+      cvecs[i] = std::complex<double>(vecs[i], 0.0);
+    }
+
+    cblas_zgemv(CblasRowMajor, CblasTrans, L_sz, L_sz,
+                reinterpret_cast<double *>(&alp),
+                reinterpret_cast<double *>(cvecs.data()), L_sz,
+                reinterpret_cast<double *>(&ct[offs[L]]), 1,
+                reinterpret_cast<double *>(&bet),
+                reinterpret_cast<double *>(c_proj.data()), 1);
+
+    std::ofstream outfile(pot + "_pes" + std::to_string(L) + ".dat",
+                          std::ios::out);
+    for (auto i = 0; i < L_sz; ++i) {
+      outfile << std::setprecision(16) << eig[i] << " " << std::norm(c_proj[i])
+              << "\n";
+    }
+
+    if (L == 0) {
+      std::cout << std::setprecision(16)
+                << " ground state pop: " << std::norm(c_proj[0]) << "\n";
+    }
+    outfile.close();
+  }
 
   // Get the norm of c(t)
   double nrm = 0;
