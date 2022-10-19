@@ -6,9 +6,9 @@ Global_Settings:
   gauge: 'v'                # length or velocity gauge
 # Settings for generating the 1e basis radial functions
 Basis_Settings:
-  state_no: 302
+  state_no: 502
   max_spline_k: 9
-  R_max: 260                # box radius in a.u.
+  R_max: 500                # box radius in a.u.
   grid: "linear"            # grid type
   knot_file: ""
   l_max: 7                  # l <= l_max
@@ -19,12 +19,12 @@ R12_Settings:
   integrator: "glob3"       # inner integral type "glo4", "glob3" or "trapezoid"
 # Settings for the TDSE solver
 Propagator_Settings:
-  states_in_l: [3030,2799,2808] #[389,389,389,389,389]
+  states_in_l: [6030,5799,5808] #[389,389,389,389,389]
   Lanczos_iterations: 200 # number of Lanczos basis vectors
   min_eigenvals: 180 # number of lowest eigenvalues used
   dt: 0.1 # time step size
 Field_Parameters:
   w: 15 # photon energy
-  Io: 1.0e15 # peak intensity
+  Io: 2.0e15 # peak intensity
   cepd: 0.0  # phase delay
   cycles: 12 # number of field cycles
