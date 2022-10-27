@@ -14,8 +14,8 @@ int srt2e::readConfig(std::string file, std::string &pot, int &L_max) {
 }
 
 int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
-  int l1 = 0, last_l1=0;
-  int l2 = 0, last_l2=0;
+  int l1 = 0, last_l1 = 0;
+  int l2 = 0, last_l2 = 0;
   std::string filename;
   std::string outfile_name;
   std::unique_ptr<H5::DataSet> e1 = nullptr, ei = nullptr;
@@ -31,7 +31,7 @@ int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
   idx4 idx_elm;
 
   H5::DataSpace e_space;
-  hsize_t offset[1]={0}, stride[1]={1}, block[1]={1};
+  hsize_t offset[1] = {0}, stride[1] = {1}, block[1] = {1};
   hsize_t count[1], dimms[1], write_sz[1], idx_sz[1];
   H5::DataSpace memspace_l;
 
@@ -44,10 +44,10 @@ int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
       t_sz += cfgs[i].n2max - cfgs[i].n2min;
     }
 
-    auto max_n2l = *std::max_element(cfgs.begin(), cfgs.end(),
-                                [](cfg::line const &a, cfg::line const &b) {
-                                  return a.n2max < b.n2max;
-                                });
+    auto max_n2l = *std::max_element(
+        cfgs.begin(), cfgs.end(), [](cfg::line const &a, cfg::line const &b) {
+          return a.n2max < b.n2max;
+        });
     auto max_Nsz = max_n2l.n2max;
     en12.reserve(max_Nsz * 2);
     count[0] = max_Nsz;

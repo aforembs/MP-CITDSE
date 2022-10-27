@@ -8,7 +8,7 @@ public:
   double field;
   std::vector<int> state_sz;
   std::vector<int> offs;
-  std::vector<double*> eig;
+  std::vector<double *> eig;
   std::vector<std::complex<double> *> cdipole;
 
   void operator()(state_type &x, state_type &dxdt,
@@ -18,9 +18,9 @@ public:
     auto beta = std::complex<double>(0.0, 0.0);
     auto bt2 = std::complex<double>(1.0, 0.0);
 
-    for(auto i=0; i< state_sz[0]; ++i) {
+    for (auto i = 0; i < state_sz[0]; ++i) {
       dxdt[i] = eig[0][i] * mI * x[i];
-    } 
+    }
 
     cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0],
                 reinterpret_cast<double *>(&alp_fl),
@@ -37,9 +37,10 @@ public:
                   reinterpret_cast<double *>(&beta),
                   reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
 
-      for(auto i=0; i< state_sz[L]; ++i) {
-        dxdt[offs[L]+i] = eig[L][i] * mI * x[offs[L]+i]+bt2*dxdt[offs[L]+i];
-      } 
+      for (auto i = 0; i < state_sz[L]; ++i) {
+        dxdt[offs[L] + i] =
+            eig[L][i] * mI * x[offs[L] + i] + bt2 * dxdt[offs[L] + i];
+      }
 
       cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
                   reinterpret_cast<double *>(&alp_fl),
@@ -56,9 +57,10 @@ public:
                 reinterpret_cast<double *>(&x[offs[L_max - 1]]), 1,
                 reinterpret_cast<double *>(&beta),
                 reinterpret_cast<double *>(&dxdt[offs[L_max]]), 1);
-          
-    for(auto i=0; i< state_sz[L_max]; ++i) {
-      dxdt[offs[L_max]+i] = eig[L_max][i] * mI * x[offs[L_max]+i]+bt2*dxdt[offs[L_max]+i];
+
+    for (auto i = 0; i < state_sz[L_max]; ++i) {
+      dxdt[offs[L_max] + i] =
+          eig[L_max][i] * mI * x[offs[L_max] + i] + bt2 * dxdt[offs[L_max] + i];
     }
   }
 };
@@ -115,8 +117,7 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
   field_fl.open(output + "_field.dat", std::ios::out);
   f_pop.open(output + "_pop.dat", std::ios::out);
 
-  f_pop << t << " " << std::norm(ct[0]) 
-        << "\n";
+  f_pop << t << " " << std::norm(ct[0]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
@@ -132,7 +133,7 @@ int td2e::prop(std::string output, int L_max, double t, double dt, int steps,
       n /= ctnrm;
     }
 
-    f_pop << std::setprecision(16) << t << " " << std::norm(ct[0])  << "\n";
+    f_pop << std::setprecision(16) << t << " " << std::norm(ct[0]) << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";

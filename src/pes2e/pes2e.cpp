@@ -299,9 +299,10 @@ int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
 
     std::ofstream outfile(pot + "_pes" + std::to_string(L) + ".dat",
                           std::ios::out);
-    for (auto i = 1; i < L_sz-1; ++i) {
-      outfile << std::setprecision(16) << eig[i] << " " 
-              << std::norm(c_proj[i]) * 2.0 / std::abs(eig[i+1]-eig[i-1])
+    for (auto i = 1; i < L_sz - 1; ++i) {
+      outfile << std::setprecision(16) << eig[i] << " "
+              << std::norm(
+                     c_proj[i]) // * 2.0 / std::abs(eig[i + 1] - eig[i - 1])
               << "\n";
     }
 

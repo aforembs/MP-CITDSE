@@ -131,8 +131,8 @@ int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
       }
     }
 
-    LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, blocks[L].get()->data(), L_sz,
-                   eig[L].get()->data());
+    LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_sz, blocks[L].get()->data(),
+                   L_sz, eig[L].get()->data());
 
     v12.clear();
   }
@@ -141,7 +141,7 @@ int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
 }
 
 int tdrd::readDipoles(std::string pot, char gauge, int L_max,
-                      std::vector<int> &state_sz, stvupt &blocks, 
+                      std::vector<int> &state_sz, stvupt &blocks,
                       stvupt &dipoles) {
   H5::DataSpace memspace;
   hsize_t offset[] = {0, 0}, stride[] = {1, 1}, block[] = {1, 1};
@@ -169,17 +169,15 @@ int tdrd::readDipoles(std::string pot, char gauge, int L_max,
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("d_if")));
     auto dl_space = dl->getSpace();
     dl_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    dl->read(dip_loc.data(), H5::PredType::NATIVE_DOUBLE, memspace,
-             dl_space);
+    dl->read(dip_loc.data(), H5::PredType::NATIVE_DOUBLE, memspace, dl_space);
     file->close();
 
-
     cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, L1_sz, L_sz, L_sz,
-                1.0, dip_loc.data(), L_sz, blocks[L]->data(),
-                L_sz, 0.0, temp.data(), L_sz);
+                1.0, dip_loc.data(), L_sz, blocks[L]->data(), L_sz, 0.0,
+                temp.data(), L_sz);
 
     cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans, L1_sz, L_sz, L1_sz,
-                1.0, blocks[L+1]->data(), L1_sz, temp.data(), L_sz, 0.0,
+                1.0, blocks[L + 1]->data(), L1_sz, temp.data(), L_sz, 0.0,
                 dipoles[L]->data(), L_sz);
   }
 
