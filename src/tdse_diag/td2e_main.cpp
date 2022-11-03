@@ -40,13 +40,11 @@ int main(int argc, char *argv[]) {
   stvupt blocks;
   stvupt dipoles;
 
-  eig.push_back(
-      std::make_unique<std::vector<double>>(std::vector<double>()));
+  eig.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
   blocks.push_back(
       std::make_unique<std::vector<double>>(std::vector<double>()));
   for (auto i = 0; i < L_max; ++i) {
-    eig.push_back(
-      std::make_unique<std::vector<double>>(std::vector<double>()));
+    eig.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
     blocks.push_back(
         std::make_unique<std::vector<double>>(std::vector<double>()));
     dipoles.push_back(
@@ -59,7 +57,7 @@ int main(int argc, char *argv[]) {
 
   std::vector<std::complex<double>> ct(ct_sz);
 
-  ct[0] = std::complex<double>(1.0,0.0);
+  ct[0] = std::complex<double>(1.0, 0.0);
 
   double t = 0.0;
   double tau = pulse::Sine_T(w * conv::En_ev_au_, cycles);

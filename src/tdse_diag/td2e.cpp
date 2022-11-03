@@ -15,6 +15,7 @@ public:
                   [[maybe_unused]] double t) const {
     constexpr std::complex<double> mI(0.0, -1.0);
     auto alp_fl = std::complex<double>(field, 0.0);
+    auto alp_flm = std::complex<double>(-field, 0.0);
     auto beta = std::complex<double>(0.0, 0.0);
     auto bt2 = std::complex<double>(1.0, 0.0);
 
@@ -23,7 +24,7 @@ public:
     }
 
     cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0],
-                reinterpret_cast<double *>(&alp_fl),
+                reinterpret_cast<double *>(&alp_flm),
                 reinterpret_cast<double *>(cdipole[0]), state_sz[0],
                 reinterpret_cast<double *>(&x[offs[1]]), 1,
                 reinterpret_cast<double *>(&bt2),
@@ -43,7 +44,7 @@ public:
       }
 
       cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  reinterpret_cast<double *>(&alp_fl),
+                  reinterpret_cast<double *>(&alp_flm),
                   reinterpret_cast<double *>(cdipole[L]), state_sz[L],
                   reinterpret_cast<double *>(&x[offs[L + 1]]), 1,
                   reinterpret_cast<double *>(&bt2),

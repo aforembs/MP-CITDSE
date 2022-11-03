@@ -54,8 +54,7 @@ int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
     dimms[0] = max_Nsz;
     memspace_l.setExtentSimple(1, dimms, NULL);
 
-    // Sort the energies in parallel using C++17 built in parallel sort
-    std::sort(
+    Sort the energies in parallel using C++ 17 built in parallel sort std::sort(
         std::execution::par_unseq, cfgs.begin(), cfgs.end(),
         [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
 

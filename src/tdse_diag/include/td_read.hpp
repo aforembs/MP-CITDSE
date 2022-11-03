@@ -7,13 +7,13 @@
 #include <complex>
 #include <fstream>
 #include <iostream>
+#include <lapacke.h>
 #include <memory>
 #include <numeric>
 #include <vector>
 #include <yaml-cpp/yaml.h>
-#include <lapacke.h>
 extern "C" {
-  #include <cblas.h>
+#include <cblas.h>
 }
 
 using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;

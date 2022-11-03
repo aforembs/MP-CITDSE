@@ -180,7 +180,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
   wig_table_init(2 * l_m, 6);
 
   // calculate 2e dipoles
-  Lsq = sqrt(static_cast<double>(Lf_i));
+  Lsq = pow(-1, Lf_i) * sqrt(static_cast<double>(Lf_i));
 #pragma omp parallel
   {
     wig_thread_temp_init(2 * l_m);
@@ -296,7 +296,7 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
     T_dimms[1] = Li_sz;
 
     // calculate 2e dipoles
-    Lsq = sqrt(static_cast<double>(Lf_i));
+    Lsq = pow(-1, Lf_i) * sqrt(static_cast<double>(Lf_i));
 #pragma omp parallel
     {
       wig_thread_temp_init(2 * l_m);
