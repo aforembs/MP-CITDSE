@@ -64,9 +64,18 @@ int main(int argc, char *argv[]) {
   int steps = tau / dt;
   steps = steps + steps / 2;
 
-  td2e::prop(file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
-             pulse::SineA_A, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
-             dipoles, ct);
+  switch (gauge) {
+  case 'v':
+    td2e::propV(file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
+                pulse::SineA_A, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
+                dipoles, ct);
+    break;
+  case 'l':
+    td2e::propL(file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
+                pulse::SineA_E, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
+                dipoles, ct);
+    break;
+  }
 
   return 0;
 }

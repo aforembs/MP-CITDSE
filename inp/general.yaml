@@ -24,7 +24,7 @@ Propagator_Settings:
   min_eigenvals: 180 # number of lowest eigenvalues used
   dt: 0.1 # time step size
 Field_Parameters:
-  w: 15 # photon energy
-  Io: 1.0e15 # peak intensity
+  w: 30 # photon energy
+  Io: 1.0e13 # peak intensity
   cepd: 0.0  # phase delay
-  cycles: 12 # number of field cycles
+  cycles: 20 # number of field cycles

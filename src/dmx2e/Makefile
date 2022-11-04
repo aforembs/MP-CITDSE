@@ -8,7 +8,7 @@ ODIR = obj
 VPATH := ../
 
 SRC = dmx2e_main.cpp dmx2e.cpp
-SRC_SH = wigner_sym.cpp cfg_in.cpp
+SRC_SH = cfg_in.cpp
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I../../lib/wigxjpf/inc
 LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -L$(VPATH) -L../../lib/wigxjpf/lib -lwigxjpf -fopenmp
@@ -28,4 +28,4 @@ $(ODIR)/%.o: %.cpp
 
 .PHONY : clean
 clean :
-	rm $(EXEC) $(OBJ)
+	rm -f $(EXEC) $(OBJ)

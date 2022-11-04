@@ -29,4 +29,4 @@ $(ODIR)/%.o: %.cpp
 
 .PHONY : clean
 clean :
-	rm $(EXEC) $(OBJ)
+	rm -f $(EXEC) $(OBJ)
