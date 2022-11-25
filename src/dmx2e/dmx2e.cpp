@@ -222,25 +222,25 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                  sqrt(static_cast<double>(l1f));
         }
         if (l1i - 1 == l1f && l2i == l2f && n2i == n2f) {
-          Tif += pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
+          Tif -= pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                  wig6jj(2 * l1i, 2 * l2i, 0, 2, 2, 2 * l1f) *
                  D_data[l1f * max2 + n1f + max_N * n1i] /
                  sqrt(static_cast<double>(l1i));
         }
         if (l2i - 1 == l2f && l1i == l1f && n1i == n1f) {
-          Tif += pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
+          Tif -= pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                  wig6jj(2 * l2i, 2 * l1i, 0, 2, 2, 2 * l2f) *
                  D_data[l2f * max2 + n2f + max_N * n2i] /
                  sqrt(static_cast<double>(l2i));
         }
         if (l1i - 1 == l2f && l2i == l1f && n2i == n1f) {
-          Tif += pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
+          Tif -= pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                  wig6jj(2 * l1i, 2 * l2i, 0, 2, 2, 2 * l2f) *
                  D_data[l2f * max2 + n2f + max_N * n1i] /
                  sqrt(static_cast<double>(l1i));
         }
         if (l2i - 1 == l1f && l1i == l2f && n1i == n2f) {
-          Tif += pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
+          Tif -= pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                  wig6jj(2 * l2i, 2 * l1i, 0, 2, 2, 2 * l1f) *
                  D_data[l1f * max2 + n1f + max_N * n2i] /
                  sqrt(static_cast<double>(l2i));
@@ -337,25 +337,25 @@ int dmx2e::GenDipole(std::string cpot, int L_max, int l_m, char gauge,
                    sqrt(static_cast<double>(l1f));
           }
           if (l1i - 1 == l1f && l2i == l2f && n2i == n2f) {
-            Tif += pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
+            Tif -= pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                    wig6jj(2 * l1i, 2 * l2i, L2, L2 + 2, 2, 2 * l1f) *
                    D_data[l1f * max2 + n1f + max_N * n1i] /
                    sqrt(static_cast<double>(l1i));
           }
           if (l2i - 1 == l2f && l1i == l1f && n1i == n1f) {
-            Tif += pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
+            Tif -= pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                    wig6jj(2 * l2i, 2 * l1i, L2, L2 + 2, 2, 2 * l2f) *
                    D_data[l2f * max2 + n2f + max_N * n2i] /
                    sqrt(static_cast<double>(l2i));
           }
           if (l1i - 1 == l2f && l2i == l1f && n2i == n1f) {
-            Tif += pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
+            Tif -= pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                    wig6jj(2 * l1i, 2 * l2i, L2, L2 + 2, 2, 2 * l2f) *
                    D_data[l2f * max2 + n2f + max_N * n1i] /
                    sqrt(static_cast<double>(l1i));
           }
           if (l2i - 1 == l1f && l1i == l2f && n1i == n2f) {
-            Tif += pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
+            Tif -= pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                    wig6jj(2 * l2i, 2 * l1i, L2, L2 + 2, 2, 2 * l1f) *
                    D_data[l1f * max2 + n1f + max_N * n2i] /
                    sqrt(static_cast<double>(l2i));

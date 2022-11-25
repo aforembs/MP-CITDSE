@@ -245,6 +245,7 @@ int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
   std::vector<double> ens, v12, eig, vecs;
   std::vector<std::complex<double>> cvecs, c_proj;
   int L_full_sz, v_sz;
+  double ion_yield = 0.0;
   // read sum energies
   for (auto L = 0; L <= L_max; ++L) {
     L_sz = state_sz[L];
@@ -304,6 +305,9 @@ int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
               << std::norm(
                      c_proj[i]) // * 2.0 / std::abs(eig[i + 1] - eig[i - 1])
               << "\n";
+      if (eig[i] + 2.0 > 0.0) {
+        ion_yield += std::norm(c_proj[i]);
+      }
     }
 
     if (L == 0) {
@@ -320,7 +324,8 @@ int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
   }
 
   // Print the ground population and the norm of c(t)
-  std::cout << std::setprecision(16) << " norm: " << nrm << "\n";
+  std::cout << std::setprecision(16) << " norm: " << nrm
+            << " yield: " << ion_yield << "\n";
 
   return 0;
 }
