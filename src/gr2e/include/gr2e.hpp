@@ -4,6 +4,7 @@
 #include <boost/numeric/odeint.hpp>
 #include <fstream>
 #include <iostream>
+#include <lapacke.h>
 #include <limits>
 #include <vector>
 extern "C" {
@@ -12,7 +13,9 @@ extern "C" {
 
 namespace gr2e {
 int prop(std::string output, int L_sz, double t, double dt,
-         std::vector<double> &block, std::vector<double> &c0);
+         std::vector<double> &block);
+
+int eig(std::string output, int L_sz, std::vector<double> &block);
 } // namespace gr2e
 
 #endif // GR2E_HPP_

@@ -16,7 +16,8 @@ public:
 };
 
 int gr2e::prop(std::string output, int L_sz, double t, double dt,
-               std::vector<double> &block, std::vector<double> &c0) {
+               std::vector<double> &block) {
+  std::vector<double> c0(L_sz);
   std::vector<double> res(L_sz);
   MatVec MV;
   MV.L_sz = L_sz;
@@ -25,12 +26,6 @@ int gr2e::prop(std::string output, int L_sz, double t, double dt,
   c0.resize(L_sz);
 
   c0[0] = 1.0;
-
-  auto c0nrm = cblas_dnrm2(L_sz, c0.data(), 1);
-
-  for (auto &n : c0) {
-    n /= c0nrm;
-  }
 
   boost::numeric::odeint::runge_kutta_fehlberg78<std::vector<double>> rkf;
 
@@ -42,7 +37,7 @@ int gr2e::prop(std::string output, int L_sz, double t, double dt,
 
     t += dt;
 
-    c0nrm = cblas_dnrm2(L_sz, c0.data(), 1);
+    auto c0nrm = cblas_dnrm2(L_sz, c0.data(), 1);
 
     for (auto &n : c0) {
       n /= c0nrm;
@@ -71,6 +66,27 @@ int gr2e::prop(std::string output, int L_sz, double t, double dt,
   f_c0.close();
 
   std::cout << "Ground State Energy (a.u.): " << tot_en_last << "\n";
+
+  return 0;
+}
+
+int gr2e::eig(std::string output, int L_sz, std::vector<double> &block) {
+  std::vector<double> eig(L_sz), evec(L_sz);
+  std::vector<int> ifail(L_sz);
+  int m = 0;
+
+  LAPACKE_dsyevx(LAPACK_ROW_MAJOR, 'V', 'I', 'U', L_sz, block.data(), L_sz, 0,
+                 0, 1, 1, 4 * LAPACKE_dlamch('s'), &m, eig.data(), evec.data(),
+                 L_sz, ifail.data());
+
+  std::fstream f_c0;
+  f_c0.open(output + "_c0.dat", std::ios::out);
+  for (auto k = 0; k < L_sz; ++k) {
+    f_c0 << k << "  " << evec[k] << "\n";
+  }
+  f_c0.close();
+
+  std::cout << "Ground State Energy (a.u.): " << eig[0] << "\n";
 
   return 0;
 }

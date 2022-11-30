@@ -6,6 +6,7 @@
 #include <cassert>
 #include <complex>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <lapacke.h>
 #include <memory>

@@ -32,11 +32,12 @@ int main(int argc, char *argv[]) {
 
   file_prefix = "dat/" + pot;
 
-  std::vector<double> ens, block, c0;
+  std::vector<double> ens, block;
 
   grrd::readStructure(file_prefix, L0_sz, ens, block);
 
-  gr2e::prop(file_prefix, L0_sz, 0.0, dt, block, c0);
+  // gr2e::prop(file_prefix, L0_sz, 0.0, 0.001, block);
+  gr2e::eig(file_prefix, L0_sz, block);
 
   return 0;
 }

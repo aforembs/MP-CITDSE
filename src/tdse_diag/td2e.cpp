@@ -197,7 +197,8 @@ int td2e::propV(std::string output, int L_max, double t, double dt, int steps,
       n /= ctnrm;
     }
 
-    f_pop << std::setprecision(16) << t << " " << std::norm(ct[0]) << "\n";
+    f_pop << std::setprecision(16) << t << " " << std::norm(ct[0]) << " "
+          << ctnrm << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";

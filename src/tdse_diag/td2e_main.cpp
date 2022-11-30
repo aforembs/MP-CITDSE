@@ -68,7 +68,6 @@ int main(int argc, char *argv[]) {
   double t = 0.0;
   double tau = pulse::Sine_T(w * conv::En_ev_au_, cycles);
   int steps = tau / dt;
-  steps = steps + steps / 2;
 
   switch (gauge) {
   case 'v':
