@@ -21,15 +21,18 @@ int w1e::ReadConfig(std::string file, int &glq_pt, int &l_max, std::string &pot,
   return 0;
 }
 
+// Current implementation, knots and GLq are coupled
 int Pr(int n, int bo, int glq_pt, int off, int ooff, std::vector<double> &kkn,
        std::vector<double> &gl_x, std::vector<double> &Bsp,
        std::vector<double> &Cf, std::vector<double> &p_out) {
   double Pl = 0;
 
+  // Loop over knot regions
   for (auto i = bo - 1; i < n; ++i) {
     auto i1 = i + 1;
     auto i1bo = (i1 - bo) * glq_pt;
 
+    // Loop over GLq points within each region
     for (auto p = 0; p < glq_pt; ++p) {
       Pl = 0;
       for (auto j = 0; j < bo; ++j) {
@@ -38,6 +41,49 @@ int Pr(int n, int bo, int glq_pt, int off, int ooff, std::vector<double> &kkn,
       p_out[ooff + i1bo + p] = Pl;
     }
   }
+
+  return 0;
+}
+
+// New decoupled implementation WIP
+int prIndp(int n, int bo, int glq_pt, int off, int ooff, std::vector<double> &kkn,
+       std::vector<double> &gl_x, std::vector<double> &Cf, std::vector<double> &p_out) {
+  double Pl = 0;
+  int gi = 0;
+  size_t pi = 0;
+  auto ksz = kkn.size();
+  auto kn = gsl_vector_alloc(ksz);
+  kn->size = ksz;
+  kn->stride = 1;
+  kn->data = kkn.data();
+  kn->owner = 0;
+
+  size_t nbreak = n+2-bo;
+  auto B  = gsl_vector_alloc(bo);
+  gsl_bspline_workspace *bw = gsl_bspline_alloc(bo, nbreak);
+  bw->knots = kn;
+
+  // Loop over knot regions
+  for (auto i = bo - 1; i < n; ++i) {
+    auto i1 = i + 1;
+    auto i1bo = (i1 - bo) * glq_pt;
+    pi=i;
+
+    // While glq_pt is between current knots
+    while (gl_x[gi] > kkn[i] && gl_x[gi] < kkn[i1]) {
+      Pl = 0;
+      // Calculate the B-spline values on the fly
+      gsl_bspline_eval_nonzero(gl_x[gi], B, &pi, &pi, bw);
+      for (auto j = 0; j < bo; ++j) {
+        Pl += Cf[off + i1 - bo + j] * B->data[j];
+      }
+      p_out[ooff + gi] = Pl;
+      ++gi;
+    }
+  }
+
+  gsl_bspline_free(bw);
+  gsl_vector_free(B);
 
   return 0;
 }
