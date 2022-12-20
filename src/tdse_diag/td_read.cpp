@@ -183,19 +183,3 @@ int tdrd::readDipoles(std::string pot, char gauge, int L_max,
 
   return 0;
 }
-
-int tdrd::readGrCt(std::string pot, std::vector<int> &state_sz,
-                   std::vector<std::complex<double>> &ct) {
-  std::ifstream fl(pot + "_c0.dat");
-  std::string temp;
-  for (auto i = 0; i < state_sz[0]; ++i) {
-    std::getline(fl, temp);
-    std::istringstream iss(temp);
-    int idx;
-    double real;
-    iss >> idx >> real;
-    ct[i] = std::complex<double>(real, 0.0);
-  }
-
-  return 0;
-}
