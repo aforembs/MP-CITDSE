@@ -104,6 +104,7 @@ int prInner(int n, int bo, int off, int ooff, std::vector<double> &kkn,
   double Pl = 0;
   double Plp = 0;
   int qi = 0;
+  int qi_i = 0;
   size_t pi = 0;
   auto ksz = kkn.size();
   auto qsz = q_x.size();
@@ -121,34 +122,48 @@ int prInner(int n, int bo, int off, int ooff, std::vector<double> &kkn,
   double max_dx = 0.0;
   bool odd_flag = (qsz >> 0) & 1;
 
-  int it_idx = (qsz - odd_flag) / 2;
-  max_dx = q_x[it_idx + 1] - q_x[it_idx];
+  // int it_idx = (qsz - odd_flag) / 2;
+  // max_dx = q_x[it_idx + 1] - q_x[it_idx];
 
   int iv_sz = (qsz + 2 - odd_flag) / 2;
-  std::vector<int> pt_q_dx(iv_sz, 3);
+  std::vector<uint8_t> pt_q_dx(q_sz + 1, 3);
 
-  int id = iv_sz - 1;
+  int idm = iv_sz - 1;
+  int idp = idm + odd_flag;
   for (int i = 10; i > 3; --i) {
-    pt_q_dx[id] = i;
-    pt_q_dx[id - 1] = i;
-    id -= 2;
+    pt_q_dx[idm] = i;
+    pt_q_dx[idm - 1] = i;
+    pt_q_dx[idp] = i;
+    pt_q_dx[idp + 1] = i;
+    idm -= 2;
+    idp += 2;
   }
+
+  pi = bo - 1;
+  gsl_bspline_eval_nonzero(q_x[0] * 0.5, B, &pi, &pi, bw);
+  for (auto j = 0; j < bo; ++j) {
+    Pl += Cf[off + i1 - bo + j] * B->data[j];
+  }
+  p_in[ooff] = Pl;
 
   // Loop over knot regions
   for (auto i = bo - 1; i < n; ++i) {
     auto i1 = i + 1;
-    pi = i;
 
     // While glq_pt is between current knots
     while (q_x[qi] > kkn[i] && q_x[qi] < kkn[i1]) {
-      Pl = 0;
-      Plp = 0;
-      // Calculate the B-spline values on the fly
-      gsl_bspline_eval_nonzero(q_x[qi], B, &pi, &pi, bw);
-      for (auto j = 0; j < bo; ++j) {
-        Pl += Cf[off + i1 - bo + j] * B->data[j];
+      auto qi1 = qi + 1;
+      for (auto pt = 0; pt < pt_q_dx[qi1]; ++pt) {
+        Pl = 0;
+        qi_x = q_x[qi1] * xw::Globx[pt_q_dx[qi1]][pt] + q_x[qi];
+        pi = i1 - (kkn[i] > qi_x);
+        // Calculate the B-spline values on the fly
+        gsl_bspline_eval_nonzero(qi_x, B, &pi, &pi, bw);
+        for (auto j = 0; j < bo; ++j) {
+          Pl += Cf[off + i1 - bo + j] * B->data[j];
+        }
+        p_in[ooff + qi] = Pl;
       }
-      p_out[ooff + qi] = Pl;
       ++qi;
     }
   }
