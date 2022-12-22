@@ -102,6 +102,7 @@ int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
   std::vector<std::complex<double>> cvecs, c_proj;
   int L_full_sz, v_sz;
   double ion_yield = 0.0;
+  double exitation = 0.0;
   // read sum energies
   int off = 0;
   for (auto L = 0; L <= L_max; ++L) {
@@ -143,13 +144,16 @@ int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
 
     std::ofstream outfile(pot + "_pes" + std::to_string(L) + ".dat",
                           std::ios::out);
-    for (auto i = 1; i < L_sz - 1; ++i) {
+    for (auto i = 0; i < L_sz - 1; ++i) {
       outfile << std::setprecision(16) << eig[i] << " "
               << std::norm(
                      ct[off + i]) // * 2.0 / std::abs(eig[i + 1] - eig[i - 1])
               << "\n";
       if (eig[i] + 2.0 > 0.0) {
         ion_yield += std::norm(ct[off + i]);
+      }
+      if (off + i > 0) {
+        exitation += std::norm(ct[off + i]);
       }
     }
 
@@ -169,7 +173,8 @@ int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
 
   // Print the ground population and the norm of c(t)
   std::cout << std::setprecision(16) << " norm: " << nrm
-            << " yield: " << ion_yield << "\n";
+            << " yield: " << ion_yield << " excited population: " << exitation
+            << "\n";
 
   return 0;
 }
