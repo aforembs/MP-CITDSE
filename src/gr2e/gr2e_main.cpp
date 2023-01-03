@@ -36,8 +36,8 @@ int main(int argc, char *argv[]) {
 
   grrd::readStructure(file_prefix, L0_sz, ens, block);
 
-  // gr2e::prop(file_prefix, L0_sz, 0.0, 0.001, block);
-  gr2e::eig(file_prefix, L0_sz, block);
+  gr2e::prop(file_prefix, L0_sz, 0.0, 0.01, block);
+  // gr2e::eig(file_prefix, L0_sz, block);
 
   return 0;
 }

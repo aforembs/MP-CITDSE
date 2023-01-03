@@ -19,7 +19,7 @@ const double GLobx10[8] = {-0.919533908166458813828932660822, -0.738773865105505
                           0.165278957666387024626219765958, 0.477924949810444495661175092731,
                           0.73877386510550507500310617486, 0.919533908166458813828932660822};
 
-const double *GLobx[9] = {0.0, GLobx3, GLobx4, GLobx5,
+const double *GLobx[9] = {0, GLobx3, GLobx4, GLobx5,
                            GLobx6, GLobx7, GLobx8, GLobx9, GLobx10};
 } // namespace glx
 
@@ -76,7 +76,7 @@ int genPtaR(int R_max, int qsz, std::vector<double> &q_x, std::vector<uint8_t> &
   double dl, sl;
   bool odd_flag = (qsz >> 0) & 1;
   int iv_sz = (qsz + 2 - odd_flag) / 2;
-  pq_dx.resize(qsz + 1);
+  pq_dx.resize(qsz);
   std::fill(pq_dx.begin(), pq_dx.end(), 1);
 
   int idm = iv_sz - 1;
@@ -93,35 +93,30 @@ int genPtaR(int R_max, int qsz, std::vector<double> &q_x, std::vector<uint8_t> &
   pti_sz = std::accumulate(pq_dx.begin(), pq_dx.end(), static_cast<int>(0));
   std::cout << "pti_sz: " << pti_sz << "\n";
 
-  ri.reserve(pti_sz);
-  ri.emplace_back(q_x[0] * 0.5);
-  for (int i=0; i<qsz-1; ++i) {
-    auto i1 = i+1;
-    auto p_num = pq_dx[i1];
-    dl = (q_x[i1] - q_x[i]) * 0.5;
-    sl = (q_x[i1] + q_x[i]) * 0.5;
+  ri.resize(pti_sz);
+  int ri_idx = 0;
+  double rm1 = 0.0;
+  for (int i=0; i<qsz; ++i) {
+    auto r1 = q_x[i];
+    auto p_num = pq_dx[i];
+    dl = (r1 - rm1) * 0.5;
+    sl = (r1 + rm1) * 0.5;
     for (int pt=0; pt<p_num; ++pt) {
       ri.emplace_back(dl * glx::Globx[p_num][pt] + sl);
     }
-  }
-  dl = (R_max - q_x[i]) * 0.5;
-  sl = (R_max + q_x[i]) * 0.5;
-  for (int pt=0; pt<pq_dx[qsz]; ++pt) {
-    ri.emplace_back(dl * glx::Globx[pq_dx[qsz]][pt] + sl);
+    rm1=r1;
   }
 
   return 0;
 }
 
 int prInner(int n, int bo, int nen, int off, int ooff, std::vector<double> &kkn,
-            std::vector<double> &Cf, std::vector<uint8_t> &pq_dx, 
-            std::vector<double> &ri, std::vector<double> &p_in) {
+            std::vector<double> &Cf, std::vector<double> &ri, std::vector<double> &p_in) {
   double Pl = 0;
   double Plp = 0;
   int r_id = 0;
   size_t pi = 0;
   auto ksz = kkn.size();
-  auto qsz = q_x.size();
   auto kn = gsl_vector_alloc(ksz);
   kn->size = ksz;
   kn->stride = 1;
@@ -138,7 +133,7 @@ int prInner(int n, int bo, int nen, int off, int ooff, std::vector<double> &kkn,
     auto i1 = i + 1;
 
     // While glq_pt is between current knots
-    while (ri[r_id] > kkn[i] && ri[r_id] < kkn[i1]) {
+    while (ri[r_id] > kkn[i] && ri[r_id] < kkn[i1] && r_id < ri.size()) {
       // Calculate the B-spline values on the fly
       pi=i;
       gsl_bspline_eval_nonzero(ri[r_id], B, &pi, &pi, bw);
@@ -156,13 +151,13 @@ int prInner(int n, int bo, int nen, int off, int ooff, std::vector<double> &kkn,
   return 0;
 }
 
-int w1e::GenWfn(std::string pot, int glq_pt, int R_max, int l_max,
+int w1e::GenWfn(std::string pot, int qsz, int R_max, int l_max,
                 std::string integrator) {
   int n, k, nen;
   std::string outfile_name, filename;
   std::unique_ptr<H5::H5File> outfile = nullptr, file = nullptr;
   std::unique_ptr<H5::DataSet> Po = nullptr, Pi = nullptr, 
-      Pidx = nullptr, Cf_set = nullptr;
+      Pidx = nullptr, Cf_set = nullptr, glr=nullptr, glw=nullptr, glri=nullptr;
 
   // read knots
   filename = pot + std::to_string(0) + ".h5";
@@ -179,122 +174,81 @@ int w1e::GenWfn(std::string pot, int glq_pt, int R_max, int l_max,
   nen = rset->getSpace().getSimpleExtentNpoints();
   file->close();
 
-  int npt = n * glq_pt;
-  int nnpt = nen * npt;
+  int nnpt = nen * qsz;
 
-  std::vector<double> wfn_o(nnpt), wfnp(nnpt);
+  std::vector<double> wfn_o(nnpt), wfn_p(nnpt);
   std::vector<double> Cf(n * nen);
-  hsize_t dimms_o[2] = {(hsize_t)nen, (hsize_t)npt};
+  hsize_t dimms_o[2] = {(hsize_t)nen, (hsize_t)qsz};
 
-  // generate GL nodes and weights over B-splines support
-  std::vector<double> gl_x(glq_pt);
+  // generate GL nodes and weights
+  std::vector<double> q_x(qsz), q_w(qsz);
   fastgl::QuadPair gl_i;
-  for (int i = 1; i <= glq_pt; ++i) {
-    gl_i = fastgl::GLPair(glq_pt, i);
-    gl_x[glq_pt - i] = 1.0 + gl_i.x() * R_max;
+  for (int i = 1; i <= qsz; ++i) {
+    gl_i = fastgl::GLPair(qsz, i);
+    q_x[qsz - i] = R_max * (gl_i.x() + 1.0) * 0.5;
+    q_w[qsz - i] = R_max * gl_i.weight * 0.5;
   }
 
-  if (integrator.compare("trapezoid") == 0) {
-#pragma omp parallel
-    {
-      for (auto l = 0; l <= l_max; ++l) {
-#pragma omp single
-        {
-          filename = pot + std::to_string(l) + ".h5";
-          file = std::make_unique<H5::H5File>(
-              H5::H5File(filename, H5F_ACC_RDONLY));
-          Cf_set = std::make_unique<H5::DataSet>(
-              H5::DataSet(file->openDataSet("Coeff")));
-          Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
-          file->close();
-        }
-
-#pragma omp parallel for
-        for (auto i = 0; i < nen; ++i) {
-          prIndp(n, k, i * n, i * npt, kkn, gl_x, Cf, wfn_o, wfn_p);
-        }
-// HDF5 is not thread safe hence the omp singles
-#pragma omp single
-        {
-          outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
-          outfile = std::make_unique<H5::H5File>(
-              H5::H5File(outfile_name, H5F_ACC_TRUNC));
-          Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "Pr_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
-          Po->write(&wfn_o[0], H5::PredType::NATIVE_DOUBLE);
-          outfile->close();
-
-          outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
-          outfile = std::make_unique<H5::H5File>(
-              H5::H5File(outfile_name, H5F_ACC_TRUNC));
-          Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "Pr_p", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
-          Po->write(&wfn_p[0], H5::PredType::NATIVE_DOUBLE);
-          outfile->close();
-        }
-      }
-    }
-  } else if (integrator.compare("mixed") == 0) {
-
-    std::vector<uint8_t> pq_dx;
-    std::vector<double> ri;
-    int pti_sz;
-    genPtaR(R_max, glq_pt, q_x, pq_dx, pti_sz, ri);
-    std::vector<double> wfn_i(nen*pti_sz);
+  std::vector<uint8_t> pq_dx;
+  std::vector<double> ri;
+  int pti_sz;
+  genPtaR(R_max, qsz, q_x, pq_dx, pti_sz, ri);
+  std::vector<double> wfn_i(nen*pti_sz);
 
 #pragma omp parallel
-    {
-      for (auto l = 0; l <= l_max; ++l) {
+  {
+    for (auto l = 0; l <= l_max; ++l) {
 #pragma omp single
-        {
-          filename = pot + std::to_string(l) + ".h5";
-          file = std::make_unique<H5::H5File>(
-              H5::H5File(filename, H5F_ACC_RDONLY));
-          Cf_set = std::make_unique<H5::DataSet>(
-              H5::DataSet(file->openDataSet("Coeff")));
-          Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
-          file->close();
-        }
+      {
+        filename = pot + std::to_string(l) + ".h5";
+        file = std::make_unique<H5::H5File>(
+            H5::H5File(filename, H5F_ACC_RDONLY));
+        Cf_set = std::make_unique<H5::DataSet>(
+            H5::DataSet(file->openDataSet("Coeff")));
+        Cf_set->read(&Cf[0], H5::PredType::NATIVE_DOUBLE);
+        file->close();
+      }
 
 #pragma omp parallel for
-        for (auto i = 0; i < nen; ++i) {
-          prIndp(n, k, i * n, i * npt, kkn, gl_x, Cf, wfn_o, wfn_p);
-          prInner(n, k, i * n, i * npt, kkn, gl_x, Cf, pq_dx, wfn_i);
-        }
+      for (auto i = 0; i < nen; ++i) {
+        prIndp(n, k, i * n, i * qsz, kkn, q_x, Cf, wfn_o, wfn_p);
+        prInner(n, k, i * n, i * qsz, kkn, q_x, Cf, pq_dx, wfn_i);
+      }
 
 #pragma omp single
-        {
-          outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
-          outfile = std::make_unique<H5::H5File>(
-              H5::H5File(outfile_name, H5F_ACC_TRUNC));
-          Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "Pr_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
-          Po->write(&wfn_o[0], H5::PredType::NATIVE_DOUBLE);
-          Pi = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "Pr_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
-          Pi->write(&wfn_i[0], H5::PredType::NATIVE_DOUBLE);
-          Pidx = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "Pr_idx", H5::PredType::NATIVE_UCHAR, H5::DataSpace(1, static_cast<hsize_t>(pti_sz)))));
-          Pidx->write(&pq_dx[0], H5::PredType::NATIVE_UCHAR);
-          glr = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "R_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, static_cast<hsize_t>(glq_pt)))));
-          glri = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "R_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, static_cast<hsize_t>(pti_sz)))));
-          outfile->close();
+      {
+        outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
+        outfile = std::make_unique<H5::H5File>(
+            H5::H5File(outfile_name, H5F_ACC_TRUNC));
+        Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Pr_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
+        Po->write(wfn_o.data(), H5::PredType::NATIVE_DOUBLE);
+        Pi = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Pr_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
+        Pi->write(wfn_i.data(), H5::PredType::NATIVE_DOUBLE);
+        Pidx = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Pr_idx", H5::PredType::NATIVE_UCHAR, H5::DataSpace(1, static_cast<hsize_t>(pti_sz)))));
+        Pidx->write(pq_dx.data(), H5::PredType::NATIVE_UCHAR);
+        glr = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Qr_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, static_cast<hsize_t>(qsz)))));
+        glr->write(q_x.data(), H5::PredType::NATIVE_DOUBLE);
+        glw = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Qw_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, static_cast<hsize_t>(qsz)))));
+        glw->write(q_w.data(), H5::PredType::NATIVE_DOUBLE);
+        glri = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Qr_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, static_cast<hsize_t>(pti_sz)))));
+        glri->write(ri.data(), H5::PredType::NATIVE_DOUBLE);
+        outfile->close();
 
-          outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
-          outfile = std::make_unique<H5::H5File>(
-              H5::H5File(outfile_name, H5F_ACC_TRUNC));
-          Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-              "Pr_p", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
-          Po->write(&wfn_p[0], H5::PredType::NATIVE_DOUBLE);
-          outfile->close();
-        }
+        outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
+        outfile = std::make_unique<H5::H5File>(
+            H5::H5File(outfile_name, H5F_ACC_TRUNC));
+        Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Pr_p", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
+        Po->write(&wfn_p[0], H5::PredType::NATIVE_DOUBLE);
+        outfile->close();
       }
     }
-  } else {
-    std::cout << "Integrator not supported, try 'trapezoid' or 'mixed'\n";
-    return -1;
   }
 
   return 0;
