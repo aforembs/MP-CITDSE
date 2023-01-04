@@ -1,8 +1,8 @@
-#include "r12_new.hpp"
+#include "r12.hpp"
 #include "time_tst.hpp"
 
-int r_12::readConfig(std::string file, int &qsz, std::string &pot,
-                     int &L_max, char &gauge, std::string &integrator) {
+int r_12::readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
+                     char &gauge) {
   YAML::Node settings = YAML::LoadFile(file);
 
   pot = settings["Global_Settings"]["potential"].as<std::string>();
@@ -18,19 +18,16 @@ int r_12::readConfig(std::string file, int &qsz, std::string &pot,
   std::cout << "Gauge type ('l' length/'v' velocity):        " << gauge
             << std::endl;
 
-  integrator = settings["R12_Settings"]["integrator"].as<std::string>();
-  std::cout << "Integration scheme (inner integral):         " << integrator
-            << std::endl;
   return 0;
 }
 
-int Rpowk(int qsz, int pti_sz, int k_max, 
-          std::vector<double> &qx_o, std::vector<double> &qx_i,
-          std::vector<double> &r_out, std::vector<double> &r_in) {
+int Rpowk(int qsz, int pti_sz, int k_max, std::vector<double> &qx_o,
+          std::vector<double> &qx_i, std::vector<double> &r_out,
+          std::vector<double> &r_in) {
   r_out.resize((k_max + 1) * qsz);
   r_in.resize((k_max + 1) * pti_sz);
   auto km1 = 0;
-  
+
   std::fill(r_out.begin(), r_out.begin() + qsz, 1.0);
   std::fill(r_in.begin(), r_in.begin() + pti_sz, 1.0);
 
@@ -40,10 +37,10 @@ int Rpowk(int qsz, int pti_sz, int k_max,
   for (auto k = 2; k <= k_max; ++k) {
     km1 = k - 1;
     for (int i = 0; i < qsz; ++i) {
-        r_out[i + k * qsz] = r_out[i + qsz] * r_out[i + km1 * qsz];
+      r_out[i + k * qsz] = r_out[i + qsz] * r_out[i + km1 * qsz];
     }
     for (int i = 0; i < pti_sz; ++i) {
-        r_in[i + k * pti_sz] = r_in[i + pti_sz] * r_in[i + km1 * pti_sz];
+      r_in[i + k * pti_sz] = r_in[i + pti_sz] * r_in[i + km1 * pti_sz];
     }
   }
 
@@ -62,7 +59,9 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
   std::string outfile_name;
 
   // HDF5 defines
-  std::unique_ptr<H5::H5File> outfile = nullptr;
+  std::unique_ptr<H5::H5File> outfile = nullptr, file = nullptr;
+  std::unique_ptr<H5::DataSet> Po = nullptr, Pi = nullptr, Pidx = nullptr,
+                               qr = nullptr, qw = nullptr, qri = nullptr;
   std::unique_ptr<H5::DataSet> V_set = nullptr;
   std::unique_ptr<H5::DataSet> L_set = nullptr;
   std::vector<idx4> L_idx;
@@ -98,10 +97,10 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
   auto lc_sz = max_N * qsz;
 
   count[0] = max_N;
-  counti[0]= max_N;
+  counti[0] = max_N;
   count[1] = qsz;
   dimms[0] = count[0];
-  dimmsi[0]= counti[0];
+  dimmsi[0] = counti[0];
   dimms[1] = count[1];
 
   memspace.setExtentSimple(2, dimms, NULL);
@@ -112,17 +111,17 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
 
   // read data from l=0
   filename = cpot + "_w1e0.h5";
-  auto file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-  auto rset =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
-  cspace = rset->getSpace();
+  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+  Po = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
+  cspace = Po->getSpace();
+  int nen = cspace.getSimpleExtentNpoints() / qsz;
   cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-  rset->read(wfn_o.data(), H5::PredType::NATIVE_DOUBLE, memspace, cspace);
-  rset =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_i")));
-  cspace = rset->getSpace();
+  Po->read(wfn_o.data(), H5::PredType::NATIVE_DOUBLE, memspace, cspace);
+  Pi = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_i")));
+  cspace = Pi->getSpace();
 
-  int pti_sz = cspace.getSimpleExtentNpoints();
+  int pti_sz = cspace.getSimpleExtentNpoints() / nen;
+  std::cout << "pti_sz: " << pti_sz << "\n";
   auto lci_sz = max_N * pti_sz;
   std::vector<double> wfn_i(lci_sz * (e1_lm + 1));
   std::vector<uint8_t> pq_dx(qsz);
@@ -132,37 +131,32 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
   memspacei.setExtentSimple(2, dimmsi, NULL);
 
   cspace.selectHyperslab(H5S_SELECT_SET, counti, offset, stride, block);
-  rset->read(wfn_i.data(), H5::PredType::NATIVE_DOUBLE, memspacei, cspace);
-  rset =
+  Pi->read(wfn_i.data(), H5::PredType::NATIVE_DOUBLE, memspacei, cspace);
+  Pidx =
       std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_idx")));
-  rset->read(pq_dx.data(), H5::PredType::NATIVE_UCHAR);
-  rset = 
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qr_o")));
-  rset->read(qx_o.data(), H5::PredType::NATIVE_DOUBLE);
-  rset = 
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qw_o")));
-  rset->read(qw_o.data(), H5::PredType::NATIVE_DOUBLE);
-  rset = 
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qr_i")));
-  rset->read(qx_i.data(), H5::PredType::NATIVE_DOUBLE);
+  Pidx->read(pq_dx.data(), H5::PredType::NATIVE_UCHAR);
+  qr = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qr_o")));
+  qr->read(qx_o.data(), H5::PredType::NATIVE_DOUBLE);
+  qw = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qw_o")));
+  qw->read(qw_o.data(), H5::PredType::NATIVE_DOUBLE);
+  qri = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qr_i")));
+  qri->read(qx_i.data(), H5::PredType::NATIVE_DOUBLE);
   file->close();
-  
+
   // read wavefunctions for all other l
   for (int l = 1; l <= e1_lm; ++l) {
     filename = cpot + "_w1e" + std::to_string(l) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    rset =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
-    cspace = rset->getSpace();
+    Po = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
+    cspace = Po->getSpace();
     cspace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    rset->read(&wfn_o[l * lc_sz], H5::PredType::NATIVE_DOUBLE, memspace,
-               cspace);
-    rset =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_i")));
-    cspace = rset->getSpace();
+    Po->read(&wfn_o[l * lc_sz], H5::PredType::NATIVE_DOUBLE, memspace, cspace);
+
+    Pi = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_i")));
+    cspace = Pi->getSpace();
     cspace.selectHyperslab(H5S_SELECT_SET, counti, offset, stride, block);
-    rset->read(&wfn_i[l * lci_sz], H5::PredType::NATIVE_DOUBLE, memspacei,
-               cspace);
+    Pi->read(&wfn_i[l * lci_sz], H5::PredType::NATIVE_DOUBLE, memspacei,
+             cspace);
     file->close();
   }
 
@@ -232,16 +226,15 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
                 !(((k + e12.l1 + e12p.l1) >> 0) & 1) &&
                 !(((k + e12.l2 + e12p.l2) >> 0) & 1) &&
                 !std::isinf(1.0 / rk_in[(k + 1) * pti_sz])) {
-              sum_k +=
-                  pow(-1, min_dir) *
-                  intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz,
-                                  e12.n1, e12.l1, e12.n2, e12.l2, 
-                                  e12p.n1, e12p.l1, e12p.n2, e12p.l2,
-                                  qw_o, pq_dx, rk, rk_in, wfn_o, wfn_i) *
-                  wig3jj(2 * e12.l1, 2 * k, 2 * e12p.l1, 0, 0, 0) *
-                  wig3jj(2 * e12.l2, 2 * k, 2 * e12p.l2, 0, 0, 0) *
-                  wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l2,
-                         2 * e12.l1, 2 * k);
+              sum_k += pow(-1, min_dir) *
+                       intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz, e12.n1,
+                                       e12.l1, e12.n2, e12.l2, e12p.n1, e12p.l1,
+                                       e12p.n2, e12p.l2, qw_o, pq_dx, rk, rk_in,
+                                       wfn_o, wfn_i) *
+                       wig3jj(2 * e12.l1, 2 * k, 2 * e12p.l1, 0, 0, 0) *
+                       wig3jj(2 * e12.l2, 2 * k, 2 * e12p.l2, 0, 0, 0) *
+                       wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l2,
+                              2 * e12.l1, 2 * k);
             }
             /* for exchange check if:
               (-)^{L+la+lc}=(-)^{L+lb+ld},
@@ -253,16 +246,15 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
                 !(((k + e12.l1 + e12p.l2) >> 0) & 1) &&
                 !(((k + e12.l2 + e12p.l1) >> 0) & 1) &&
                 !std::isinf(1.0 / rk_in[(k + 1) * pti_sz])) {
-              sum_k +=
-                  pow(-1, min_exc) *
-                  intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz,
-                                  e12.n1, e12.l1, e12.n2, e12.l2, 
-                                  e12p.n2, e12p.l2, e12p.n1, e12p.l1,
-                                  qw_o, pq_dx, rk, rk_in, wfn_o, wfn_i) *
-                  wig3jj(2 * e12.l1, 2 * k, 2 * e12p.l2, 0, 0, 0) *
-                  wig3jj(2 * e12.l2, 2 * k, 2 * e12p.l1, 0, 0, 0) *
-                  wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l1,
-                         2 * e12.l2, 2 * k);
+              sum_k += pow(-1, min_exc) *
+                       intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz, e12.n1,
+                                       e12.l1, e12.n2, e12.l2, e12p.n2, e12p.l2,
+                                       e12p.n1, e12p.l1, qw_o, pq_dx, rk, rk_in,
+                                       wfn_o, wfn_i) *
+                       wig3jj(2 * e12.l1, 2 * k, 2 * e12p.l2, 0, 0, 0) *
+                       wig3jj(2 * e12.l2, 2 * k, 2 * e12p.l1, 0, 0, 0) *
+                       wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l1,
+                              2 * e12.l2, 2 * k);
             }
           }
 

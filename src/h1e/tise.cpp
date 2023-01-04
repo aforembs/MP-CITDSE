@@ -78,7 +78,7 @@ int tise::ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
   k = settings["Basis_Settings"]["max_spline_k"].as<int>();
   std::cout << "Maximum B-splines order:                   " << k << std::endl;
   glq_pt = settings["Basis_Settings"]["GL_quad_points"].as<int>();
-  std::cout << "Number of points in the outer quadrature:  " << glq_pt
+  std::cout << "No. of quadrature points per knot:         " << glq_pt
             << std::endl;
   r_max = settings["Basis_Settings"]["R_max"].as<int>();
   std::cout << "Box radius:                                " << r_max

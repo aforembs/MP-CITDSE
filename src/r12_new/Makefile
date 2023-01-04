@@ -1,5 +1,5 @@
 CPPC = g++
-EXEC = ../../bin/r12
+EXEC = ../../bin/r12_n
 
 IDIR = include
 SH_IDIR = ../include

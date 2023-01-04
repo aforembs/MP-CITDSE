@@ -1,18 +1,21 @@
-#include "w1e.hpp"
+
+#include "dmx1e.hpp"
 #include <cstdlib>
+#include <iostream>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
-  int qsz, R_max, l_max;
-  std::string pot;
+  int qsz, l_max;
+  std::string pot, integrator;
   std::string out_prefix;
+  char gauge;
 
   for (;;) {
     switch (getopt(argc, argv, "hf:")) {
     case 'h':
-      std::cout << "Program for calculating the inter-electronic interaction\n"
-                << "coefficients <n1l1;n2l2|r_12|n'1l'1;n'2l'2>\n"
+      std::cout << "Program for calculating the 1e dipole matrix\n"
+                << "elements <nl|d_(v/l)|n'l'>\n"
                 << "-f <path> yaml input file with the input settings\n";
       return -1;
     case 'f':
@@ -22,11 +25,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  w1e::ReadConfig(opt_file, qsz, R_max, l_max, pot);
+  dmx1e::ReadConfig(opt_file, pot, qsz, gauge, l_max);
 
   out_prefix = "dat/" + pot;
 
-  w1e::GenWfn(out_prefix, qsz, R_max, l_max);
+  dmx1e::GenDipole(out_prefix, qsz, gauge, l_max);
 
   return 0;
 }

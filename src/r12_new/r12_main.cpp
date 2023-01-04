@@ -1,4 +1,4 @@
-#include "r12_new.hpp"
+#include "r12.hpp"
 #include <cstdlib>
 #include <filesystem>
 #include <unistd.h>
@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  r_12::readConfig(opt_file, qsz, pot, L_max, gauge, integrator);
+  r_12::readConfig(opt_file, qsz, pot, L_max, gauge);
 
   out_prefix = "dat/" + pot;
 

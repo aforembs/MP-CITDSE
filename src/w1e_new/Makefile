@@ -1,5 +1,5 @@
 CPPC = g++
-EXEC = ../../bin/w1e
+EXEC = ../../bin/w1e_n
 
 IDIR = include
 SH_IDIR = ../include
