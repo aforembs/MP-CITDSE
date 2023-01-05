@@ -7,7 +7,7 @@ namespace fs = std::filesystem;
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
-  int glq_pt, L_max;
+  int qsz, L_max;
   std::string pot, integrator;
   std::string out_prefix;
   char gauge;
@@ -26,20 +26,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  r_12::readConfig(opt_file, glq_pt, pot, L_max, gauge, integrator);
+  r_12::readConfig(opt_file, qsz, pot, L_max, gauge);
 
   out_prefix = "dat/" + pot;
 
-  if (integrator.compare("mixed") == 0)
-    r_12::r12MM(out_prefix, L_max, glq_pt, "inp");
-  else if (integrator.compare("glob4") == 0)
-    r_12::r12Glob4(out_prefix, L_max, glq_pt, "inp");
-  else if (integrator.compare("glob3") == 0)
-    r_12::r12Glob3(out_prefix, L_max, glq_pt, "inp");
-  else if (integrator.compare("trapezoid") == 0)
-    r_12::r12Trap(out_prefix, L_max, glq_pt, "inp");
-  else
-    std::cout << "Invalid integration scheme\n";
+  r_12::r12Glob(out_prefix, L_max, qsz, "inp");
 
   return 0;
 }

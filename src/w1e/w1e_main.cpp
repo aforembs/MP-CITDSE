@@ -4,8 +4,8 @@
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
-  int glq_pt, l_max;
-  std::string pot, integrator;
+  int qsz, R_max, l_max;
+  std::string pot;
   std::string out_prefix;
 
   for (;;) {
@@ -22,11 +22,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  w1e::ReadConfig(opt_file, glq_pt, l_max, pot, integrator);
+  w1e::ReadConfig(opt_file, qsz, R_max, l_max, pot);
 
   out_prefix = "dat/" + pot;
 
-  w1e::GenWfn(out_prefix, glq_pt, l_max, integrator);
+  w1e::GenWfn(out_prefix, qsz, R_max, l_max);
 
   return 0;
 }

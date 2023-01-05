@@ -17,15 +17,9 @@
 namespace r_12 {
 
 int readConfig(std::string file, int &glq_pt, std::string &pot, int &L_max,
-               char &gauge, std::string &integrator);
+               char &gauge);
 
-int r12MM(std::string cpot, int L_max, int glq_pt, std::string dir);
-
-int r12Glob4(std::string cpot, int L_max, int glq_pt, std::string dir);
-
-int r12Glob3(std::string cpot, int L_max, int glq_pt, std::string dir);
-
-int r12Trap(std::string cpot, int L_max, int glq_pt, std::string dir);
+int r12Glob(std::string cpot, int L_max, int glq_pt, std::string dir);
 
 } // namespace r_12
 

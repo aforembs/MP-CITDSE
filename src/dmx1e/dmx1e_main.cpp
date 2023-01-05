@@ -6,7 +6,7 @@
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
-  int glq_pt, l_max;
+  int qsz, l_max;
   std::string pot, integrator;
   std::string out_prefix;
   char gauge;
@@ -25,11 +25,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  dmx1e::ReadConfig(opt_file, pot, glq_pt, gauge, l_max);
+  dmx1e::ReadConfig(opt_file, pot, qsz, gauge, l_max);
 
   out_prefix = "dat/" + pot;
 
-  dmx1e::GenDipole(out_prefix, glq_pt, gauge, l_max);
+  dmx1e::GenDipole(out_prefix, qsz, gauge, l_max);
 
   return 0;
 }
