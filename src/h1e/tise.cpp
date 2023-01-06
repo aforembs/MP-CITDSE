@@ -1,6 +1,6 @@
 #include "tise.hpp"
 
-// for now same as Lampros', remove knots soon!!!
+// for now same as Lampros'
 int WriteHdf5(int n, int k, int li, double z, double mass, std::string pot,
               std::vector<double> &kkn, std::vector<double> &Enl,
               std::vector<double> &Cnl, std::string outFile) {

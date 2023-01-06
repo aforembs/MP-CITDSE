@@ -8,7 +8,7 @@ ODIR = obj
 VPATH := ../
 
 SRC = r12_main.cpp r12.cpp integrator.cpp
-SRC_SH = fastgl.cpp bsp_gsl.cpp cfg_in.cpp
+SRC_SH = fastgl.cpp cfg_in.cpp
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I../../lib/wigxjpf/inc
 LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -fopenmp -L$(VPATH) -L../../lib/wigxjpf/lib -lwigxjpf -lgsl -L/opt/OpenBLAS/lib -lopenblas

@@ -1,25 +1,5 @@
 #include "w1e.hpp"
 
-int w1e::ReadConfig(std::string file, int &qsz, int &R_max, int &l_max,
-                    std::string &pot) {
-  YAML::Node settings = YAML::LoadFile(file);
-
-  pot = settings["Global_Settings"]["potential"].as<std::string>();
-  std::cout << "Core Potential:                              " << pot
-            << std::endl;
-  qsz = settings["Global_Settings"]["Outer_quadrature_size"].as<int>();
-  std::cout << "No. of outer quadrature points:              " << qsz
-            << std::endl;
-
-  R_max = settings["Basis_Settings"]["R_max"].as<int>();
-  std::cout << "Maximum R:                                   " << R_max
-            << std::endl;
-  l_max = settings["Basis_Settings"]["l_max"].as<int>();
-  std::cout << "Maximum l:                                   " << l_max
-            << std::endl;
-  return 0;
-}
-
 namespace glx {
 const double GLobx3[1] = {0.0};
 const double GLobx4[2] = {-0.447213595499957939281834733746,
@@ -51,11 +31,40 @@ const double *GLobx[9] = {0,      GLobx3, GLobx4, GLobx5, GLobx6,
                           GLobx7, GLobx8, GLobx9, GLobx10};
 } // namespace glx
 
+int w1e::readConfig(std::string file, int &qsz, int &R_max, int &l_max,
+                    std::string &pot, std::string &quad_type,
+                    std::string &quad_file) {
+  YAML::Node settings = YAML::LoadFile(file);
+
+  pot = settings["Global_Settings"]["potential"].as<std::string>();
+  std::cout << "Core Potential:                              " << pot
+            << std::endl;
+  qsz = settings["Global_Settings"]["Outer_quadrature_size"].as<int>();
+  std::cout << "No. of outer quadrature points:              " << qsz
+            << std::endl;
+  quad_type = settings["Global_Settings"]["Quadrature_type"].as<std::string>();
+  std::cout << "Outer quadrature type:                       " << quad_type
+            << std::endl;
+  if (quad_type.compare("User-Defined") == 0) {
+    quad_file = settings["Global_Settings"]["quad_file"].as<std::string>();
+    std::cout << "Quadrature read from file:                 " << quad_file
+              << std::endl;
+  }
+
+  R_max = settings["Basis_Settings"]["R_max"].as<int>();
+  std::cout << "Maximum R:                                   " << R_max
+            << std::endl;
+  l_max = settings["Basis_Settings"]["l_max"].as<int>();
+  std::cout << "Maximum l:                                   " << l_max
+            << std::endl;
+  return 0;
+}
+
 // New decoupled implementation WIP
 // Here gl_x holds the actual 0->R positions of the gl points
-int prIndp(int n, int bo, int off, int ooff, std::vector<double> &kkn,
-           std::vector<double> &q_x, std::vector<double> &Cf,
-           std::vector<double> &p_out, std::vector<double> &p_der) {
+int prOuter(int n, int bo, int off, int ooff, std::vector<double> &kkn,
+            std::vector<double> &q_x, std::vector<double> &Cf,
+            std::vector<double> &p_out, std::vector<double> &p_der) {
   double Pl = 0;
   double Plp = 0;
   int qi = 0;
@@ -181,7 +190,41 @@ int prInner(int n, int bo, int off, int ooff, std::vector<double> &kkn,
   return 0;
 }
 
-int w1e::GenWfn(std::string pot, int qsz, int R_max, int l_max) {
+int w1e::genGaussLegendre(int qsz, int R_max, std::vector<double> &q_x,
+                          std::vector<double> &q_w) {
+  // generate GL nodes and weights scaled to [0,R_max]
+  fastgl::QuadPair gl_i;
+  for (int i = 1; i <= qsz; ++i) {
+    gl_i = fastgl::GLPair(qsz, i);
+    q_x[qsz - i] = R_max * (gl_i.x() + 1.0) * 0.5;
+    q_w[qsz - i] = R_max * gl_i.weight * 0.5;
+  }
+
+  return 0;
+}
+
+int w1e::readQuad(int qsz, std::string quad_file, char type,
+                  std::vector<double> &q_x, std::vector<double> &q_w) {
+  if (type == 't') {
+    std::ifstream fl(quad_file);
+    std::string temp;
+
+    for (int i = 0; i < qsz; ++i) {
+      std::getline(fl, temp);
+      std::istringstream iss(temp);
+      iss >> q_x[i] >> q_w[i];
+    }
+  } else if (type == 'b') {
+    std::ifstream fl(quad_file, std::ios::in | std::ios::binary);
+    fl.read(reinterpret_cast<char *>(q_x.data()), qsz * sizeof(double));
+    fl.read(reinterpret_cast<char *>(q_w.data()), qsz * sizeof(double));
+  }
+
+  return 0;
+}
+
+int w1e::genWfn(std::string pot, int qsz, int l_max, std::vector<double> &q_x,
+                std::vector<double> &q_w) {
   int n, k, nen;
   std::string outfile_name, filename;
   std::unique_ptr<H5::H5File> outfile = nullptr, file = nullptr;
@@ -208,15 +251,6 @@ int w1e::GenWfn(std::string pot, int qsz, int R_max, int l_max) {
 
   std::vector<double> wfn_o(nnpt), wfn_p(nnpt);
   std::vector<double> Cf(n * nen);
-
-  // generate GL nodes and weights
-  std::vector<double> q_x(qsz), q_w(qsz);
-  fastgl::QuadPair gl_i;
-  for (int i = 1; i <= qsz; ++i) {
-    gl_i = fastgl::GLPair(qsz, i);
-    q_x[qsz - i] = R_max * (gl_i.x() + 1.0) * 0.5;
-    q_w[qsz - i] = R_max * gl_i.weight * 0.5;
-  }
 
   std::vector<uint8_t> pq_dx;
   std::vector<double> ri;
@@ -245,7 +279,7 @@ int w1e::GenWfn(std::string pot, int qsz, int R_max, int l_max) {
 
 #pragma omp parallel for
       for (auto i = 0; i < nen; ++i) {
-        prIndp(n, k, i * n, i * qsz, kkn, q_x, Cf, wfn_o, wfn_p);
+        prOuter(n, k, i * n, i * qsz, kkn, q_x, Cf, wfn_o, wfn_p);
         prInner(n, k, i * n, i * pti_sz, kkn, Cf, ri, wfn_i);
       }
 

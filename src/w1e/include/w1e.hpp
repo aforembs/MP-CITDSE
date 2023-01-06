@@ -1,19 +1,31 @@
 #ifndef W1E_H
 #define W1E_H
 
-#include "bsp_gsl.hpp"
 #include "fastgl.hpp"
 #include <H5Cpp.h>
+#include <fstream>
+#include <iostream>
 #include <numeric>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+extern "C" {
+#include <gsl/gsl_bspline.h>
+}
 
 namespace w1e {
 
-int ReadConfig(std::string file, int &qsz, int &R_max, int &l_max,
-               std::string &pot);
+int readConfig(std::string file, int &qsz, int &R_max, int &l_max,
+               std::string &pot, std::string &quad_type,
+               std::string &quad_file);
 
-int GenWfn(std::string pot, int qsz, int R_max, int l_max);
+int genGaussLegendre(int qsz, int R_max, std::vector<double> &q_x,
+                     std::vector<double> &q_w);
+
+int readQuad(int qsz, std::string quad_file, char type,
+             std::vector<double> &q_x, std::vector<double> &q_w);
+
+int genWfn(std::string pot, int qsz, int l_max, std::vector<double> &q_x,
+           std::vector<double> &q_w);
 
 } // namespace w1e
 

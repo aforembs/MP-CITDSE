@@ -2,6 +2,8 @@
 Global_Settings:
   potential: "he"           # potential name
   Outer_quadrature_size: 300
+  Quadrature_type: "Gauss-Legendre"
+  quad_file: ""
   L_max: 3                  # total L <= L_max
   gauge: 'v'                # length or velocity gauge
 # Settings for generating the 1e basis radial functions

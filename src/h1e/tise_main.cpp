@@ -69,8 +69,7 @@ int main(int argc, char *argv[]) {
   // generate B_i(r) and B'_i(r)
   auto spl = std::vector<double>();
   auto splp = std::vector<double>();
-  bsp::Splines(n, k, glq_pt, gl_x, kkn, spl);
-  bsp::SplinesP(n, k, glq_pt, gl_x, kkn, splp);
+  bsp::Splines(n, k, glq_pt, gl_x, kkn, spl, splp);
 
   tise::GenCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp,
                  "dat/");
