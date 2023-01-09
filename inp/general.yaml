@@ -1,19 +1,21 @@
 # Settings consistent among all programs
 Global_Settings:
   potential: "he"           # potential name
-  Outer_quadrature_size: 300
-  Quadrature_type: "Gauss-Legendre"
-  quad_file: ""
+  Outer_quadrature_size: 300 # size of outer quadrature
+  Quadrature_type: "gauss-legendre" # gauss-legendre or user-defined
+  quad_file: "cheb.dat" # only read if above is "user-defined"
+  Inner_Layout: "default" # default or user-defined
+  in_point_file: "points.dat" # only read if above is "user-defined"
   L_max: 3                  # total L <= L_max
   gauge: 'v'                # length or velocity gauge
 # Settings for generating the 1e basis radial functions
 Basis_Settings:
-  state_no: 302
+  state_no: 302             # number of 1e states +2
   max_spline_k: 9           # Splines for h1e
-  GL_quad_points: 9         # quadrature for h1e
+  GL_quad_points: 15        # quadrature for h1e
   R_max: 260                # box radius in a.u.
-  grid: "linear"            # grid type
-  knot_file: ""
+  grid: "linear"            # grid type 
+  knot_file: ""             # only read if above is "user-defined"
   l_max: 7                  # l <= l_max
   atomic_no: 2              # nuclear charge
   mass: 0.5                 # 0.5 for atom 1 for positronium

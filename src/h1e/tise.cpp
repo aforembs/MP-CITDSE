@@ -86,7 +86,7 @@ int tise::ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
   grid = settings["Basis_Settings"]["grid"].as<std::string>();
   std::cout << "Type of knot spacing:                      " << grid
             << std::endl;
-  if (grid.compare("custom") == 0) {
+  if (grid.compare("user-defined") == 0) {
     k_file = settings["Basis_Settings"]["grid"].as<std::string>();
     std::cout << "Custom knot sequence file:     " << k_file << std::endl;
   }
@@ -118,17 +118,17 @@ int tise::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
   auto v_1 = std::unique_ptr<ModelV>(new V_c(1.0));
   auto v_1_r2 = std::unique_ptr<ModelV>(new V_c_r2(1.0));
 
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_BB, spl, kkn,
-                 v_1); // int B_iB_j dr
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_dBdB, splp, kkn,
-                 v_1); // int B_i d/dr^2 B_j dr
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_1_r2, spl, kkn,
-                 v_1_r2); // int B_iB_j/r^2 dr
+  // int B_iB_j dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_BB, spl, kkn, v_1);
+  // int B_i d/dr^2 B_j dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_dBdB, splp, kkn, v_1);
+  // int B_iB_j/r^2 dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_1_r2, spl, kkn, v_1_r2);
 
   auto v = std::unique_ptr<ModelV>(new V_1_r(z));
 
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_V, spl, kkn,
-                 v); // int B_i V(r) B_j dr
+  // int B_i V(r) B_j dr
+  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_V, spl, kkn, v);
 
   Enl.reserve(lm1 * nm2);
   Cnl_tmp.reserve(lm1 * nm22);
@@ -140,21 +140,38 @@ int tise::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
               w_bb.begin() + l * nk);
   }
 
-  // omp_set_num_threads(std::min(lm1, omp_get_max_threads()));
-  // #pragma omp parallel for private(llp1, nik, lnk)
-  for (int l = 0; l <= l_max; ++l) {
-    llp1 = l * (l + 1);
-    lnk = l * nk;
-    for (int ni = 0; ni < nm2; ++ni) {
-      nik = ni * k;
-      for (int j = 0; j < k; ++j) {
-        aa[lnk + j + nik] = mass * ov_dBdB[j + nik] - ov_V[j + nik] +
-                            mass * llp1 * ov_1_r2[j + nik];
+  if (nm2 > 200) {
+    for (int l = 0; l <= l_max; ++l) {
+      llp1 = l * (l + 1);
+      lnk = l * nk;
+#pragma omp parallel for private(nik)
+      for (int ni = 0; ni < nm2; ++ni) {
+        nik = ni * k;
+        for (int j = 0; j < k; ++j) {
+          aa[lnk + j + nik] = mass * ov_dBdB[j + nik] - ov_V[j + nik] +
+                              mass * llp1 * ov_1_r2[j + nik];
+        }
       }
-    }
 
-    LAPACKE_dsbgvd(LAPACK_COL_MAJOR, 'V', 'U', nm2, k - 1, k - 1, &aa[lnk], k,
-                   &w_bb[lnk], k, &Enl[l * nm2], &Cnl_tmp[l * nm22], nm2);
+      LAPACKE_dsbgvd(LAPACK_COL_MAJOR, 'V', 'U', nm2, k - 1, k - 1, &aa[lnk], k,
+                     &w_bb[lnk], k, &Enl[l * nm2], &Cnl_tmp[l * nm22], nm2);
+    }
+  } else {
+    for (int l = 0; l <= l_max; ++l) {
+      llp1 = l * (l + 1);
+      lnk = l * nk;
+#pragma omp parallel for private(nik)
+      for (int ni = 0; ni < nm2; ++ni) {
+        nik = ni * k;
+        for (int j = 0; j < k; ++j) {
+          aa[lnk + j + nik] = mass * ov_dBdB[j + nik] - ov_V[j + nik] +
+                              mass * llp1 * ov_1_r2[j + nik];
+        }
+      }
+
+      LAPACKE_dsbgv(LAPACK_COL_MAJOR, 'V', 'U', nm2, k - 1, k - 1, &aa[lnk], k,
+                    &w_bb[lnk], k, &Enl[l * nm2], &Cnl_tmp[l * nm22], nm2);
+    }
   }
 
   for (int l = 0; l <= l_max; ++l) {
@@ -169,9 +186,8 @@ int tise::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
         val += Cnl_tmp[idxh + i] * spl[i + (k - 1) * k * glq_pt];
 
       if (val < 0.0) {
-        std::transform(
-            std::execution::seq, st_it, end_it, st_it,
-            std::bind(std::multiplies<double>(), std::placeholders::_1, -1.0));
+        std::transform(std::execution::seq, st_it, end_it, st_it,
+                       [](auto &a) { return a * -1.0; });
       }
       std::copy(std::execution::seq, st_it, end_it,
                 Cnl.begin() + l * n * nm2 + 1 + ni * n);

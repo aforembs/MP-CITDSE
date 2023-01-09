@@ -93,7 +93,7 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
         [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
     l1_m = std::max(l1_m, max_line.l1);
   }
-  auto k_max = l1_m + l2_m;
+  int k_max = l1_m + l2_m;
   auto lc_sz = max_N * qsz;
 
   count[0] = max_N;
@@ -141,6 +141,10 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
   qri = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qr_i")));
   qri->read(qx_i.data(), H5::PredType::NATIVE_DOUBLE);
   file->close();
+
+  if (nen < 200 && nen / qx_o[qsz - 1] < 1.5) {
+    k_max = std::min(k_max, nen / 8);
+  }
 
   // read wavefunctions for all other l
   for (int l = 1; l <= e1_lm; ++l) {

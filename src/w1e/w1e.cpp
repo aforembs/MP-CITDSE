@@ -33,7 +33,8 @@ const double *GLobx[9] = {0,      GLobx3, GLobx4, GLobx5, GLobx6,
 
 int w1e::readConfig(std::string file, int &qsz, int &R_max, int &l_max,
                     std::string &pot, std::string &quad_type,
-                    std::string &quad_file) {
+                    std::string &quad_file, std::string &in_quad_layout,
+                    std::string &pt_file) {
   YAML::Node settings = YAML::LoadFile(file);
 
   pot = settings["Global_Settings"]["potential"].as<std::string>();
@@ -45,9 +46,18 @@ int w1e::readConfig(std::string file, int &qsz, int &R_max, int &l_max,
   quad_type = settings["Global_Settings"]["Quadrature_type"].as<std::string>();
   std::cout << "Outer quadrature type:                       " << quad_type
             << std::endl;
-  if (quad_type.compare("User-Defined") == 0) {
+  if (quad_type.compare("user-defined") == 0) {
     quad_file = settings["Global_Settings"]["quad_file"].as<std::string>();
-    std::cout << "Quadrature read from file:                 " << quad_file
+    std::cout << "Quadrature read from file:                   " << quad_file
+              << std::endl;
+  }
+  in_quad_layout =
+      settings["Global_Settings"]["Inner_Layout"].as<std::string>();
+  std::cout << "Layout of inner quadrature points:           " << in_quad_layout
+            << std::endl;
+  if (in_quad_layout.compare("user-defined") == 0) {
+    pt_file = settings["Global_Settings"]["in_point_file"].as<std::string>();
+    std::cout << "Quadrature read from file:                   " << pt_file
               << std::endl;
   }
 
@@ -108,16 +118,12 @@ int prOuter(int n, int bo, int off, int ooff, std::vector<double> &kkn,
   return 0;
 }
 
-int genPtaR(int qsz, std::vector<double> &q_x, std::vector<uint8_t> &pq_dx,
-            int &pti_sz, std::vector<double> &ri) {
-  double dl, sl;
+int w1e::defaultPointLayout(int qsz, std::vector<uint8_t> &pq_dx, int &pti_sz) {
+  pq_dx.resize(qsz);
   bool odd_flag = (qsz >> 0) & 1;
   int iv_sz = (qsz + 2 - odd_flag) / 2;
-  pq_dx.resize(qsz);
   std::fill(pq_dx.begin(), pq_dx.end(), 1);
-
   // default inner quadrature layout
-  // add option to read from file
   int idm = iv_sz - 1;
   int idp = idm + odd_flag;
   for (int i = 8; i > 1; --i) {
@@ -130,15 +136,54 @@ int genPtaR(int qsz, std::vector<double> &q_x, std::vector<uint8_t> &pq_dx,
   }
 
   pti_sz = std::reduce(pq_dx.begin(), pq_dx.end(), static_cast<int>(0));
+  std::cout << "No. of inner points: " << pti_sz << "\n";
+
+  return 0;
+}
+
+int w1e::userPointLayout(char ftype, std::string pt_file, int qsz,
+                         std::vector<uint8_t> &pq_dx, int &pti_sz) {
+  pq_dx.resize(qsz);
+
+  switch (ftype) {
+  case 't': {
+    std::ifstream fl(pt_file);
+    std::string temp;
+
+    for (int i = 0; i < qsz; ++i) {
+      std::getline(fl, temp);
+      std::istringstream iss(temp);
+      int st_num;
+      iss >> st_num;
+      pq_dx[i] = static_cast<uint8_t>(st_num);
+    }
+    break;
+  }
+  case 'b': {
+    std::ifstream fl(pt_file, std::ios::in | std::ios::binary);
+    fl.read(reinterpret_cast<char *>(pq_dx.data()), qsz);
+    break;
+  }
+  }
+
+  pti_sz = std::reduce(pq_dx.begin(), pq_dx.end(), static_cast<int>(0));
+  std::cout << "No. of inner points: " << pti_sz << "\n";
+
+  return 0;
+}
+
+int genRin(int qsz, int pti_sz, std::vector<double> &q_x,
+           std::vector<uint8_t> &pq_dx, std::vector<double> &ri) {
+  double dl, sl;
 
   ri.reserve(pti_sz);
   double rm1 = 0.0;
   for (int i = 0; i < qsz; ++i) {
     auto r1 = q_x[i];
-    auto p_num = pq_dx[i];
+    uint8_t p_num = pq_dx[i];
     dl = (r1 - rm1) * 0.5;
     sl = (r1 + rm1) * 0.5;
-    for (int pt = 0; pt < p_num; ++pt) {
+    for (uint8_t pt = 0; pt < p_num; ++pt) {
       ri.emplace_back(dl * glx::GLobx[p_num][pt] + sl);
     }
     rm1 = r1;
@@ -192,39 +237,55 @@ int prInner(int n, int bo, int off, int ooff, std::vector<double> &kkn,
 
 int w1e::genGaussLegendre(int qsz, int R_max, std::vector<double> &q_x,
                           std::vector<double> &q_w) {
+  double R_half = R_max * 0.5;
   // generate GL nodes and weights scaled to [0,R_max]
   fastgl::QuadPair gl_i;
   for (int i = 1; i <= qsz; ++i) {
     gl_i = fastgl::GLPair(qsz, i);
-    q_x[qsz - i] = R_max * (gl_i.x() + 1.0) * 0.5;
-    q_w[qsz - i] = R_max * gl_i.weight * 0.5;
+    q_x[qsz - i] = R_half * (gl_i.x() + 1.0);
+    q_w[qsz - i] = R_half * gl_i.weight;
   }
 
   return 0;
 }
 
-int w1e::readQuad(int qsz, std::string quad_file, char type,
+int w1e::readQuad(int qsz, int R_max, std::string quad_file, char type,
                   std::vector<double> &q_x, std::vector<double> &q_w) {
-  if (type == 't') {
+  double R_half = R_max * 0.5;
+  double R_const{R_half};
+  switch (type) {
+  case 't': {
     std::ifstream fl(quad_file);
     std::string temp;
 
     for (int i = 0; i < qsz; ++i) {
       std::getline(fl, temp);
       std::istringstream iss(temp);
-      iss >> q_x[i] >> q_w[i];
+      double x_m1_p1, w_m1_p1;
+      iss >> x_m1_p1 >> w_m1_p1;
+      q_x[i] = R_half * (x_m1_p1 + 1.0);
+      q_w[i] = R_half * w_m1_p1;
     }
-  } else if (type == 'b') {
+    break;
+  }
+  case 'b': {
     std::ifstream fl(quad_file, std::ios::in | std::ios::binary);
     fl.read(reinterpret_cast<char *>(q_x.data()), qsz * sizeof(double));
     fl.read(reinterpret_cast<char *>(q_w.data()), qsz * sizeof(double));
+    std::transform(q_x.begin(), q_x.end(), q_x.begin(),
+                   [&R_const](auto &a) { return a * R_const + R_const; });
+    std::transform(q_w.begin(), q_w.end(), q_w.begin(),
+                   [&R_const](auto &a) { return a * R_const; });
+    break;
+  }
   }
 
   return 0;
 }
 
-int w1e::genWfn(std::string pot, int qsz, int l_max, std::vector<double> &q_x,
-                std::vector<double> &q_w) {
+int w1e::genWfn(std::string pot, int qsz, int pti_sz, int l_max,
+                std::vector<double> &q_x, std::vector<double> &q_w,
+                std::vector<uint8_t> &pq_dx) {
   int n, k, nen;
   std::string outfile_name, filename;
   std::unique_ptr<H5::H5File> outfile = nullptr, file = nullptr;
@@ -252,10 +313,8 @@ int w1e::genWfn(std::string pot, int qsz, int l_max, std::vector<double> &q_x,
   std::vector<double> wfn_o(nnpt), wfn_p(nnpt);
   std::vector<double> Cf(n * nen);
 
-  std::vector<uint8_t> pq_dx;
   std::vector<double> ri;
-  int pti_sz;
-  genPtaR(qsz, q_x, pq_dx, pti_sz, ri);
+  genRin(qsz, pti_sz, q_x, pq_dx, ri);
   std::vector<double> wfn_i(nen * pti_sz);
   hsize_t dimms_o[2] = {static_cast<hsize_t>(nen), static_cast<hsize_t>(qsz)};
   hsize_t dimms_i[2] = {static_cast<hsize_t>(nen),

@@ -15,17 +15,23 @@ extern "C" {
 namespace w1e {
 
 int readConfig(std::string file, int &qsz, int &R_max, int &l_max,
-               std::string &pot, std::string &quad_type,
-               std::string &quad_file);
+               std::string &pot, std::string &quad_type, std::string &quad_file,
+               std::string &in_quad_layout, std::string &pt_file);
 
 int genGaussLegendre(int qsz, int R_max, std::vector<double> &q_x,
                      std::vector<double> &q_w);
 
-int readQuad(int qsz, std::string quad_file, char type,
+int defaultPointLayout(int qsz, std::vector<uint8_t> &pq_dx, int &pti_sz);
+
+int userPointLayout(char ftype, std::string pt_file, int qsz,
+                    std::vector<uint8_t> &pq_dx, int &pti_sz);
+
+int readQuad(int qsz, int R_max, std::string quad_file, char type,
              std::vector<double> &q_x, std::vector<double> &q_w);
 
-int genWfn(std::string pot, int qsz, int l_max, std::vector<double> &q_x,
-           std::vector<double> &q_w);
+int genWfn(std::string pot, int qsz, int pti_sz, int l_max,
+           std::vector<double> &q_x, std::vector<double> &q_w,
+           std::vector<uint8_t> &pq_dx);
 
 } // namespace w1e
 

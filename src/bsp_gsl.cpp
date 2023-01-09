@@ -88,7 +88,7 @@ int bsp::WrKnotsH5(int n, int k, double r_max, double fkn, char type,
   } else if (type == 's') {
     tp_string = "sine";
   } else if (type == 'c') {
-    tp_string = "custom";
+    tp_string = "user-defied";
   }
 
   auto fl = std::make_unique<H5::H5File>(H5::H5File(file, H5F_ACC_TRUNC));

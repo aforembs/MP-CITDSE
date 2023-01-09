@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <unistd.h>
 
+namespace fs = std::filesystem;
+
 int main(int argc, char *argv[]) {
   std::string opt_file;
   int qsz, R_max, l_max;
@@ -10,6 +12,8 @@ int main(int argc, char *argv[]) {
   std::string out_prefix;
   std::string quad_type;
   std::string quad_file;
+  std::string in_quad_layout;
+  std::string pt_file;
 
   for (;;) {
     switch (getopt(argc, argv, "hf:")) {
@@ -25,23 +29,21 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  w1e::readConfig(opt_file, qsz, R_max, l_max, pot, quad_type, quad_file);
+  w1e::readConfig(opt_file, qsz, R_max, l_max, pot, quad_type, quad_file,
+                  in_quad_layout, pt_file);
 
   out_prefix = "dat/" + pot;
 
   std::vector<double> q_x(qsz), q_w(qsz);
 
-  if (quad_type.compare("Gauss-Legendre") == 0) {
+  if (quad_type.compare("gauss-legendre") == 0) {
     w1e::genGaussLegendre(qsz, R_max, q_x, q_w);
-  } else if (quad_type.compare("User-Defined") == 0) {
-    if (std::filesystem::path(quad_file).extension().string().compare(".txt") ==
-            0 ||
-        std::filesystem::path(quad_file).extension().string().compare(".dat") ==
-            0) {
-      w1e::readQuad(qsz, quad_file, 't', q_x, q_w);
-    } else if (std::filesystem::path(quad_file).extension().string().compare(
-                   ".bin") == 0) {
-      w1e::readQuad(qsz, quad_file, 'b', q_x, q_w);
+  } else if (quad_type.compare("user-defined") == 0) {
+    if (fs::path(quad_file).extension().string().compare(".txt") == 0 ||
+        fs::path(quad_file).extension().string().compare(".dat") == 0) {
+      w1e::readQuad(qsz, R_max, quad_file, 't', q_x, q_w);
+    } else if (fs::path(quad_file).extension().string().compare(".bin") == 0) {
+      w1e::readQuad(qsz, R_max, quad_file, 'b', q_x, q_w);
     } else {
       std::cout << "Invalid quadrature file extension, use .txt/.dat or .bin\n";
       return -1;
@@ -51,7 +53,26 @@ int main(int argc, char *argv[]) {
     return -1;
   }
 
-  w1e::genWfn(out_prefix, qsz, l_max, q_x, q_w);
+  std::vector<uint8_t> pq_dx;
+  int pti_sz = 0;
+  if (in_quad_layout.compare("default") == 0) {
+    w1e::defaultPointLayout(qsz, pq_dx, pti_sz);
+  } else if (in_quad_layout.compare("user-defined") == 0) {
+    if (fs::path(pt_file).extension().string().compare(".txt") == 0 ||
+        fs::path(pt_file).extension().string().compare(".dat") == 0) {
+      w1e::userPointLayout('t', pt_file, qsz, pq_dx, pti_sz);
+    } else if (fs::path(quad_file).extension().string().compare(".bin") == 0) {
+      w1e::userPointLayout('b', pt_file, qsz, pq_dx, pti_sz);
+    } else {
+      std::cout << "Invalid layout file extension, use .txt/.dat or .bin\n";
+      return -1;
+    }
+  } else {
+    std::cout << "Invalid inner quadrature layout!\n";
+    return -1;
+  }
+
+  w1e::genWfn(out_prefix, qsz, pti_sz, l_max, q_x, q_w, pq_dx);
 
   return 0;
 }
