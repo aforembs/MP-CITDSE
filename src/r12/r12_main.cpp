@@ -11,7 +11,8 @@ int main(int argc, char *argv[]) {
   int qsz, L_max;
   std::string pot, integrator;
   std::string out_prefix;
-  char gauge;
+  bool lim_flag = false;
+  std::string k_limit;
 
   for (;;) {
     switch (getopt(argc, argv, "hf:i:")) {
@@ -31,11 +32,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  r_12::readConfig(opt_file, qsz, pot, L_max, gauge);
+  r_12::readConfig(opt_file, qsz, pot, L_max, k_limit, lim_flag);
 
   out_prefix = "dat/" + pot;
 
-  r_12::r12Glob(out_prefix, L_max, qsz, inp_dir);
+  r_12::r12Glob(out_prefix, L_max, qsz, inp_dir, lim_flag, k_limit);
 
   return 0;
 }

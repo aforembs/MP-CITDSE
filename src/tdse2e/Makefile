@@ -1,4 +1,7 @@
+ifndef CPPC
 CPPC = g++
+endif
+
 EXEC = ../../bin/tdse2e
 
 IDIR = include
@@ -10,10 +13,17 @@ VPATH := ../
 SRC =td2e_main.cpp td_read.cpp td2e.cpp pulse.cpp
 SRC_SH=
 
-CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I/opt/OpenBLAS/include -g
-LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -fopenmp -lopenblas -L/opt/OpenBLAS/lib
+ifndef BLAS_LIB
+BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
+endif
+
+ifndef BLAS_INC
+BLAS_INC = /opt/OpenBLAS/include
+endif
+
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -g
+LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -fopenmp $(BLAS_LIB)
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
-#OBJ+= $(addprefix ../, $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_SHARED)))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
 all: $(SRC) $(EXEC)

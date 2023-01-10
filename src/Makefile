@@ -2,6 +2,13 @@ BIN_DIR = ../bin
 DAT_DIR = ../dat
 OBJ_DIR = obj
 
+CPPC = g++
+
+BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib -Wno-c99-extensions
+BLAS_INC = /opt/OpenBLAS/include -Wno-c99-extensions
+
+export
+
 all:
 	[[ -d $(BIN_DIR) ]] || mkdir $(BIN_DIR)
 	[[ -d $(DAT_DIR) ]] || mkdir $(DAT_DIR)

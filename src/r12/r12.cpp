@@ -2,7 +2,7 @@
 #include "time_tst.hpp"
 
 int r_12::readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
-                     char &gauge) {
+                     std::string &k_limit, bool &lim_flag) {
   YAML::Node settings = YAML::LoadFile(file);
 
   pot = settings["Global_Settings"]["potential"].as<std::string>();
@@ -14,9 +14,14 @@ int r_12::readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
   L_max = settings["Global_Settings"]["L_max"].as<int>();
   std::cout << "Maximum total two electron angular momentum: " << L_max
             << std::endl;
-  gauge = settings["Global_Settings"]["gauge"].as<char>();
-  std::cout << "Gauge type ('l' length/'v' velocity):        " << gauge
+  k_limit = settings["R12_Settings"]["k_limit"].as<std::string>();
+  std::cout << "Maximum k wigner-6j or user limited:         " << k_limit
             << std::endl;
+  if (k_limit.compare("wigner") == 0) {
+    lim_flag = false;
+  } else {
+    lim_flag = true;
+  }
 
   return 0;
 }
@@ -47,7 +52,8 @@ int Rpowk(int qsz, int pti_sz, int k_max, std::vector<double> &qx_o,
   return 0;
 }
 
-int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
+int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir,
+                  bool lim_flag, std::string k_limit) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
   std::vector<double> v_mat;
@@ -94,6 +100,10 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
     l1_m = std::max(l1_m, max_line.l1);
   }
   int k_max = l1_m + l2_m;
+  if (lim_flag) {
+    k_max = std::min(k_max, std::stoi(k_limit));
+  }
+
   auto lc_sz = max_N * qsz;
 
   count[0] = max_N;
@@ -141,10 +151,6 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir) {
   qri = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qr_i")));
   qri->read(qx_i.data(), H5::PredType::NATIVE_DOUBLE);
   file->close();
-
-  if (nen < 200 && nen / qx_o[qsz - 1] < 1.5) {
-    k_max = std::min(k_max, nen / 8);
-  }
 
   // read wavefunctions for all other l
   for (int l = 1; l <= e1_lm; ++l) {

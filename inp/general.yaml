@@ -21,7 +21,7 @@ Basis_Settings:
   mass: 0.5                 # 0.5 for atom 1 for positronium
 # Settings for the two electron interaction calculation
 R12_Settings:
-  integrator: "glob3"       # inner integral type "glo4", "glob3" or "trapezoid"
+  k_limit: "wigner" # "wigner" - default or an integer - only use if ground energy is incorrect 
 # Settings for the TDSE solver
 Propagator_Settings:
   states_in_l: [3030,2799,2808,2808] #[389,389,389,389,389]

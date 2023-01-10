@@ -15,10 +15,11 @@
 
 namespace r_12 {
 
-int readConfig(std::string file, int &glq_pt, std::string &pot, int &L_max,
-               char &gauge);
+int readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
+               std::string &k_limit, bool &lim_flag);
 
-int r12Glob(std::string cpot, int L_max, int glq_pt, std::string dir);
+int r12Glob(std::string cpot, int L_max, int qsz, std::string dir,
+            bool lim_flag, std::string k_limit);
 
 } // namespace r_12
 

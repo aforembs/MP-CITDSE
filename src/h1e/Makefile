@@ -1,4 +1,7 @@
+ifndef CPPC
 CPPC = g++
+endif
+
 EXEC = ../../bin/h1e
 
 IDIR = include
@@ -7,13 +10,20 @@ ODIR = obj
 
 VPATH := ../
 
-SRC =tise_main.cpp tise.cpp 
-SRC_SH=fastgl.cpp bsp_gsl.cpp
+SRC = tise_main.cpp tise.cpp bsp_gsl.cpp
+SRC_SH= fastgl.cpp 
 
-CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I/opt/OpenBLAS/include -g
-LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -llapacke -fopenmp -lgsl -L/opt/OpenBLAS/lib -lopenblas 
+ifndef BLAS_LIB
+BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
+endif
+
+ifndef BLAS_INC
+BLAS_INC = /opt/OpenBLAS/include
+endif
+
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -g
+LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -llapack -fopenmp -lgsl $(BLAS_LIB)
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
-#OBJ+= $(addprefix ../, $(patsubst %.cpp,$(ODIR)/%.o,$(SRC_SHARED)))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
 all: $(SRC) $(EXEC)

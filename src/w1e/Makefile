@@ -1,4 +1,7 @@
+ifndef CPPC
 CPPC = g++
+endif
+
 EXEC = ../../bin/w1e
 
 IDIR = include
@@ -10,8 +13,12 @@ VPATH := ../
 SRC = w1e_main.cpp w1e.cpp
 SRC_SH = fastgl.cpp
 
+ifndef BLAS_LIB
+BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
+endif
+
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -I$(IDIR) -I$(SH_IDIR) -fopenmp
-LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -L$(VPATH) -lgsl -L/opt/OpenBLAS/lib -lopenblas -fopenmp
+LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -L$(VPATH) -lgsl $(BLAS_LIB) -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 

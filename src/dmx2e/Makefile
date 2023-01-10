@@ -1,4 +1,7 @@
+ifndef CPPC
 CPPC = g++
+endif
+
 EXEC = ../../bin/dmx2e
 
 IDIR = include
