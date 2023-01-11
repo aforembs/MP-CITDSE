@@ -1,7 +1,7 @@
-#include "pes2e.hpp"
+#include "pes.hpp"
 
-int pes2e::readConfig(std::string file, std::string &pot, int &L_max,
-                      int &l_max, std::vector<int> &state_sz) {
+int pes::readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
+                    std::vector<int> &state_sz) {
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
   pot = settings["Global_Settings"]["potential"].as<std::string>();
@@ -29,7 +29,7 @@ int pes2e::readConfig(std::string file, std::string &pot, int &L_max,
   return 0;
 }
 
-int pes2e::readCt(std::string file, std::vector<std::complex<double>> &ct) {
+int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
   std::ifstream fl(file);
   std::string temp;
   while (std::getline(fl, temp)) {
@@ -43,8 +43,8 @@ int pes2e::readCt(std::string file, std::vector<std::complex<double>> &ct) {
   return 0;
 }
 
-int pes2e::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
-                     std::vector<std::complex<double>> &ct) {
+int pes::genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
+                   std::vector<std::complex<double>> &ct) {
   std::vector<idx4> ct_idx(ct.size());
   std::vector<int> offs;
   auto sum = 0;

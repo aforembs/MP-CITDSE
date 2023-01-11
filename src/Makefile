@@ -7,6 +7,9 @@ CPPC = g++
 BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib -Wno-c99-extensions
 BLAS_INC = /opt/OpenBLAS/include -Wno-c99-extensions
 
+WIG_LIB = -lwigxjpf -L../../lib
+WIG_INC = ../../lib/include
+
 export
 
 all:

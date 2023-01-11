@@ -1,4 +1,4 @@
-#include "tise.hpp"
+#include "h1e.hpp"
 
 // for now same as Lampros'
 int WriteHdf5(int n, int k, int li, double z, double mass, std::string pot,
@@ -63,9 +63,9 @@ int WriteHdf5(int n, int k, int li, double z, double mass, std::string pot,
   return 0;
 }
 
-int tise::ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
-                     std::string &grid, std::string &k_file, std::string &pot,
-                     int &l_max, int &z, double &mass) {
+int h1e::ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
+                    std::string &grid, std::string &k_file, std::string &pot,
+                    int &l_max, int &z, double &mass) {
 
   YAML::Node settings = YAML::LoadFile(file);
 
@@ -101,11 +101,11 @@ int tise::ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
   return 0;
 }
 
-int tise::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
-                   std::string pot, std::vector<double> &gl_w,
-                   std::vector<double> &gl_x, std::vector<double> &kkn,
-                   std::vector<double> &spl, std::vector<double> &splp,
-                   std::string outFile) {
+int h1e::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
+                  std::string pot, std::vector<double> &gl_w,
+                  std::vector<double> &gl_x, std::vector<double> &kkn,
+                  std::vector<double> &spl, std::vector<double> &splp,
+                  std::string outFile) {
   int nm2 = n - 2;
   int lm1 = l_max + 1;
   int nm22 = nm2 * nm2;

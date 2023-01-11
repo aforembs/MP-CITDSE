@@ -10,7 +10,7 @@ ODIR = obj
 
 VPATH := ../
 
-SRC = tise_main.cpp tise.cpp bsp_gsl.cpp
+SRC = h1e_main.cpp h1e.cpp bsp_gsl.cpp
 SRC_SH= fastgl.cpp 
 
 ifndef BLAS_LIB

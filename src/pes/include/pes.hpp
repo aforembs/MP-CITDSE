@@ -15,7 +15,7 @@ extern "C" {
 #include <cblas.h>
 }
 
-namespace pes2e {
+namespace pes {
 int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
                std::vector<int> &state_sz);
 
@@ -26,6 +26,6 @@ int genPES(std::string pot, std::string dir, int L_max, int l_max,
 
 int genPES2eb(std::string pot, int L_max, std::vector<int> &state_sz,
               std::vector<std::complex<double>> &ct);
-} // namespace pes2e
+} // namespace pes
 
 #endif // PES2E_HPP_

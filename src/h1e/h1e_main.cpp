@@ -1,5 +1,5 @@
 #include "fastgl.hpp"
-#include "tise.hpp"
+#include "h1e.hpp"
 #include <cstdlib>
 #include <filesystem>
 #include <unistd.h>
@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  tise::ReadConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z,
-                   mass);
+  h1e::ReadConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z,
+                  mass);
 
   if (grid.compare("linear") == 0) {
     bsp::GenKnots(n, k, r_max, fkn, 'l', kkn);
@@ -71,8 +71,8 @@ int main(int argc, char *argv[]) {
   auto splp = std::vector<double>();
   bsp::Splines(n, k, glq_pt, gl_x, kkn, spl, splp);
 
-  tise::GenCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp,
-                 "dat/");
+  h1e::GenCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp,
+                "dat/");
 
   return 0;
 }

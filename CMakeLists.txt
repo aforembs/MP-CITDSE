@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.20)
+cmake_policy(SET CMP0135 NEW)
 
 # set the project name
 project(ParTDSE VERSION 1.0)
@@ -9,29 +10,36 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
-file(GLOB_RECURSE sources src/*.cpp src/include/*.hpp)
+add_compile_options(
+    -Wall -Wextra -Wshadow -Wnon-virtual-dtor 
+    -pedantic -O3 -march=native -fopenmp
+)
 
-# add the executable
-add_executable(${PROJECT_NAME} ${sources})
+set(SH1_HEADER_FILES 
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/include/dmx_typ.hpp
+)
 
-target_compile_options(${PROJECT_NAME} PUBLIC -Wall -pedantic -O3 -march=native -fopenmp)
+set(SHARED_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/cfg_in.cpp
+)
 
-target_link_options(${PROJECT_NAME} PUBLIC -fopenmp)
+set(SHARED_SOURCES2
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/fastgl.cpp
+)
 
-target_include_directories(${PROJECT_NAME} PUBLIC src/ src/include/)
+set(BLA_VENDOR OpenBLAS)
+set(BLA_INC /opt/OpenBLAS/include)
 
-set(BLAS_VENDOR OpenBLAS)
-find_package(BLAS REQUIRED)
-if(BLAS_FOUND)
-    message("OpenBLAS found.")
-    include_directories(/opt/OpenBLAS/include/)
-    target_link_libraries(${PROJECT_NAME} PUBLIC ${BLAS_LIBRARIES})
-endif(BLAS_FOUND)
+add_subdirectory(3rd_party)
 
-find_package(yaml-cpp REQUIRED)
-
-find_package(HDF5 REQUIRED)
-
-find_package(GSL REQUIRED)
-
-target_link_libraries(${PROJECT_NAME} PUBLIC yaml-cpp HDF5 GSL)
+add_subdirectory(src/h1e)
+add_subdirectory(src/w1e)
+add_subdirectory(src/sort2eEn)
+add_subdirectory(src/dmx1e)
+add_subdirectory(src/gr2e)
+add_subdirectory(src/r12)
+add_subdirectory(src/dmx2e)
+add_subdirectory(src/tdse2e)
+add_subdirectory(src/tdse_diag)
+add_subdirectory(src/pes)
+add_subdirectory(src/pes2e)

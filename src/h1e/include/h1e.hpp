@@ -1,5 +1,5 @@
-#ifndef TISE_H_
-#define TISE_H_
+#ifndef H1E_H_
+#define H1E_H_
 
 #include "ModelV.hpp"
 #include "bsp_gsl.hpp"
@@ -13,7 +13,7 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
-namespace tise {
+namespace h1e {
 
 int ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
                std::string &grid, std::string &k_file, std::string &pot,
@@ -25,6 +25,6 @@ int GenCoeff(int n, int k, int glq_pt, int l, double z, double mass,
              std::vector<double> &spl, std::vector<double> &splp,
              std::string outFile);
 
-} // namespace tise
+} // namespace h1e
 
-#endif // TISE_H_
+#endif // H1E_H_

@@ -1,4 +1,4 @@
-#include "pes2e.hpp"
+#include "pes.hpp"
 #include <cstdlib>
 #include <iostream>
 #include <unistd.h>
@@ -27,15 +27,15 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  pes2e::readConfig(opt_file, pot, L_max, l_max, state_sz);
+  pes::readConfig(opt_file, pot, L_max, l_max, state_sz);
 
   file_prefix = "dat/" + pot;
 
   std::vector<std::complex<double>> ct;
 
-  pes2e::readCt(in_file, ct);
+  pes::readCt(in_file, ct);
 
-  pes2e::genPES2eb(file_prefix, L_max, state_sz, ct);
+  pes::genPES2eb(file_prefix, L_max, state_sz, ct);
 
   return 0;
 }
