@@ -2,7 +2,7 @@ ifndef CPPC
 CPPC = g++
 endif
 
-EXEC = ../../bin/pes_diag
+EXEC = ../../bin/pes
 
 IDIR = include
 SH_IDIR = ../include
@@ -10,7 +10,7 @@ ODIR = obj
 
 VPATH := ../
 
-SRC =pes2e_main.cpp pes2e.cpp
+SRC =pes_main.cpp pes.cpp
 SRC_SH=cfg_in.cpp
 
 ifndef BLAS_LIB

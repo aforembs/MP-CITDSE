@@ -18,7 +18,7 @@ ifndef BLAS_INC
 BLAS_INC = /opt/OpenBLAS/include
 endif
 
-CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -I$(IDIR) -I$(AR_DIR) -I$(SH_IDIR) -I$(BLAS_INC) -fopenmp
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -fopenmp
 LDFLAGS = -llapack -lyaml-cpp -lhdf5 -lhdf5_cpp -fopenmp $(BLAS_LIB)
 
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
