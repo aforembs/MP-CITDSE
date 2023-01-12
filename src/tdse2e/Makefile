@@ -2,7 +2,7 @@ ifndef CPPC
 CPPC = g++
 endif
 
-EXEC = ../../bin/tdse2e
+EXEC = ../../bin/td_diag
 
 IDIR = include
 SH_IDIR = ../include

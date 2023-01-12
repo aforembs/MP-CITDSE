@@ -27,19 +27,22 @@ set(SHARED_SOURCES2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/fastgl.cpp
 )
 
-set(BLA_VENDOR OpenBLAS)
-set(BLA_INC /opt/OpenBLAS/include)
+if(NOT DEFINED BLA_VENDOR)
+    set(BLA_VENDOR OpenBLAS)
+endif()
+
+if(${BLA_VENDOR} MATCHES OpenBLAS) 
+    set(BLA_INC /opt/OpenBLAS/include)
+endif()
 
 add_subdirectory(3rd_party)
 
 add_subdirectory(src/h1e)
 add_subdirectory(src/w1e)
-add_subdirectory(src/sort2eEn)
 add_subdirectory(src/dmx1e)
-add_subdirectory(src/gr2e)
-add_subdirectory(src/r12)
+add_subdirectory(src/gen2eidx)
 add_subdirectory(src/dmx2e)
+add_subdirectory(src/r12)
+add_subdirectory(src/cibasis)
 add_subdirectory(src/tdse2e)
-add_subdirectory(src/tdse_diag)
 add_subdirectory(src/pes)
-add_subdirectory(src/pes2e)

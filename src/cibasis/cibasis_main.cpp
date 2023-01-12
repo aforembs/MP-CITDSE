@@ -1,24 +1,20 @@
-#include "gr2e.hpp"
-#include "gr_read.hpp"
+#include "cibasis.hpp"
 #include <cstdlib>
 #include <fenv.h>
 #include <iostream>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
-  // feenableexcept(FE_INVALID | FE_OVERFLOW);
-
   std::string opt_file;
-  char gauge;
-  int L0_sz;
-  double dt;
   std::string pot;
   std::string file_prefix;
+  int L_max;
+  char gauge;
 
   for (;;) {
     switch (getopt(argc, argv, "hf:")) {
     case 'h':
-      std::cout << "Program for calculating the ground state of the system\n"
+      std::cout << "Program for forming the CI correlated 2e^- basis\n"
                 << "-f <path> yaml input file with the input settings\n";
       return -1;
     case 'f':
@@ -28,15 +24,18 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  grrd::readConfig(opt_file, pot, gauge, L0_sz, dt);
-
+  cib::readConfig(opt_file, pot, gauge, L_max);
   file_prefix = "dat/" + pot;
 
-  std::vector<double> ens, block;
+  stvupt vecs;
+  for (auto i = 0; i <= L_max; ++i) {
+    vecs.push_back(
+        std::make_unique<std::vector<double>>(std::vector<double>()));
+  }
 
-  grrd::readStructure(file_prefix, L0_sz, ens, block);
+  cib::formCIh0(file_prefix, L_max, vecs);
 
-  gr2e::prop(file_prefix, L0_sz, 0.0, 0.01, block);
+  cib::formCIDipoles(file_prefix, gauge, L_max, vecs);
 
   return 0;
 }

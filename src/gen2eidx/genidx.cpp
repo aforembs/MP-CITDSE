@@ -1,6 +1,6 @@
-#include "srt2e.hpp"
+#include "genidx.hpp"
 
-int srt2e::readConfig(std::string file, std::string &pot, int &L_max) {
+int genidx::readConfig(std::string file, std::string &pot, int &L_max) {
   YAML::Node settings = YAML::LoadFile(file);
 
   pot = settings["Global_Settings"]["potential"].as<std::string>();
@@ -13,7 +13,7 @@ int srt2e::readConfig(std::string file, std::string &pot, int &L_max) {
   return 0;
 }
 
-int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
+int genidx::sortEn(std::string pot, int L_max, std::string dir) {
   int l1 = 0, last_l1 = 0;
   int l2 = 0, last_l2 = 0;
   std::string filename;
@@ -21,9 +21,8 @@ int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
   std::unique_ptr<H5::DataSet> e1 = nullptr, ei = nullptr;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::H5File> outfile = nullptr;
-  std::vector<double> en12, en_srtd;
-  std::vector<idx4> idx_data;
-  std::vector<en_data> L_dat;
+  std::vector<double> en12, en;
+  std::vector<idx4> idx;
 
   int ncf, sym, t_sz;
   std::vector<cfg::line> cfgs;
@@ -54,19 +53,8 @@ int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
     dimms[0] = max_Nsz;
     memspace_l.setExtentSimple(1, dimms, NULL);
 
-    // Sort the energies in parallel using C++ 17 built in parallel sort
-    std::sort(
-        std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-        [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
-
-    std::sort(std::execution::par_unseq, cfgs.begin(), cfgs.end(),
-              [](cfg::line const &a, cfg::line const &b) {
-                return (a.l2 < b.l2) && (a.l1 == b.l1);
-              });
-
-    L_dat.reserve(t_sz);
-    en_srtd.reserve(t_sz);
-    idx_data.reserve(t_sz);
+    en.reserve(t_sz);
+    idx.reserve(t_sz);
     write_sz[0] = t_sz;
     idx_sz[0] = t_sz * 4;
 
@@ -117,19 +105,12 @@ int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
       for (int n2 = line.n2min; n2 < line.n2max; ++n2) {
         ent = en1 + en12[max_Nsz + n2];
         en_d = {ent, line.n1, l1, n2, l2};
-        L_dat.emplace_back(en_d);
+        idx_elm = {line.n1, l1, n2, l2};
+        en.emplace_back(ent);
+        idx.emplace_back(idx_elm);
       }
       last_l1 = l1;
       last_l2 = l2;
-    }
-
-    std::sort(std::execution::par_unseq, L_dat.begin(), L_dat.end(),
-              [](en_data const &a, en_data const &b) { return a.en < b.en; });
-
-    for (auto i : L_dat) {
-      en_srtd.emplace_back(i.en);
-      idx_elm = {i.n1, i.l1, i.n2, i.l2};
-      idx_data.emplace_back(idx_elm);
     }
 
     // write the energies to a file
@@ -138,18 +119,17 @@ int srt2e::sortEn(std::string pot, int L_max, std::string dir) {
         std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
     ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
         "e_2e", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz))));
-    ei->write(&en_srtd[0], H5::PredType::NATIVE_DOUBLE);
+    ei->write(&en[0], H5::PredType::NATIVE_DOUBLE);
 
-    en_srtd.clear();
+    en.clear();
 
     // write indices to file
     ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
         "idx", H5::PredType::NATIVE_INT32, H5::DataSpace(1, idx_sz))));
-    ei->write(&idx_data[0], H5::PredType::NATIVE_INT32);
+    ei->write(&idx[0], H5::PredType::NATIVE_INT32);
     outfile->close();
 
-    idx_data.clear();
-    L_dat.clear();
+    idx.clear();
     cfgs.clear();
   }
 

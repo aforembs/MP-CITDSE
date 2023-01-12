@@ -6,11 +6,15 @@
 #include <cassert>
 #include <complex>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <memory>
 #include <numeric>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+extern "C" {
+#include <cblas.h>
+}
 
 using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
 
@@ -22,13 +26,10 @@ int readConfig(std::string file, std::string &pot, char &gauge, int &l_max,
 
 int readStructure(std::string pot, int L_max, int &ct_sz,
                   std::vector<int> &state_sz, std::vector<int> &offs,
-                  stvupt &blocks);
+                  stvupt &ens);
 
 int readDipoles(std::string pot, char gauge, int L_max,
                 std::vector<int> &state_sz, stvupt &dipoles);
-
-int readGrCt(std::string pot, std::vector<int> &state_sz,
-             std::vector<std::complex<double>> &ct);
 } // namespace tdrd
 
 #endif // TD_READ_HPP_

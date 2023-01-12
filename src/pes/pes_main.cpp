@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 
   pes::readCt(in_file, ct);
 
-  pes::genPES2eb(file_prefix, L_max, state_sz, ct);
+  pes::genPES(file_prefix, L_max, state_sz, ct);
 
   return 0;
 }

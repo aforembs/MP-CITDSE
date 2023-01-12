@@ -2,7 +2,7 @@ ifndef CPPC
 CPPC = g++
 endif
 
-EXEC = ../../bin/td_diag
+EXEC = ../../bin/cibasis
 
 IDIR = include
 SH_IDIR = ../include
@@ -10,7 +10,7 @@ ODIR = obj
 
 VPATH := ../
 
-SRC =td2e_main.cpp td_read.cpp td2e.cpp pulse.cpp
+SRC =cibasis_main.cpp cibasis.cpp
 SRC_SH=
 
 ifndef BLAS_LIB
@@ -21,8 +21,8 @@ ifndef BLAS_INC
 BLAS_INC = /opt/OpenBLAS/include
 endif
 
-CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -g
-LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -fopenmp $(BLAS_LIB)
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC)
+LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -llapack $(BLAS_LIB) -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 

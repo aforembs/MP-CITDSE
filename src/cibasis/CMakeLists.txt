@@ -1,13 +1,12 @@
-project(gr2e)
+project(cibasis)
 
 # add the executable
 add_executable(${PROJECT_NAME} ${SH1_HEADER_FILES})
 
 target_sources(${PROJECT_NAME}
     PRIVATE 
-        ${CMAKE_CURRENT_SOURCE_DIR}/gr2e_main.cpp 
-        ${CMAKE_CURRENT_SOURCE_DIR}/gr2e.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/gr_read.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/cibasis_main.cpp 
+        ${CMAKE_CURRENT_SOURCE_DIR}/cibasis.cpp
 )
 
 target_include_directories(${PROJECT_NAME} 
@@ -23,12 +22,10 @@ find_package(HDF5 REQUIRED)
 
 find_package(OpenMP REQUIRED)
 
-find_package(TBB REQUIRED)
-
 find_package(BLAS REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE 
-        yaml-cpp hdf5 hdf5_cpp lapack tbb ${BLAS_LIBRARIES}
+        yaml-cpp hdf5 hdf5_cpp lapack ${BLAS_LIBRARIES}
 )
 target_link_options(${PROJECT_NAME} PRIVATE -fopenmp)

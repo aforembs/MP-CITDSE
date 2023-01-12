@@ -50,91 +50,39 @@ int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
   return 0;
 }
 
-template <class Container, class ElementType = typename Container::value_type>
-constexpr auto element_of(const Container &, ElementType v = 0) {
-  return v;
-}
-
 int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
                         std::vector<int> &state_sz, std::vector<int> &offs,
-                        stvupt &blocks) {
+                        stvupt &eig) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
-  std::unique_ptr<H5::DataSet> edata = nullptr, v12data = nullptr;
-  std::unique_ptr<H5::DataSet> diag_set = nullptr;
-  std::unique_ptr<H5::DataSet> L_set = nullptr;
-  H5::DataSpace memspace, espace, vspace, lspace;
-  std::vector<double> ens, v12;
-  std::vector<int> ifail;
-  std::vector<idx4> L_idx;
-  int L_sz, L_full_sz, v_sz;
+  std::unique_ptr<H5::DataSet> edata = nullptr;
+  H5::DataSpace e_space, memspace;
+  int L_sz;
+  hsize_t offset[] = {0}, stride[] = {1}, block[] = {1};
+  hsize_t count[1], dimms[1];
 
-  hsize_t offset1[] = {0}, stride1[] = {1}, block1[] = {1};
-  hsize_t count1[1], dimms1[1];
-
-  ct_sz = std::accumulate(state_sz.begin(), state_sz.end(),
-                          element_of(state_sz, 0));
+  ct_sz = std::reduce(state_sz.begin(), state_sz.end(), 0);
   auto sum = 0;
   offs.push_back(sum);
 
   for (auto L = 0; L <= L_max; ++L) {
     L_sz = state_sz[L];
-    count1[0] = L_sz;
-    dimms1[0] = L_sz;
     sum += L_sz;
     offs.push_back(sum);
+    count[0] = L_sz;
+    dimms[0] = L_sz;
+    memspace.setExtentSimple(1, dimms, NULL);
 
-    ens.reserve(L_sz);
-    blocks[L].get()->resize(L_sz * L_sz);
-    L_idx.reserve(L_sz);
-    memspace.setExtentSimple(1, dimms1, NULL);
+    eig[L]->resize(L_sz);
 
-    // read sum energies
-    filename = pot + "2_" + std::to_string(L) + "En.h5";
+    filename = pot + "CI" + std::to_string(L) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
     edata =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
-    L_full_sz = edata->getSpace().getSimpleExtentNpoints();
-    espace = edata->getSpace();
-    espace.selectHyperslab(H5S_SELECT_SET, count1, offset1, stride1, block1);
-    edata->read(&ens[0], H5::PredType::NATIVE_DOUBLE, memspace, espace);
-
-    count1[0] = L_sz * 4;
-    dimms1[0] = L_sz * 4;
-    memspace.setExtentSimple(1, dimms1, NULL);
-
-    L_set =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
-    lspace = L_set->getSpace();
-    lspace.selectHyperslab(H5S_SELECT_SET, count1, offset1, stride1, block1);
-    L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32, memspace, lspace);
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En_CI")));
+    e_space = edata->getSpace();
+    e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+    edata->read(eig[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace, e_space);
     file->close();
-
-    v_sz = L_full_sz * (L_full_sz + 1) / 2;
-    v12.reserve(v_sz);
-
-    // read V_12 triangular format
-    filename = pot + "V12_" + std::to_string(L) + ".h5";
-    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    v12data =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("V_12")));
-    v12data->read(&v12[0], H5::PredType::NATIVE_DOUBLE);
-    file->close();
-
-    // #pragma omp parallel
-    {
-      for (auto i = 0; i < L_sz; ++i) {
-        v12[(2 * L_full_sz - i - 1) * i / 2 + i] += ens[i];
-        blocks[L].get()->at(i * L_sz + i) =
-            v12[(2 * L_full_sz - i - 1) * i / 2 + i];
-        // #pragma omp for
-        for (auto j = i + 1; j < L_sz; ++j) {
-          blocks[L].get()->at(i * L_sz + j) =
-              v12[(2 * L_full_sz - i - 1) * i / 2 + j];
-        }
-      }
-    }
-    v12.clear();
   }
 
   return 0;
@@ -142,10 +90,13 @@ int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
 
 int tdrd::readDipoles(std::string pot, char gauge, int L_max,
                       std::vector<int> &state_sz, stvupt &dipoles) {
-  H5::DataSpace memspace;
+  std::string filename;
+  std::unique_ptr<H5::H5File> file = nullptr;
+  std::unique_ptr<H5::DataSet> dl = nullptr;
+  H5::DataSpace dl_space, memspace;
+  int L_sz, L1_sz;
   hsize_t offset[] = {0, 0}, stride[] = {1, 1}, block[] = {1, 1};
   hsize_t count[2], dimms[2];
-  int L_sz, L1_sz;
 
   for (auto L = 0; L < L_max; ++L) {
     L_sz = state_sz[L];
@@ -154,36 +105,20 @@ int tdrd::readDipoles(std::string pot, char gauge, int L_max,
     count[1] = L_sz;
     dimms[0] = L1_sz;
     dimms[1] = L_sz;
-
-    dipoles[L].get()->resize(L_sz * L1_sz);
     memspace.setExtentSimple(2, dimms, NULL);
-    auto filename =
-        pot + "2_" + std::to_string(L) + std::to_string(L + 1) + gauge + ".h5";
-    auto file =
-        std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    auto dl =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("d_if")));
-    auto dl_space = dl->getSpace();
+
+    dipoles[L]->resize(L_sz * L1_sz);
+
+    filename =
+        pot + "CI_" + std::to_string(L) + std::to_string(L + 1) + gauge + ".h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    dl =
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("CI_dip")));
+    dl_space = dl->getSpace();
     dl_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    dl->read(dipoles[L].get()->data(), H5::PredType::NATIVE_DOUBLE, memspace,
+    dl->read(dipoles[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace,
              dl_space);
     file->close();
-  }
-
-  return 0;
-}
-
-int tdrd::readGrCt(std::string pot, std::vector<int> &state_sz,
-                   std::vector<std::complex<double>> &ct) {
-  std::ifstream fl(pot + "_c0.dat");
-  std::string temp;
-  for (auto i = 0; i < state_sz[0]; ++i) {
-    std::getline(fl, temp);
-    std::istringstream iss(temp);
-    int idx;
-    double real;
-    iss >> idx >> real;
-    ct[i] = std::complex<double>(real, 0.0);
   }
 
   return 0;

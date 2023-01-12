@@ -1,4 +1,4 @@
-#include "srt2e.hpp"
+#include "genidx.hpp"
 #include <cstdlib>
 #include <filesystem>
 #include <unistd.h>
@@ -25,11 +25,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  srt2e::readConfig(opt_file, pot, L_max);
+  genidx::readConfig(opt_file, pot, L_max);
 
   out_prefix = "dat/" + pot;
 
-  srt2e::sortEn(out_prefix, L_max, inp_dir);
+  genidx::sortEn(out_prefix, L_max, inp_dir);
 
   return 0;
 }

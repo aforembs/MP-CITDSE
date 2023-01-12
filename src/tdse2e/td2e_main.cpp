@@ -6,8 +6,6 @@
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
-  // feenableexcept(FE_INVALID | FE_OVERFLOW);
-
   std::string opt_file;
   std::string out_dir;
   int L_max, Lanc_iter, num_eval, cycles;
@@ -42,41 +40,38 @@ int main(int argc, char *argv[]) {
 
   int ct_sz = 0;
   std::vector<int> offs;
-  stvupt blocks;
+  stvupt eig;
   stvupt dipoles;
 
-  blocks.push_back(
-      std::make_unique<std::vector<double>>(std::vector<double>()));
+  eig.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
   for (auto i = 0; i < L_max; ++i) {
-    blocks.push_back(
-        std::make_unique<std::vector<double>>(std::vector<double>()));
+    eig.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
     dipoles.push_back(
         std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
-  tdrd::readStructure(i_file_prefix, L_max, ct_sz, state_sz, offs, blocks);
+  tdrd::readStructure(i_file_prefix, L_max, ct_sz, state_sz, offs, eig);
 
   tdrd::readDipoles(i_file_prefix, gauge, L_max, state_sz, dipoles);
 
   std::vector<std::complex<double>> ct(ct_sz);
 
-  tdrd::readGrCt(i_file_prefix, state_sz, ct);
+  ct[0] = std::complex<double>(1.0, 0.0);
 
   double t = 0.0;
   double tau = pulse::Sine_T(w * conv::En_ev_au_, cycles);
   int steps = tau / dt;
-  steps = steps + steps / 2;
 
   switch (gauge) {
   case 'v':
     td2e::propV(o_file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
-                pulse::SineA_A, w, Io, cepd, cycles, ct_sz, offs, state_sz,
-                blocks, dipoles, ct);
+                pulse::SineA_A, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
+                dipoles, ct);
     break;
   case 'l':
     td2e::propL(o_file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
-                pulse::SineA_E, w, Io, cepd, cycles, ct_sz, offs, state_sz,
-                blocks, dipoles, ct);
+                pulse::SineA_E, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
+                dipoles, ct);
     break;
   }
 

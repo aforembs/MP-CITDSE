@@ -2,7 +2,7 @@ ifndef CPPC
 CPPC = g++
 endif
 
-EXEC = ../../bin/sort2eEn
+EXEC = ../../bin/gen2eidx
 
 IDIR = include
 SH_IDIR = ../include
@@ -10,11 +10,11 @@ ODIR = obj
 
 VPATH := ../
 
-SRC = srt_main.cpp srt2e.cpp
+SRC = genidx_main.cpp genidx.cpp
 SRC_SH = cfg_in.cpp
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -g
-LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -fopenmp -L$(VPATH) -g
+LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -fopenmp -L$(VPATH) -g
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
