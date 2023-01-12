@@ -73,7 +73,7 @@ int pes::genPES(std::string pot, int L_max, std::vector<int> &state_sz,
     std::ofstream outfile(pot + "_pes" + std::to_string(L) + ".dat",
                           std::ios::out);
     for (auto i = 0; i < L_sz - 1; ++i) {
-      outfile << std::setprecision(16) << eig[i] << " "
+      outfile << std::setprecision(16) << eig[i] + 2.0 << " "
               << std::norm(
                      ct[off + i]) // * 2.0 / std::abs(eig[i + 1] - eig[i - 1])
               << "\n";
@@ -87,7 +87,7 @@ int pes::genPES(std::string pot, int L_max, std::vector<int> &state_sz,
 
     if (L == 0) {
       std::cout << std::setprecision(16)
-                << " ground state pop: " << std::norm(ct[0]) << "\n";
+                << "\nground state pop: " << std::norm(ct[0]) << "\n";
     }
     outfile.close();
     off += L_sz;
@@ -100,8 +100,8 @@ int pes::genPES(std::string pot, int L_max, std::vector<int> &state_sz,
   }
 
   // Print the ground population and the norm of c(t)
-  std::cout << std::setprecision(16) << " norm: " << nrm
-            << " yield: " << ion_yield << " excited population: " << exitation
+  std::cout << std::setprecision(16) << "norm: " << nrm
+            << "\nyield: " << ion_yield << "\nexcited population: " << exitation
             << "\n";
 
   return 0;

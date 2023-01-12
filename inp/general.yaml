@@ -1,7 +1,7 @@
 # Settings consistent among all programs
 Global_Settings:
   potential: "he"           # potential name
-  Outer_quadrature_size: 300 # size of outer quadrature
+  Outer_quadrature_size: 600 # size of outer quadrature
   Quadrature_type: "gauss-legendre" # gauss-legendre or user-defined
   quad_file: "cheb.dat" # only read if above is "user-defined"
   Inner_Layout: "default" # default or user-defined
