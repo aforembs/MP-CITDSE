@@ -1,9 +1,8 @@
 #include "td_read.hpp"
 
 int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
-                     int &L_max, std::vector<int> &state_sz, int &Lanc_iter,
-                     int &num_eval, double &timestep, double &w, double &Io,
-                     double &cepd, int &cycles) {
+                     int &L_max, std::vector<int> &state_sz, double &timestep,
+                     double &w, double &Io, double &cepd, int &cycles) {
 
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
@@ -26,12 +25,6 @@ int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
     std::cout << " " << state_sz[i];
   }
   std::cout << std::endl;
-  Lanc_iter = settings["Propagator_Settings"]["Lanczos_iterations"].as<int>();
-  std::cout << "  No. of Lanczos Iterations:            " << Lanc_iter
-            << std::endl;
-  num_eval = settings["Propagator_Settings"]["min_eigenvals"].as<int>();
-  std::cout << "  No. of Lowest Eigenvalues:            " << num_eval
-            << std::endl;
   timestep = settings["Propagator_Settings"]["dt"].as<double>();
   std::cout << "  timestep dt:                          " << timestep
             << std::endl;

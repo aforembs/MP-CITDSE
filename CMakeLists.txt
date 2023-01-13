@@ -10,11 +10,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/../bin)
 
-add_compile_options(
-    -Wall -Wextra -Wshadow -Wnon-virtual-dtor 
-    -pedantic -O3 -march=native -fopenmp
-)
-
 set(SH1_HEADER_FILES 
     ${CMAKE_CURRENT_SOURCE_DIR}/src/include/dmx_typ.hpp
 )
@@ -37,13 +32,19 @@ endif()
 
 add_subdirectory(3rd_party)
 
+add_compile_options(
+    -Wall -Wextra -Wshadow -Wnon-virtual-dtor 
+    -pedantic -O3 -march=native -fopenmp
+)
+
 add_subdirectory(src/h1e)
 add_subdirectory(src/w1e)
 add_subdirectory(src/dmx1e)
 add_subdirectory(src/tdse1e)
+add_subdirectory(src/pes-td1)
 add_subdirectory(src/gen2eidx)
 add_subdirectory(src/dmx2e)
 add_subdirectory(src/r12)
 add_subdirectory(src/cibasis)
 add_subdirectory(src/tdse2e)
-add_subdirectory(src/pes)
+add_subdirectory(src/pes-td2)

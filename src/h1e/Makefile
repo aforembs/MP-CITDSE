@@ -22,7 +22,7 @@ BLAS_INC = /opt/OpenBLAS/include
 endif
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -g
-LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -llapack -fopenmp -lgsl $(BLAS_LIB)
+LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -fopenmp -lgsl $(BLAS_LIB)
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 

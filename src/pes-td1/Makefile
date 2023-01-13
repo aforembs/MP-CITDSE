@@ -1,5 +1,5 @@
 CPPC = g++
-EXEC = ../../bin/pes
+EXEC = ../../bin/pes-td1
 
 IDIR = include
 SH_IDIR = ../include
@@ -7,7 +7,7 @@ ODIR = obj
 
 VPATH := ../
 
-SRC = pes_main.cpp pes.cpp
+SRC = pes1e_main.cpp pes1e.cpp
 SRC_SH = 
 
 CPPFLAGS = -Wall -pedantic -O3 -march=native -std=c++17 -I$(IDIR) -I$(SH_IDIR)

@@ -44,7 +44,7 @@ int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
 }
 
 int pes::genPES(std::string pot, int L_max, std::vector<int> &state_sz,
-                std::vector<std::complex<double>> &ct) {
+                std::vector<std::complex<double>> &ct, std::string output) {
   std::vector<int> offs;
   auto sum = 0;
   offs.push_back(sum);
@@ -70,7 +70,7 @@ int pes::genPES(std::string pot, int L_max, std::vector<int> &state_sz,
     edata->read(eig.data(), H5::PredType::NATIVE_DOUBLE);
     file->close();
 
-    std::ofstream outfile(pot + "_pes" + std::to_string(L) + ".dat",
+    std::ofstream outfile(output + "_pes" + std::to_string(L) + ".dat",
                           std::ios::out);
     for (auto i = 0; i < L_sz - 1; ++i) {
       outfile << std::setprecision(16) << eig[i] + 2.0 << " "

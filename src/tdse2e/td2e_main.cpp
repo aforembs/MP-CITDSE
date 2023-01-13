@@ -8,7 +8,7 @@
 int main(int argc, char *argv[]) {
   std::string opt_file;
   std::string out_dir;
-  int L_max, Lanc_iter, num_eval, cycles;
+  int L_max, cycles;
   std::string pot;
   std::string i_file_prefix;
   std::string o_file_prefix;
@@ -32,8 +32,8 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  tdrd::readConfig(opt_file, pot, gauge, L_max, state_sz, Lanc_iter, num_eval,
-                   dt, w, Io, cepd, cycles);
+  tdrd::readConfig(opt_file, pot, gauge, L_max, state_sz, dt, w, Io, cepd,
+                   cycles);
 
   i_file_prefix = "dat/" + pot;
   o_file_prefix = out_dir + "/" + pot;

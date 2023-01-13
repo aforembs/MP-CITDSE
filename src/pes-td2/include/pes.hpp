@@ -22,7 +22,7 @@ int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
 int readCt(std::string file, std::vector<std::complex<double>> &ct);
 
 int genPES(std::string pot, int L_max, std::vector<int> &state_sz,
-           std::vector<std::complex<double>> &ct);
+           std::vector<std::complex<double>> &ct, std::string output);
 } // namespace pes
 
 #endif // PES2E_HPP_

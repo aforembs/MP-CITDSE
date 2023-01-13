@@ -1,6 +1,6 @@
-#include "pes.h"
+#include "pes1e.hpp"
 
-int pes::ReadConfig(std::string file, std::string &pot, int &l_max,
+int pes::readConfig(std::string file, std::string &pot, int &l_max,
                     std::vector<int> &state_sz) {
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
@@ -27,7 +27,7 @@ int pes::ReadConfig(std::string file, std::string &pot, int &l_max,
   return 0;
 }
 
-int pes::ReadCt(std::string file, std::vector<std::complex<double>> &ct) {
+int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
   std::ifstream fl(file);
   std::string temp;
   while (std::getline(fl, temp)) {
@@ -41,8 +41,8 @@ int pes::ReadCt(std::string file, std::vector<std::complex<double>> &ct) {
   return 0;
 }
 
-int pes::GenPES(std::string pot, int l_max, std::vector<int> &state_sz,
-                std::vector<std::complex<double>> &ct) {
+int pes::genPES(std::string pot, int l_max, std::vector<int> &state_sz,
+                std::vector<std::complex<double>> &ct, std::string output) {
   int n;
 
   // Read the energies of l=0
@@ -95,7 +95,7 @@ int pes::GenPES(std::string pot, int l_max, std::vector<int> &state_sz,
   }
 
   // Write PES for energies > 0
-  std::fstream outfile(pot + "_pes.dat", std::ios::out);
+  std::fstream outfile(output + "_pes.dat", std::ios::out);
   for (auto i = 0; i < static_cast<int>(PES_En.size()) - 1; ++i) {
     if (PES_En[i] > 0.0) {
       outfile << PES_En[i] << " " << PES[i] << "\n";
