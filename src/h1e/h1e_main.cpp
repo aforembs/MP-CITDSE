@@ -32,20 +32,20 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  h1e::ReadConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z,
+  h1e::readConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z,
                   mass);
 
   if (grid.compare("linear") == 0) {
-    bsp::GenKnots(n, k, r_max, fkn, 'l', kkn);
+    bsp::genKnots(n, k, r_max, fkn, 'l', kkn);
   } else if (grid.compare("exponential") == 0) {
-    bsp::GenKnots(n, k, r_max, fkn, 'e', kkn);
+    bsp::genKnots(n, k, r_max, fkn, 'e', kkn);
   } else if (grid.compare("sine") == 0) {
-    bsp::GenKnots(n, k, r_max, fkn, 's', kkn);
+    bsp::genKnots(n, k, r_max, fkn, 's', kkn);
   } else if (grid.compare("user-defined") == 0) {
     if (fs::path(k_file).extension().string().compare(".txt") == 0) {
-      bsp::GenKnots(n, k, r_max, k_file, 't', kkn);
+      bsp::genKnots(n, k, r_max, k_file, 't', kkn);
     } else if (fs::path(k_file).extension().string().compare(".bin") == 0) {
-      bsp::GenKnots(n, k, r_max, k_file, 'b', kkn);
+      bsp::genKnots(n, k, r_max, k_file, 'b', kkn);
     } else {
       std::cout << "Invalid knot file extension, use .txt or .bin\n";
       return -1;
@@ -69,9 +69,9 @@ int main(int argc, char *argv[]) {
   // generate B_i(r) and B'_i(r)
   auto spl = std::vector<double>();
   auto splp = std::vector<double>();
-  bsp::Splines(n, k, glq_pt, gl_x, kkn, spl, splp);
+  bsp::splines(n, k, glq_pt, gl_x, kkn, spl, splp);
 
-  h1e::GenCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp,
+  h1e::genCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp,
                 "dat/");
 
   return 0;

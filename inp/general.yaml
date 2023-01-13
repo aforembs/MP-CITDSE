@@ -25,11 +25,9 @@ R12_Settings:
 # Settings for the TDSE solver
 Propagator_Settings:
   states_in_l: [3030,2799,2808,2808] #[389,389,389,389,389]
-  Lanczos_iterations: 200 # number of Lanczos basis vectors
-  min_eigenvals: 180 # number of lowest eigenvalues used
   dt: 0.1 # time step size
 Field_Parameters:
   w: 15 # photon energy
-  Io: 1.0e15 # peak intensity
+  Io: 1.0e13 # peak intensity
   cepd: 0.0  # phase delay
   cycles: 12 # number of field cycles

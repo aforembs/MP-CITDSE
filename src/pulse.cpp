@@ -1,13 +1,5 @@
 #include "pulse.hpp"
 
-// double pulse::Gauss_A() {
-
-// }
-
-// double pulse::Gauss_E() {
-
-// }
-
 void pulse::ToAU(double IoW, double weV, double &IoAU, double &wAU) {
   IoAU = IoW * conv::I_W_cm2_au_;
   wAU = weV * conv::En_ev_au_;

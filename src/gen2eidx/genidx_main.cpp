@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
 
   out_prefix = "dat/" + pot;
 
-  genidx::sortEn(out_prefix, L_max, inp_dir);
+  genidx::saveIdx(out_prefix, L_max, inp_dir);
 
   return 0;
 }

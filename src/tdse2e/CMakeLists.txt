@@ -1,14 +1,13 @@
 project(tdse2e)
 
 # add the executable
-add_executable(${PROJECT_NAME} ${SH1_HEADER_FILES})
+add_executable(${PROJECT_NAME} ${SH1_HEADER_FILES} ${PULSE_SRC})
 
 target_sources(${PROJECT_NAME}
     PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}/td2e_main.cpp 
         ${CMAKE_CURRENT_SOURCE_DIR}/td2e.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/td_read.cpp
-        ${CMAKE_CURRENT_SOURCE_DIR}/pulse.cpp
 )
 
 target_include_directories(${PROJECT_NAME} 

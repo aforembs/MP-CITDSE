@@ -28,11 +28,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  dmx2e::ReadConfig(opt_file, pot, L_max, l_max, gauge);
+  dmx2e::readConfig(opt_file, pot, L_max, l_max, gauge);
 
   out_prefix = "dat/" + pot;
 
-  dmx2e::GenDipole(out_prefix, L_max, l_max, gauge, inp_dir);
+  dmx2e::genDipole(out_prefix, L_max, l_max, gauge, inp_dir);
 
   return 0;
 }

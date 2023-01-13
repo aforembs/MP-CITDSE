@@ -1,7 +1,7 @@
 #include "h1e.hpp"
 
 // for now same as Lampros'
-int WriteHdf5(int n, int k, int li, double z, double mass, std::string pot,
+int writeHdf5(int n, int k, int li, double z, double mass, std::string pot,
               std::vector<double> &kkn, std::vector<double> &Enl,
               std::vector<double> &Cnl, std::string outFile) {
   auto nm2 = n - 2;
@@ -63,7 +63,7 @@ int WriteHdf5(int n, int k, int li, double z, double mass, std::string pot,
   return 0;
 }
 
-int h1e::ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
+int h1e::readConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
                     std::string &grid, std::string &k_file, std::string &pot,
                     int &l_max, int &z, double &mass) {
 
@@ -101,7 +101,7 @@ int h1e::ReadConfig(std::string file, int &n, int &k, int &glq_pt, int &r_max,
   return 0;
 }
 
-int h1e::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
+int h1e::genCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
                   std::string pot, std::vector<double> &gl_w,
                   std::vector<double> &gl_x, std::vector<double> &kkn,
                   std::vector<double> &spl, std::vector<double> &splp,
@@ -119,16 +119,16 @@ int h1e::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
   auto v_1_r2 = std::unique_ptr<ModelV>(new V_c_r2(1.0));
 
   // int B_iB_j dr
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_BB, spl, kkn, v_1);
+  bsp::splineInt(nm2, k, glq_pt, gl_w, gl_x, ov_BB, spl, kkn, v_1);
   // int B_i d/dr^2 B_j dr
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_dBdB, splp, kkn, v_1);
+  bsp::splineInt(nm2, k, glq_pt, gl_w, gl_x, ov_dBdB, splp, kkn, v_1);
   // int B_iB_j/r^2 dr
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_1_r2, spl, kkn, v_1_r2);
+  bsp::splineInt(nm2, k, glq_pt, gl_w, gl_x, ov_1_r2, spl, kkn, v_1_r2);
 
   auto v = std::unique_ptr<ModelV>(new V_1_r(z));
 
   // int B_i V(r) B_j dr
-  bsp::SplineInt(nm2, k, glq_pt, gl_w, gl_x, ov_V, spl, kkn, v);
+  bsp::splineInt(nm2, k, glq_pt, gl_w, gl_x, ov_V, spl, kkn, v);
 
   Enl.reserve(lm1 * nm2);
   Cnl_tmp.reserve(lm1 * nm22);
@@ -194,7 +194,7 @@ int h1e::GenCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
     }
 
     // Write hdf5 file
-    WriteHdf5(n, k, l, z, mass, pot, kkn, Enl, Cnl, outFile);
+    writeHdf5(n, k, l, z, mass, pot, kkn, Enl, Cnl, outFile);
   }
 
   return 0;

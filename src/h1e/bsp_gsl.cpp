@@ -1,6 +1,6 @@
 #include "bsp_gsl.hpp"
 
-int bsp::GenKnots(int n, int k, double r_max, double fkn, char type,
+int bsp::genKnots(int n, int k, int R_max, double fkn, char type,
                   std::vector<double> &kkn) {
   double par = 0.0, lin = 0.0;
   static constexpr double PI = 3.141592653589793238463;
@@ -10,7 +10,7 @@ int bsp::GenKnots(int n, int k, double r_max, double fkn, char type,
   }
 
   if (type == 'l') {
-    par = r_max / (double)(n - k + 1);
+    par = R_max / (double)(n - k + 1);
 
     for (int i = k; i < n; ++i) {
       lin += par;
@@ -18,18 +18,18 @@ int bsp::GenKnots(int n, int k, double r_max, double fkn, char type,
     }
 
   } else if (type == 'e') {
-    par = log(r_max / fkn) / (double)(n - k + 1);
+    par = log(R_max / fkn) / (double)(n - k + 1);
 
     for (int i = k; i < n; ++i) {
       kkn.emplace_back(fkn * exp((double)(i - k) * par));
     }
 
   } else if (type == 's') {
-    par = -log((2. / PI) * asin(fkn / r_max)) / log((double)(n - k + 1));
+    par = -log((2. / PI) * asin(fkn / R_max)) / log((double)(n - k + 1));
 
     for (int i = k; i < n; ++i) {
       kkn.emplace_back(
-          r_max *
+          R_max *
           sin((PI / 2.) * pow((double)(i - k + 1) / (double)(n - k + 1), par)));
     }
 
@@ -38,12 +38,12 @@ int bsp::GenKnots(int n, int k, double r_max, double fkn, char type,
     return 1;
   }
   for (int i = n; i < n + k; ++i) {
-    kkn.emplace_back(r_max);
+    kkn.emplace_back(R_max);
   }
   return 0;
 }
 
-int bsp::GenKnots(int n, int k, double r_max, std::string file, char type,
+int bsp::genKnots(int n, int k, int R_max, std::string file, char type,
                   std::vector<double> &kkn) {
   std::string pt;
   int line_num = 0;
@@ -72,12 +72,12 @@ int bsp::GenKnots(int n, int k, double r_max, std::string file, char type,
   }
 
   for (int i = n; i < n + k; ++i) {
-    kkn.emplace_back(r_max);
+    kkn.emplace_back(R_max);
   }
   return 0;
 }
 
-int bsp::WrKnotsH5(int n, int k, double r_max, double fkn, char type,
+int bsp::wrKnotsH5(int n, int k, int R_max, double fkn, char type,
                    std::string file, std::vector<double> &kkn) {
   std::string tp_string;
 
@@ -119,7 +119,7 @@ int bsp::WrKnotsH5(int n, int k, double r_max, double fkn, char type,
 
   N.write(H5::PredType::NATIVE_INT32, &n);
   K.write(H5::PredType::NATIVE_INT32, &k);
-  R.write(H5::PredType::NATIVE_DOUBLE, &r_max);
+  R.write(H5::PredType::NATIVE_INT32, &R_max);
   TP.write(str_ty, &tp_string);
   F.write(H5::PredType::NATIVE_DOUBLE, &fkn);
   Knots.write(&kkn[0], H5::PredType::NATIVE_DOUBLE);
@@ -127,15 +127,15 @@ int bsp::WrKnotsH5(int n, int k, double r_max, double fkn, char type,
   return 0;
 }
 
-int bsp::Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
-                 std::vector<double> &knots, std::vector<double> &splines,
+int bsp::splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
+                 std::vector<double> &kkn, std::vector<double> &splines,
                  std::vector<double> &splinesp) {
   int i1, B_sz = n * glq_pt * k;
   double dl, sl, x;
-  auto kn = gsl_vector_alloc(knots.size());
-  kn->size = knots.size();
+  auto kn = gsl_vector_alloc(kkn.size());
+  kn->size = kkn.size();
   kn->stride = 1;
-  kn->data = knots.data();
+  kn->data = kkn.data();
   kn->owner = 0;
 
   size_t nbreak = n + 2 - k;
@@ -154,8 +154,8 @@ int bsp::Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
   size_t pi = 0;
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
-    dl = knots[i1] - knots[i];
-    sl = knots[i1] + knots[i];
+    dl = kkn[i1] - kkn[i];
+    sl = kkn[i1] + kkn[i];
 
     for (int p = 0; p < glq_pt; ++p) {
       x = dl * 0.5 * gl_x[p] + sl * 0.5; // x-transformation
@@ -174,7 +174,7 @@ int bsp::Splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
   return 0;
 }
 
-int bsp::SplineInt(int n, int k, int glq_pt, std::vector<double> &gl_w,
+int bsp::splineInt(int n, int k, int glq_pt, std::vector<double> &gl_w,
                    std::vector<double> &gl_x, std::vector<double> &ov,
                    std::vector<double> &spl, std::vector<double> &kkn,
                    std::unique_ptr<ModelV> &Vptr) {

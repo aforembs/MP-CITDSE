@@ -1,4 +1,3 @@
-
 #include "dmx1e.hpp"
 #include <cstdlib>
 #include <iostream>
@@ -25,11 +24,11 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  dmx1e::ReadConfig(opt_file, pot, qsz, gauge, l_max);
+  dmx1e::readConfig(opt_file, pot, qsz, gauge, l_max);
 
   out_prefix = "dat/" + pot;
 
-  dmx1e::GenDipole(out_prefix, qsz, gauge, l_max);
+  dmx1e::genDipole(out_prefix, qsz, gauge, l_max);
 
   return 0;
 }

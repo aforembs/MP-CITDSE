@@ -20,9 +20,8 @@ using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
 
 namespace tdrd {
 int readConfig(std::string file, std::string &pot, char &gauge, int &l_max,
-               std::vector<int> &state_sz, int &Lanc_iter, int &num_eval,
-               double &timestep, double &w, double &Io, double &cepd,
-               int &cycles);
+               std::vector<int> &state_sz, double &timestep, double &w,
+               double &Io, double &cepd, int &cycles);
 
 int readStructure(std::string pot, int L_max, int &ct_sz,
                   std::vector<int> &state_sz, std::vector<int> &offs,

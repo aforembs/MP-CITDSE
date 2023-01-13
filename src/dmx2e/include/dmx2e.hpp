@@ -1,6 +1,13 @@
 #ifndef DMX2E_H_
 #define DMX2E_H_
 
+/**
+ * @file dmx2e.hpp
+ * @author Andrew Forembski (andrew.forembski2@mail.dcu.ie)
+ * @brief Functions used for calculating 2-electron dipole matrices
+ * @version 1.0
+ */
+
 #include "cfg_in.hpp"
 #include "dmx_typ.hpp"
 #include "wigxjpf.h"
@@ -13,27 +20,35 @@
 #include <vector>
 #include <yaml-cpp/yaml.h>
 
+/**
+ * @brief Namespace for the 2-electron dipole matrix funcitons
+ */
 namespace dmx2e {
-int ReadConfig(std::string file, std::string &pot, int &L_max, int &l_max,
+/**
+ * @brief Function for reading settings from a .yaml file
+ *
+ * @param file path to the .yaml file
+ * @param pot the name of the selected potential
+ * @param L_max the maximum total angular momentum used
+ * @param l_max the maximum 1-electron angular momentum used
+ * @param gauge the gauge of the dipole elements 'v' (velocity) / 'l' (length)
+ * @return int default '0' error otherwise
+ */
+int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
                char &gauge);
 
-/* Function for sorting the n1,l1+n2,l2 LN states by ascending energies
- * these sorted energies are stored in the he2_<L><L+1>v.h5 files.
- * The n1,l1,n2,l2 indices are stored in the he<L>idx.h5 files
- * @param in L_max - The maximum total orbital angular momentum L
- * @param in dir
+/**
+ * @brief Function for calculating the 2-electron dipole matrix elements
+ *
+ * @param pot the name of the selected potential
+ * @param L_max the maximum total angular momentum used
+ * @param l_max the maximum 1-electron angular momentum used
+ * @param gauge the gauge of the dipole elements 'v' (velocity) / 'l' (length)
+ * @param dir the directory containing the cfg-<L>.inp files which define what
+ * 2-electron configuraitons are included
+ * @return int default '0' error otherwise
  */
-int SortL(std::string cpot, int L_max, char gauge, std::string dir);
-
-/* Function for calculating the 2e dipole matrix elements.
- * First all of the required subsections of the 1e dmx's are read into a vector.
- * Then for each L, L+1 pair the indices of both L's are read from the he<L>.idx
- * files. Finally the 2e dmx elements are calculated and saved in the
- * he2_<L><L+1>v.h5 files.
- * @param in L_max - The maximum total orbital angular momentum L
- * @param in dir
- */
-int GenDipole(std::string cpot, int L_max, int l_m, char gauge,
+int genDipole(std::string pot, int L_max, int l_max, char gauge,
               std::string dir);
 }; // namespace dmx2e
 

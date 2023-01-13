@@ -13,7 +13,7 @@ int genidx::readConfig(std::string file, std::string &pot, int &L_max) {
   return 0;
 }
 
-int genidx::sortEn(std::string pot, int L_max, std::string dir) {
+int genidx::saveIdx(std::string pot, int L_max, std::string dir) {
   int l1 = 0, last_l1 = 0;
   int l2 = 0, last_l2 = 0;
   std::string filename;

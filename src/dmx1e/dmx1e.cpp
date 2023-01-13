@@ -1,6 +1,6 @@
 #include "dmx1e.hpp"
 
-int dmx1e::ReadConfig(std::string file, std::string &pot, int &qsz, char &gauge,
+int dmx1e::readConfig(std::string file, std::string &pot, int &qsz, char &gauge,
                       int &l_max) {
   YAML::Node settings = YAML::LoadFile(file);
 
@@ -21,7 +21,7 @@ int dmx1e::ReadConfig(std::string file, std::string &pot, int &qsz, char &gauge,
   return 0;
 }
 
-int dmx1e::GenDipole(std::string cpot, int qsz, char gauge, int l_max) {
+int dmx1e::genDipole(std::string pot, int qsz, char gauge, int l_max) {
   int nen = 0; // no. of basis states
   int lp1 = 0;
   double kl, t_ab;
@@ -32,7 +32,7 @@ int dmx1e::GenDipole(std::string cpot, int qsz, char gauge, int l_max) {
   auto D_set = std::make_unique<H5::DataSet>();
   hsize_t d_dim[2];
 
-  filename = cpot + "_w1e0.h5";
+  filename = pot + "_w1e0.h5";
   auto file =
       std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
   auto rset =
@@ -54,7 +54,7 @@ int dmx1e::GenDipole(std::string cpot, int qsz, char gauge, int l_max) {
 
   // read wavefunctions for all l
   for (int l = 1; l <= l_max; ++l) {
-    filename = cpot + "_w1e" + std::to_string(l) + ".h5";
+    filename = pot + "_w1e" + std::to_string(l) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
     rset =
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
@@ -72,7 +72,7 @@ int dmx1e::GenDipole(std::string cpot, int qsz, char gauge, int l_max) {
       for (int l = 0; l < l_max; ++l) {
 #pragma omp single
         {
-          filename = cpot + "_w1ep" + std::to_string(l + 1) + ".h5";
+          filename = pot + "_w1ep" + std::to_string(l + 1) + ".h5";
           file = std::make_unique<H5::H5File>(
               H5::H5File(filename, H5F_ACC_RDONLY));
           rset = std::make_unique<H5::DataSet>(
@@ -93,7 +93,7 @@ int dmx1e::GenDipole(std::string cpot, int qsz, char gauge, int l_max) {
 #pragma omp single
         {
           filename =
-              cpot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
+              pot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
           file =
               std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
           D_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
@@ -121,7 +121,7 @@ int dmx1e::GenDipole(std::string cpot, int qsz, char gauge, int l_max) {
 #pragma omp single
       {
         filename =
-            cpot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
+            pot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
         file =
             std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
         D_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
