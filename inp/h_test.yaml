@@ -17,7 +17,7 @@ Basis_Settings:
   grid: "linear"            # grid type 
   knot_file: ""             # only read if above is "user-defined"
   l_max: 5                  # l <= l_max
-  atomic_no: 2              # nuclear charge
+  atomic_no: 1              # nuclear charge
   mass: 0.5                 # 0.5 for atom 1 for positronium
 # Settings for the two electron interaction calculation
 R12_Settings:
@@ -27,7 +27,7 @@ Propagator_Settings:
   states_in_l: [300,300,300,300,300,300]
   dt: 0.1 # time step size
 Field_Parameters:
-  w: 8 # photon energy
+  w: 8.5 # photon energy
   Io: 1.0e13 # peak intensity
   cepd: 0.0  # phase delay
   cycles: 12 # number of field cycles
