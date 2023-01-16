@@ -4,11 +4,11 @@ Parallel programs for the time propagation of 1- and 2-electron systems
 
 ## Requirements
 
-A C++17 or greater compatible compiler /
-tbb - library for C++17 multithreading (apt-get, pacman, etc...)  /
-hdf5 - data storage library (apt-get, pacman, etc...) /
-yaml-cpp - library for human readable (yaml) format configuration files /
-any parallel BLAS library - e.g. intel MKL, OpenBLAS /
+A C++17 or greater compatible compiler \
+tbb - library for C++17 multithreading (apt-get, pacman, etc...)  \
+hdf5 - data storage library (apt-get, pacman, etc...) \
+yaml-cpp - library for human readable (yaml) format configuration files \
+any parallel BLAS library - e.g. intel MKL, OpenBLAS \
 wigxjpf - library for wigner symbols; cmake downloads and links it automatically, if using make install from github:
 
 ```
