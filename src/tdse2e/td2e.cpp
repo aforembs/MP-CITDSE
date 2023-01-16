@@ -135,7 +135,7 @@ int td2e::propV(std::string output, int L_max, double t, double dt, int steps,
                 std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
                 std::vector<std::complex<double>> &ct) {
   double IoA, wA, Ao, cepds, Wenv;
-  pulse::ToAU(Io, w, IoA, wA);
+  pulse::toAU(Io, w, IoA, wA);
 
   int print = steps / 10;
 
@@ -222,7 +222,7 @@ int td2e::propL(std::string output, int L_max, double t, double dt, int steps,
                 std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
                 std::vector<std::complex<double>> &ct) {
   double IoA, wA, Ao, cepds, Wenv;
-  pulse::ToAU(Io, w, IoA, wA);
+  pulse::toAU(Io, w, IoA, wA);
 
   int print = steps / 10;
 

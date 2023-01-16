@@ -45,24 +45,18 @@ int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
   return 0;
 }
 
-template <class Container, class ElementType = typename Container::value_type>
-constexpr auto element_of(const Container &, ElementType v = 0) {
-  return v;
-}
-
 int tdrd::readEnergies(std::string pot, int l_max, std::vector<int> &state_sz,
                        std::vector<double> &eps, std::vector<int> &offs,
-                       int &eps_sz, std::vector<double *> &eps_off) {
+                       int &eps_sz, std::vector<double *> &eig) {
   H5::DataSpace memspace;
   hsize_t offset[1], count[1], stride[1], block[1], dimms[1];
   offset[0] = 0;
   stride[0] = 1;
   block[0] = 1;
 
-  eps_sz = std::accumulate(state_sz.begin(), state_sz.end(),
-                           element_of(state_sz, 0));
+  eps_sz = std::reduce(state_sz.begin(), state_sz.end(), 0);
   eps.reserve(eps_sz);
-  eps_off.push_back(&eps[0]);
+  eig.push_back(eps.data());
   auto sum = 0;
   offs.push_back(sum);
 
@@ -77,55 +71,44 @@ int tdrd::readEnergies(std::string pot, int l_max, std::vector<int> &state_sz,
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
     auto ei_space = ei->getSpace();
     ei_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    ei->read(eps_off[l], H5::PredType::NATIVE_DOUBLE, memspace, ei_space);
+    ei->read(eig[l], H5::PredType::NATIVE_DOUBLE, memspace, ei_space);
     file->close();
     sum += state_sz[l];
     offs.push_back(sum);
-    eps_off.push_back(&eps[sum]);
+    eig.push_back(&eps[sum]);
   }
 
   return 0;
 }
 
 int tdrd::readDipoles(std::string pot, char gauge, int l_max,
-                      std::vector<int> &state_sz, std::vector<double> &dip,
-                      std::vector<int> &doffs, std::vector<double *> &dip_off) {
-  H5::DataSpace memspace;
+                      std::vector<int> &state_sz, stvupt &dipoles) {
+  std::string filename;
+  std::unique_ptr<H5::H5File> file = nullptr;
+  std::unique_ptr<H5::DataSet> dl = nullptr;
+  H5::DataSpace dl_space, memspace;
+  int l_sz, l1_sz;
   hsize_t offset[] = {0, 0}, stride[] = {1, 1}, block[] = {1, 1};
   hsize_t count[2], dimms[2];
-  int dip_sz = 0;
-  int szl1 = 0;
-
-  doffs.push_back(dip_sz);
-
-  for (auto i = 0; i < l_max; ++i) {
-    szl1 = state_sz[i] * state_sz[i + 1];
-    dip_sz += szl1;
-    doffs.push_back(dip_sz);
-  }
-
-  dip.reserve(dip_sz);
-  dip_off.push_back(&dip[0]);
-
-  for (auto i = 1; i < l_max; ++i) {
-    dip_off.push_back(&dip[doffs[i]]);
-  }
 
   for (auto l = 0; l < l_max; ++l) {
-    count[0] = state_sz[l + 1];
-    count[1] = state_sz[l];
-    dimms[0] = state_sz[l + 1];
-    dimms[1] = state_sz[l];
+    l_sz = state_sz[l];
+    l1_sz = state_sz[l + 1];
+    count[0] = l1_sz;
+    count[1] = l_sz;
+    dimms[0] = l1_sz;
+    dimms[1] = l_sz;
     memspace.setExtentSimple(2, dimms, NULL);
-    auto filename =
-        pot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
-    auto file =
-        std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    auto dl =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("d_if")));
-    auto dl_space = dl->getSpace();
+
+    dipoles[l]->resize(l_sz * l1_sz);
+
+    filename = pot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    dl = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("d_if")));
+    dl_space = dl->getSpace();
     dl_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    dl->read(dip_off[l], H5::PredType::NATIVE_DOUBLE, memspace, dl_space);
+    dl->read(dipoles[l]->data(), H5::PredType::NATIVE_DOUBLE, memspace,
+             dl_space);
     file->close();
   }
 

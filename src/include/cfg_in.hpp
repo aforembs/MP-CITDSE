@@ -22,9 +22,18 @@
 #include <vector>
 
 /**
- * @brief
+ * @brief Namespace for functions used in reading the cfg-<L>.inp files
  */
 namespace cfg {
+/**
+ * @brief Structure for holding elemets of a single line of a cfg file
+ *
+ * @param n1 primary quantum number of the 1st electron
+ * @param l1 angular quantum number of the 1st electron
+ * @param l2 angular quantum number of the 2nd electron
+ * @param n2min minimum primary quantum number of the 2nd electron
+ * @param n2max maximum primary quantum number of the 2nd electron
+ */
 struct line {
   int n1;
   int l1;
@@ -34,28 +43,18 @@ struct line {
 };
 
 /**
- * @brief
+ * @brief Function for reading the cfg-<L>.inp files and saving the lines into a
+ * vector of cfg::line structures
  *
- * @param dir
- * @param L
- * @param sym
- * @param ncf
- * @param cfgs
- * @return int
+ * @param dir path to directory containing the cfg-<L>.inp files
+ * @param L the total angular momentum
+ * @param sym symmetry '1'/'3' singlet or triplet (for now only singlet)
+ * @param ncf number of lines in the cfg file
+ * @param cfgs vector containing lines from a cfg file
+ * @return int default '0' error otherwise
  */
 int readCfg(std::string dir, int L, int &sym, int &ncf,
             std::vector<line> &cfgs);
-
-/**
- * @brief
- *
- * @param pot
- * @param gauge
- * @param L_max
- * @param dir
- * @return int
- */
-int genL_idx(std::string pot, char gauge, int L_max, std::string dir);
 } // namespace cfg
 
 #endif // CFG_IN_H_

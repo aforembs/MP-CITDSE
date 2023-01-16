@@ -52,7 +52,7 @@ int Rpowk(int qsz, int pti_sz, int k_max, std::vector<double> &qx_o,
   return 0;
 }
 
-int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir,
+int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
                   bool lim_flag, std::string k_limit) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
@@ -120,7 +120,7 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir,
   std::vector<double> wfn_o(lc_sz * (e1_lm + 1));
 
   // read data from l=0
-  filename = cpot + "_w1e0.h5";
+  filename = pot + "_w1e0.h5";
   file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
   Po = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
   cspace = Po->getSpace();
@@ -154,7 +154,7 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir,
 
   // read wavefunctions for all other l
   for (int l = 1; l <= e1_lm; ++l) {
-    filename = cpot + "_w1e" + std::to_string(l) + ".h5";
+    filename = pot + "_w1e" + std::to_string(l) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
     Po = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_o")));
     cspace = Po->getSpace();
@@ -188,7 +188,7 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir,
 // Read n1l1;n2l2 indices for NL states
 #pragma omp single
       {
-        filename = cpot + "2_" + std::to_string(L) + "En.h5";
+        filename = pot + "2_" + std::to_string(L) + "En.h5";
         file =
             std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
         L_set = std::make_unique<H5::DataSet>(
@@ -286,7 +286,7 @@ int r_12::r12Glob(std::string cpot, int L_max, int qsz, std::string dir,
                   << ((double)(GetTimeMs64() - st_time) / 1000.0) << "s\n";
         // save upper triangular V_12
         v_dim[0] = v_sz;
-        outfile_name = cpot + "V12_" + std::to_string(L) + ".h5";
+        outfile_name = pot + "V12_" + std::to_string(L) + ".h5";
         outfile = std::make_unique<H5::H5File>(
             H5::H5File(outfile_name, H5F_ACC_TRUNC));
         V_set =

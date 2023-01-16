@@ -1,14 +1,14 @@
 #include "pulse.hpp"
 
-void pulse::ToAU(double IoW, double weV, double &IoAU, double &wAU) {
+void pulse::toAU(double IoW, double weV, double &IoAU, double &wAU) {
   IoAU = IoW * conv::I_W_cm2_au_;
   wAU = weV * conv::En_ev_au_;
 }
 
-double pulse::Sine_T(double w, int cycles) { return cycles * 2.0 * M_PI / w; }
+double pulse::sineT(double w, int cycles) { return cycles * 2.0 * M_PI / w; }
 
-void pulse::SineA_Setup(double Io, double w, double cepd, int cycles,
-                        double &Ao, double &cepds, double &Wenv) {
+void pulse::sineASetup(double Io, double w, double cepd, int cycles, double &Ao,
+                       double &cepds, double &Wenv) {
   Ao = sqrt(Io) / w;
   cepds = cepd * (2.0 * M_PI / w);
   Wenv = w / (2.0 * cycles);
@@ -17,8 +17,7 @@ void pulse::SineA_Setup(double Io, double w, double cepd, int cycles,
 // double Ao = sqrt(Io)/w;
 // double cepds = cepd*(2.0*M_PI/w);
 // double Wenv = w/(2.0*cycles);
-double pulse::SineA_A(double Ao, double w, double cepds, double Wenv,
-                      double t) {
+double pulse::sineAA(double Ao, double w, double cepds, double Wenv, double t) {
   double sinWt = sin(Wenv * t);
   return (double)(t >= 0.0 && t <= M_PI / Wenv) * Ao * sinWt * sinWt *
          sin(w * t + cepds);
@@ -27,8 +26,7 @@ double pulse::SineA_A(double Ao, double w, double cepds, double Wenv,
 // double Ao = sqrt(Io)/w;
 // double cepds = cepd*(2.0*M_PI/w);
 // double Wenv = w/(2.0*cycles);
-double pulse::SineA_E(double Ao, double w, double cepds, double Wenv,
-                      double t) {
+double pulse::sineAE(double Ao, double w, double cepds, double Wenv, double t) {
   double Wt = Wenv * t;
   double sinWt = sin(Wt);
   double wtc = w * t + cepds;
@@ -36,8 +34,8 @@ double pulse::SineA_E(double Ao, double w, double cepds, double Wenv,
          (w * sinWt * sinWt * cos(wtc) + Wenv * sin(2 * Wt) * sin(wtc));
 }
 
-void pulse::SineE_Setup(double Io, double w, double cepd, int cycles,
-                        double &Eo, double &cepds, double &Wenv) {
+void pulse::sineESetup(double Io, double w, double cepd, int cycles, double &Eo,
+                       double &cepds, double &Wenv) {
   Eo = sqrt(Io);
   cepds = cepd * (2 * M_PI / w);
   Wenv = w / (2.0 * cycles);
@@ -48,8 +46,7 @@ void pulse::SineE_Setup(double Io, double w, double cepd, int cycles,
 // double Wenv = w/(2.0*cycles);
 // double WpP = w + 2.0*Wenv;
 // double WpN = w - 2.0*Wenv;
-double pulse::SineE_A(double Eo, double w, double cepds, double Wenv,
-                      double t) {
+double pulse::sineEA(double Eo, double w, double cepds, double Wenv, double t) {
   double WpP = w + 2.0 * Wenv;
   double WpN = w - 2.0 * Wenv;
   return (double)(t >= 0.0 && t <= M_PI / Wenv) * 0.5 * Eo *
@@ -60,8 +57,7 @@ double pulse::SineE_A(double Eo, double w, double cepds, double Wenv,
 // double Eo = sqrt(Io);
 // double cepds = cepd*(2.0*M_PI/w);
 // double Wenv = w/(2.0*cycles);
-double pulse::SineE_E(double Eo, double w, double cepds, double Wenv,
-                      double t) {
+double pulse::sineEE(double Eo, double w, double cepds, double Wenv, double t) {
   double sinWt = sin(Wenv * t);
   return (double)(t >= 0.0 && t <= M_PI / Wenv) * Eo * sinWt * sinWt *
          sin(w * t + cepds);

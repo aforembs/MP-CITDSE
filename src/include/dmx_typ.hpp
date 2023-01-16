@@ -1,6 +1,13 @@
 #ifndef DMX_TYP_H_
 #define DMX_TYP_H_
 
+/**
+ * @file dmx_typ.hpp
+ * @author Andrew Forembski (andrew.forembski2@mail.dcu.ie)
+ * @brief Structures for storing 2-electron configurations
+ * @version 1.0
+ */
+
 #include <vector>
 
 struct l_ab {

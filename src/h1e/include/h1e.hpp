@@ -4,7 +4,8 @@
 /**
  * @file h1e.hpp
  * @author Andrew Forembski (andrew.forembski2@mail.dcu.ie)
- * @brief Functions used for calculating 2-electron dipole matrices
+ * @brief Functions used for solving the 1-electron tdse on a B-splines
+ * basis
  * @version 1.0
  */
 

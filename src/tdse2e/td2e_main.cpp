@@ -59,18 +59,18 @@ int main(int argc, char *argv[]) {
   ct[0] = std::complex<double>(1.0, 0.0);
 
   double t = 0.0;
-  double tau = pulse::Sine_T(w * conv::En_ev_au_, cycles);
+  double tau = pulse::sineT(w * conv::En_ev_au_, cycles);
   int steps = tau / dt;
 
   switch (gauge) {
   case 'v':
-    td2e::propV(o_file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
-                pulse::SineA_A, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
+    td2e::propV(o_file_prefix, L_max, t, dt, steps, pulse::sineASetup,
+                pulse::sineAA, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
                 dipoles, ct);
     break;
   case 'l':
-    td2e::propL(o_file_prefix, L_max, t, dt, steps, pulse::SineA_Setup,
-                pulse::SineA_E, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
+    td2e::propL(o_file_prefix, L_max, t, dt, steps, pulse::sineESetup,
+                pulse::sineEE, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
                 dipoles, ct);
     break;
   }

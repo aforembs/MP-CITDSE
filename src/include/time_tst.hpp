@@ -1,11 +1,15 @@
 #ifndef TIME_TST_H_
 #define TIME_TST_H_
 
-#include <sys/time.h>
 #include <ctime>
+#include <sys/time.h>
 
-uint64_t GetTimeMs64()
-{
+/**
+ * @brief Utility timing function.
+ *
+ * @return uint64_t
+ */
+uint64_t GetTimeMs64() {
   /* Linux */
   struct timeval tv;
 
