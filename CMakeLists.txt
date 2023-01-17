@@ -34,6 +34,12 @@ if(${BLA_VENDOR} MATCHES OpenBLAS)
     set(BLA_INC /opt/OpenBLAS/include)
 endif()
 
+if(DEFINED BLA_HINT)
+    find_package(BLAS REQUIRED HINT ${BLA_HINT})
+    set(BLA_INC ${BLA_INC})
+endif()
+
+
 add_subdirectory(3rd_party)
 
 add_compile_options(

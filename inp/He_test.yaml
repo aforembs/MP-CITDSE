@@ -10,7 +10,7 @@ Global_Settings:
   gauge: 'v'                # length or velocity gauge
 # Settings for generating the 1e basis radial functions
 Basis_Settings:
-  state_no: 302             # number of 1e states +2
+  state_no: 362             # number of 1e states +2
   max_spline_k: 9           # Splines for h1e
   GL_quad_points: 15        # quadrature for h1e
   R_max: 260                # box radius in a.u.
