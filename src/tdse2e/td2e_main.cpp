@@ -1,7 +1,7 @@
 #include "td2e.hpp"
 #include "td_read.hpp"
 #include <cstdlib>
-#include <fenv.h>
+#include <filesystem>
 #include <iostream>
 #include <unistd.h>
 
@@ -30,6 +30,11 @@ int main(int argc, char *argv[]) {
       continue;
     }
     break;
+  }
+
+  const std::filesystem::path out_path{out_dir};
+  if (!std::filesystem::exists(out_path)) {
+    std::filesystem::create_directory(out_path);
   }
 
   tdrd::readConfig(opt_file, pot, gauge, L_max, state_sz, dt, w, Io, cepd,

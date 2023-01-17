@@ -32,6 +32,12 @@ int main(int argc, char *argv[]) {
     break;
   }
 
+  std::string out_dir = "dat/";
+  const std::filesystem::path out_path{out_dir};
+  if (!std::filesystem::exists(out_path)) {
+    std::filesystem::create_directory(out_path);
+  }
+
   h1e::readConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z,
                   mass);
 
@@ -72,7 +78,7 @@ int main(int argc, char *argv[]) {
   bsp::splines(n, k, glq_pt, gl_x, kkn, spl, splp);
 
   h1e::genCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp,
-                "dat/");
+                out_dir);
 
   return 0;
 }
