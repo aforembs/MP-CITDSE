@@ -57,11 +57,22 @@ make
 ```
 
 ## Running a 1-electron example
+#### Structure
+To run the electronic structure programs you can use the provided bin/run-structure.sh script. \
+For the 1-electron case do:
+```
+bin/run-structure.sh -e 1 -f inp/H_test.yaml
+```
+
+Alternatively you can run all of the programs individually
 ```
 [[ -d dat ]] || mkdir dat
 bin/h1e -f inp/H_test.yaml
 bin/w1e -f inp/H_test.yaml
 bin/dmx1e -f inp/H_test.yaml
+```
+#### TDSE Solution
+```
 mkdir dat/H_tdat
 bin/tdse1e -f inp/H_test.yaml -o dat/H_tdat
 ```
@@ -73,25 +84,39 @@ bin/pes-td1 -f inp/H_test.yaml -i dat/H_tdat/h_ct_<time>.dat
 This will produce a photoelectron distribution in the file dat/H_tdat/h_pes.dat
 
 ## Running a 2-electron example
-
-To run go back to the main directory and run
-
+#### Structure
+To run the electronic structure programs you can use the provided bin/run-structure.sh script. \
+For the 2-electron case do:
 ```
-bin/run_structure.sh
-bin/tdse2e -f inp/general.yaml
+bin/run-structure.sh -e 2 -f inp/He_test.yaml -i inp/
+```
+Alternatively you can run all of the programs individually
+```
+[[ -d dat ]] || mkdir dat
+bin/h1e -f inp/He_test.yaml
+bin/w1e -f inp/He_test.yaml
+bin/dmx1e -f inp/He_test.yaml
+bin/gen2eidx -f inp/He_test.yaml -i inp/
+bin/r12 -f inp/He_test.yaml -i inp/
+bin/dmx2e -f inp/He_test.yaml -i inp/
+bin/cibasis -f inp/He_test.yaml
+```
+#### TDSE Solution
+```
+mkdir dat/He_tdat
+bin/tdse2e -f inp/general.yaml -o dat/He_tdat
+```
+Text files contatining the time dependent coefficients will then be available in dat/H_tdat.\
+To obtain the photoelectron energy distribution run:
+```
+bin/pes-td2 -f inp/He_test.yaml -i dat/He_tdat/he_ct_<time>.dat
 ```
 
-All input parameters can be found and modified in inp/general.yaml
-The 2e configurations are located in the inp/cfg-\<L\>.inp files
+## I/O
 
-To produce the energy spectra run (for now this only works with bin/tdse2e not bin/td*diag)
-`bin/pes2e -f inp/general -i dat/he_ct*<time>.dat`
+All input parameters can be found in the supplied inp/H_test.yaml and inp/He_test.yaml files. \
+The 2e configurations are located in the inp/cfg-\<L\>.inp files. \
+To provide custom inputs youcan just copy the inp/ folder and rename/modify as needed
 
-All data and output files can be found in
-`dat/`
-
-`he_ct_<time>.dat` - contain the coefficients
-
-`he_pop.dat` - contains the ground state population
-
-`he_pes<L>.dat` - contains the energy spectrum for a given angular momentum L
+All structure calculation files can be found in the dat directory.\
+Most of the data is stored in the HDF5 format.
