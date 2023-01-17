@@ -66,7 +66,6 @@ bin/run-structure.sh -e 1 -f inp/H_test.yaml
 
 Alternatively you can run all of the programs individually
 ```
-[[ -d dat ]] || mkdir dat
 bin/h1e -f inp/H_test.yaml
 bin/w1e -f inp/H_test.yaml
 bin/dmx1e -f inp/H_test.yaml
@@ -92,7 +91,6 @@ bin/run-structure.sh -e 2 -f inp/He_test.yaml -i inp/
 ```
 Alternatively you can run all of the programs individually
 ```
-[[ -d dat ]] || mkdir dat
 bin/h1e -f inp/He_test.yaml
 bin/w1e -f inp/He_test.yaml
 bin/dmx1e -f inp/He_test.yaml
