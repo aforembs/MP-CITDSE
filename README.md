@@ -1,6 +1,6 @@
 # ParTDSE
 
-A set of parallel programs for the ab-initio solution of the Time-Dependent Schrödinger Equation (TDSE) in the case of 1- and/or 2-electron atom-laser interactions. Initially the 1-electron Time-Independent Schrödinger Equation (TISE) is solved on a basis of B-splines, as described in [1](#appl_B-spl). The 1-electron dipole transition elements are then obtained, using the 1-electron eigenstates of the TISE. From here, solution of the 1-electron TDSE is possible. \
+A set of parallel programs for the ab-initio solution of the Time-Dependent Schrödinger Equation (TDSE) in the case of 1- and/or 2-electron atom-laser interactions. Initially the 1-electron Time-Independent Schrödinger Equation (TISE) is solved on a basis of B-splines, as described in \[[1](https://iopscience.iop.org/article/10.1088/0034-4885/64/12/205)\]. The 1-electron dipole transition elements are then obtained, using the 1-electron eigenstates of the TISE. From here, solution of the 1-electron TDSE is possible. \
 Moving onto the 2-electron problem, the inter-electronic interactions and 2-electron dipole transition elements, are calculated before forming the Configuration Interaction (CI) basis. Once the 2-electron time dependent Hamiltonian is obtained in the CI basis the 2-electron TDSE ma be solved.\
 As a form of result analysis this suite provides two programs for the calculation of photoelectron spectra from time dependent coefficients, one for the 1-electron, and another for the 2-electron problem. These programs also provide the ground state populations and ionisation yields.
 
@@ -24,7 +24,7 @@ tbb                       - library for C++17 multithreading (apt-get, pacman, e
 hdf5                      - data storage library (apt-get, pacman, etc...) \
 yaml-cpp                  - library for human readable (yaml) format configuration files \
 any parallel BLAS library - e.g. intel MKL, OpenBLAS \
-[wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf)                   - library for wigner symbols; the cmake compilation downloads and links it automatically, if using make you need to download it from github and compile manually:
+[wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf)                   - library for wigner symbols \[[2](https://doi.org/10.1137/15M1021908)\]; the cmake compilation downloads and links it automatically, if using make you need to download it from github and compile manually:
 
 ```
 [[ -d lib ]] || mkdir lib && cd lib
@@ -120,3 +120,14 @@ To provide custom inputs youcan just copy the inp/ folder and rename/modify as n
 
 All structure calculation files can be found in the dat directory.\
 Most of the data is stored in the HDF5 format.
+
+## References
+[1] Bachau H, Cormier E, Decleva P, Hansen JE, Martín F. Applications of 
+    B-splines in atomic and molecular physics. Reports on progress in physics. 
+    2001 Nov 19;64(12):1815.
+
+[2] H. T. Johansson and C. Forssén, Fast and Accurate Evaluation of Wigner 3j,
+    6j, and 9j Symbols Using Prime Factorization and Multiword Integer Arithmetic,
+    SIAM J. Sci. Comput., 38(1) (2016), A376-A384.
+    
+## Cite as (Add once published)
