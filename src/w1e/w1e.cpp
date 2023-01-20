@@ -347,32 +347,34 @@ int w1e::genWfn(std::string pot, int qsz, int pti_sz, int l_max,
         outfile_name = pot + "_w1e" + std::to_string(l) + ".h5";
         outfile = std::make_unique<H5::H5File>(
             H5::H5File(outfile_name, H5F_ACC_TRUNC));
+        // Write wave functions on outer points
         Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
             "Pr_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
         Po->write(wfn_o.data(), H5::PredType::NATIVE_DOUBLE);
+        // Write wave function derivatives on outer points
+        Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
+            "Pr_p", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
+        Po->write(wfn_p.data(), H5::PredType::NATIVE_DOUBLE);
+        // Write wave functions on inner points
         Pi = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
             "Pr_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_i))));
         Pi->write(wfn_i.data(), H5::PredType::NATIVE_DOUBLE);
+        // Write inner quadrature point distribution
         Pidx = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
             "Pr_idx", H5::PredType::NATIVE_UCHAR, H5::DataSpace(1, dimm_q))));
         Pidx->write(pq_dx.data(), H5::PredType::NATIVE_UCHAR);
+        // Write outer quadrature nodes on (0,R_max)
         glr = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
             "Qr_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, dimm_q))));
         glr->write(q_x.data(), H5::PredType::NATIVE_DOUBLE);
+        // Write outer quadrature wieghts on (0,R_max)
         glw = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
             "Qw_o", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, dimm_q))));
         glw->write(q_w.data(), H5::PredType::NATIVE_DOUBLE);
+        // Write inner quadrature nodes on (0,R_max)
         glri = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
             "Qr_i", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, dimm_i))));
         glri->write(ri.data(), H5::PredType::NATIVE_DOUBLE);
-        outfile->close();
-
-        outfile_name = pot + "_w1ep" + std::to_string(l) + ".h5";
-        outfile = std::make_unique<H5::H5File>(
-            H5::H5File(outfile_name, H5F_ACC_TRUNC));
-        Po = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-            "Pr_p", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, dimms_o))));
-        Po->write(&wfn_p[0], H5::PredType::NATIVE_DOUBLE);
         outfile->close();
       }
     }

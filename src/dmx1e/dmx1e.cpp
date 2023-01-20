@@ -62,17 +62,16 @@ int dmx1e::genDipole(std::string pot, int qsz, char gauge, int l_max) {
     file->close();
   }
 
-  std::vector<double> wfnp;
-
   switch (gauge) {
-  case 'v':
+  case 'v': {
+    std::vector<double> wfnp;
     wfnp.reserve(lc_sz);
 #pragma omp parallel
     {
       for (int l = 0; l < l_max; ++l) {
 #pragma omp single
         {
-          filename = pot + "_w1ep" + std::to_string(l + 1) + ".h5";
+          filename = pot + "_w1e" + std::to_string(l + 1) + ".h5";
           file = std::make_unique<H5::H5File>(
               H5::H5File(filename, H5F_ACC_RDONLY));
           rset = std::make_unique<H5::DataSet>(
@@ -105,32 +104,36 @@ int dmx1e::genDipole(std::string pot, int qsz, char gauge, int l_max) {
     }
     wfnp.clear();
     break;
-  case 'l':
+  }
+  case 'l': {
 #pragma omp parallel
-  {
-    for (int l = 0; l < l_max; ++l) {
-      lp1 = l + 1;
-      kl = sqrt((double)(lp1 * lp1) / (4.0 * lp1 * lp1 - 1));
-      for (int n2 = 0; n2 < nen; ++n2) {
+    {
+      for (int l = 0; l < l_max; ++l) {
+        lp1 = l + 1;
+        kl = sqrt((double)(lp1 * lp1) / (4.0 * lp1 * lp1 - 1));
+        for (int n2 = 0; n2 < nen; ++n2) {
 #pragma omp for private(t_ab)
-        for (int n1 = 0; n1 < nen; ++n1) {
-          t_ab = kl * dmx_int::tlenGL(qsz, lc_sz, n1, l, n2, lp1, qx, qw, wfn);
-          D[n1 + nen * n2] = t_ab;
+          for (int n1 = 0; n1 < nen; ++n1) {
+            t_ab =
+                kl * dmx_int::tlenGL(qsz, lc_sz, n1, l, n2, lp1, qx, qw, wfn);
+            D[n1 + nen * n2] = t_ab;
+          }
+        }
+#pragma omp single
+        {
+          filename =
+              pot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
+          file =
+              std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
+          D_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
+              "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d_dim))));
+          D_set->write(&D[0], H5::PredType::NATIVE_DOUBLE);
+          file->close();
         }
       }
-#pragma omp single
-      {
-        filename =
-            pot + std::to_string(l) + std::to_string(l + 1) + gauge + ".h5";
-        file =
-            std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_TRUNC));
-        D_set = std::make_unique<H5::DataSet>(H5::DataSet(file->createDataSet(
-            "d_if", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(2, d_dim))));
-        D_set->write(&D[0], H5::PredType::NATIVE_DOUBLE);
-        file->close();
-      }
     }
-  } break;
+    break;
+  }
   }
 
   return 0;
