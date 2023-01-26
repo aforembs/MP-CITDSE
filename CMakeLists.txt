@@ -22,10 +22,6 @@ set(SHARED_SOURCES2
     ${CMAKE_CURRENT_SOURCE_DIR}/src/fastgl.cpp
 )
 
-set(PULSE_SRC
-    ${CMAKE_CURRENT_SOURCE_DIR}/src/pulse.cpp
-)
-
 if(NOT DEFINED BLA_VENDOR)
     set(BLA_VENDOR OpenBLAS)
 endif()
@@ -50,11 +46,9 @@ add_compile_options(
 add_subdirectory(src/h1e)
 add_subdirectory(src/w1e)
 add_subdirectory(src/dmx1e)
-add_subdirectory(src/tdse1e)
-add_subdirectory(src/pes-td1)
+add_subdirectory(src/tdse)
+add_subdirectory(src/pes)
 add_subdirectory(src/gen2eidx)
 add_subdirectory(src/dmx2e)
 add_subdirectory(src/r12)
 add_subdirectory(src/cibasis)
-add_subdirectory(src/tdse2e)
-add_subdirectory(src/pes-td2)

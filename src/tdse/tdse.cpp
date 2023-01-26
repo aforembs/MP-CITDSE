@@ -1,4 +1,4 @@
-#include "td2e.hpp"
+#include "tdse.hpp"
 
 typedef std::vector<std::complex<double>> state_type;
 
@@ -129,7 +129,7 @@ public:
   }
 };
 
-int td2e::propV(std::string output, int L_max, double t, double dt, int steps,
+int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
                 fieldInit fieldst, fieldFcn field, double w, double Io,
                 double cepd, int cycles, int ct_sz, std::vector<int> &offs,
                 std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
@@ -216,7 +216,7 @@ int td2e::propV(std::string output, int L_max, double t, double dt, int steps,
   return 0;
 }
 
-int td2e::propL(std::string output, int L_max, double t, double dt, int steps,
+int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
                 fieldInit fieldst, fieldFcn field, double w, double Io,
                 double cepd, int cycles, int ct_sz, std::vector<int> &offs,
                 std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,

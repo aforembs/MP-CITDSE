@@ -1,5 +1,5 @@
-#include "td2e.hpp"
 #include "td_read.hpp"
+#include "tdse.hpp"
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
@@ -8,20 +8,31 @@
 int main(int argc, char *argv[]) {
   std::string opt_file;
   std::string out_dir;
-  int L_max, cycles;
+  int L_max, cycles, e_num = 0;
   std::string pot;
-  std::string i_file_prefix;
+  std::string base, option;
+  std::string en_pot, dip_pot;
+  std::string en_set, dip_set;
   std::string o_file_prefix;
   char gauge;
   double dt, w, Io, cepd;
   std::vector<int> state_sz;
 
   for (;;) {
-    switch (getopt(argc, argv, "hf:o:")) {
+    switch (getopt(argc, argv, "he:f:o:")) {
     case 'h':
-      std::cout << "Program for propagating the 2e tdse\n"
-                << "-f <path> yaml input file with the input settings\n";
+      std::cout << "Program for propagating either the 1- or 2-e^- tdse\n"
+                << "-e <1 or 2> the number of electrons in the tdse\n"
+                << "-f <path> yaml input file with the input settings\n"
+                << "-o <path> output directory for the coefficient files\n";
       return -1;
+    case 'e':
+      e_num = std::stoi(optarg);
+      if (e_num != 1 && e_num != 2) {
+        std::cout << "Invalid number of electrons, use 1 or 2\n";
+        return -1;
+      }
+      continue;
     case 'f':
       opt_file = optarg;
       continue;
@@ -37,10 +48,35 @@ int main(int argc, char *argv[]) {
     std::filesystem::create_directory(out_path);
   }
 
-  tdrd::readConfig(opt_file, pot, gauge, L_max, state_sz, dt, w, Io, cepd,
-                   cycles);
+  switch (e_num) {
+  case 1:
+    base = "Basis_Settings";
+    option = "l_max";
+    break;
+  case 2:
+    base = "Global_Settings";
+    option = "L_max";
+    break;
+  }
 
-  i_file_prefix = "dat/" + pot;
+  tdrd::readConfig(opt_file, pot, gauge, base, option, L_max, state_sz, dt, w,
+                   Io, cepd, cycles);
+
+  switch (e_num) {
+  case 1:
+    en_pot = "dat/" + pot;
+    en_set = "En";
+    dip_pot = "dat/" + pot;
+    dip_set = "d_if";
+    break;
+  case 2:
+    en_pot = "dat/" + pot + "CI";
+    en_set = "En_CI";
+    dip_pot = "dat/" + pot + "CI_";
+    dip_set = "CI_dip";
+    break;
+  }
+
   o_file_prefix = out_dir + "/" + pot;
 
   int ct_sz = 0;
@@ -55,12 +91,11 @@ int main(int argc, char *argv[]) {
         std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
-  tdrd::readStructure(i_file_prefix, L_max, ct_sz, state_sz, offs, eig);
+  tdrd::readEnergies(en_pot, en_set, L_max, ct_sz, state_sz, offs, eig);
 
-  tdrd::readDipoles(i_file_prefix, gauge, L_max, state_sz, dipoles);
+  tdrd::readDipoles(dip_pot, dip_set, gauge, L_max, state_sz, dipoles);
 
   std::vector<std::complex<double>> ct(ct_sz);
-
   ct[0] = std::complex<double>(1.0, 0.0);
 
   double t = 0.0;
@@ -69,12 +104,12 @@ int main(int argc, char *argv[]) {
 
   switch (gauge) {
   case 'v':
-    td2e::propV(o_file_prefix, L_max, t, dt, steps, pulse::sineASetup,
+    tdse::propV(o_file_prefix, L_max, t, dt, steps, pulse::sineASetup,
                 pulse::sineAA, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
                 dipoles, ct);
     break;
   case 'l':
-    td2e::propL(o_file_prefix, L_max, t, dt, steps, pulse::sineESetup,
+    tdse::propL(o_file_prefix, L_max, t, dt, steps, pulse::sineESetup,
                 pulse::sineEE, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
                 dipoles, ct);
     break;

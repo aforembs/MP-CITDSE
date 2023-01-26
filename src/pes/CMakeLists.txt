@@ -1,4 +1,4 @@
-project(pes-td2)
+project(pes)
 
 # add the executable
 add_executable(${PROJECT_NAME} ${SHARED_SOURCES} ${SH1_HEADER_FILES})

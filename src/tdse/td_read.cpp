@@ -1,15 +1,16 @@
 #include "td_read.hpp"
 
 int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
-                     int &L_max, std::vector<int> &state_sz, double &timestep,
-                     double &w, double &Io, double &cepd, int &cycles) {
+                     std::string set_base, std::string option, int &L_max,
+                     std::vector<int> &state_sz, double &timestep, double &w,
+                     double &Io, double &cepd, int &cycles) {
 
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
   pot = settings["Global_Settings"]["potential"].as<std::string>();
   std::cout << "  Core Potential:                       " << pot << std::endl;
-  L_max = settings["Global_Settings"]["L_max"].as<int>();
-  std::cout << "  max l:                                " << L_max << std::endl;
+  L_max = settings[set_base][option].as<int>();
+  std::cout << "  max l/L:                              " << L_max << std::endl;
   gauge = settings["Global_Settings"]["gauge"].as<char>();
   std::cout << "  Gauge type ('l' length/'v' velocity): " << gauge << std::endl;
 
@@ -43,9 +44,9 @@ int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
   return 0;
 }
 
-int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
-                        std::vector<int> &state_sz, std::vector<int> &offs,
-                        stvupt &eig) {
+int tdrd::readEnergies(std::string pot, std::string setname, int L_max,
+                       int &ct_sz, std::vector<int> &state_sz,
+                       std::vector<int> &offs, stvupt &eig) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> edata = nullptr;
@@ -68,10 +69,10 @@ int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
 
     eig[L]->resize(L_sz);
 
-    filename = pot + "CI" + std::to_string(L) + ".h5";
+    filename = pot + std::to_string(L) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
     edata =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En_CI")));
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet(setname)));
     e_space = edata->getSpace();
     e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     edata->read(eig[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace, e_space);
@@ -81,8 +82,8 @@ int tdrd::readStructure(std::string pot, int L_max, int &ct_sz,
   return 0;
 }
 
-int tdrd::readDipoles(std::string pot, char gauge, int L_max,
-                      std::vector<int> &state_sz, stvupt &dipoles) {
+int tdrd::readDipoles(std::string pot, std::string setname, char gauge,
+                      int L_max, std::vector<int> &state_sz, stvupt &dipoles) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> dl = nullptr;
@@ -102,11 +103,9 @@ int tdrd::readDipoles(std::string pot, char gauge, int L_max,
 
     dipoles[L]->resize(L_sz * L1_sz);
 
-    filename =
-        pot + "CI_" + std::to_string(L) + std::to_string(L + 1) + gauge + ".h5";
+    filename = pot + std::to_string(L) + std::to_string(L + 1) + gauge + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    dl =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("CI_dip")));
+    dl = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet(setname)));
     dl_space = dl->getSpace();
     dl_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     dl->read(dipoles[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace,

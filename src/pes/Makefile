@@ -2,7 +2,7 @@ ifndef CPPC
 CPPC = g++
 endif
 
-EXEC = ../../bin/pes-td2
+EXEC = ../../bin/pes
 
 IDIR = include
 SH_IDIR = ../include

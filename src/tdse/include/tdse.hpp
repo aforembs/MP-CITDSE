@@ -1,5 +1,5 @@
-#ifndef TD2E_HPP_
-#define TD2E_HPP_
+#ifndef TDSE_HPP_
+#define TDSE_HPP_
 
 /**
  * @file tdse.hpp
@@ -28,7 +28,7 @@ using fieldFcn = std::function<double(double, double, double, double, double)>;
 /**
  * @brief Namespace for functions used in the propagation of the 2-electron TDSE
  */
-namespace td2e {
+namespace tdse {
 /**
  * @brief Function for propagating the 2-electron TDSE in the velocity gauge
  *
@@ -96,6 +96,6 @@ int propL(std::string output, int L_max, double t, double dt, int steps,
           int cycles, int ct_sz, std::vector<int> &offs,
           std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
           std::vector<std::complex<double>> &ct);
-} // namespace td2e
+} // namespace tdse
 
-#endif // TD2E_HPP_
+#endif // TDSE_HPP_

@@ -1,5 +1,8 @@
+ifndef CPPC
 CPPC = g++
-EXEC = ../../bin/tdse1e
+endif
+
+EXEC = ../../bin/tdse
 
 IDIR = include
 SH_IDIR = ../include
@@ -7,8 +10,8 @@ ODIR = obj
 
 VPATH := ../
 
-SRC = tdse_main.cpp tdse.cpp td_read.cpp pulse.cpp
-SRC_SH = 
+SRC =tdse_main.cpp td_read.cpp tdse.cpp pulse.cpp
+SRC_SH=
 
 ifndef BLAS_LIB
 BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
@@ -18,9 +21,8 @@ ifndef BLAS_INC
 BLAS_INC = /opt/OpenBLAS/include
 endif
 
-CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -fopenmp
-LDFLAGS = -lyaml-cpp -lhdf5 -lhdf5_cpp -fopenmp $(BLAS_LIB)
-
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -g
+LDFLAGS = -lhdf5 -lhdf5_cpp -ltbb -lyaml-cpp -fopenmp $(BLAS_LIB)
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
@@ -37,4 +39,4 @@ $(ODIR)/%.o: %.cpp
 
 .PHONY : clean
 clean :
-	rm $(EXEC) $(OBJ)
+	rm -f $(EXEC) $(OBJ)

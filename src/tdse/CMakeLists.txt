@@ -1,13 +1,14 @@
-project(tdse1e)
+project(tdse)
 
 # add the executable
-add_executable(${PROJECT_NAME} ${SH1_HEADER_FILES} ${PULSE_SRC})
+add_executable(${PROJECT_NAME} ${SH1_HEADER_FILES})
 
 target_sources(${PROJECT_NAME}
     PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}/tdse_main.cpp 
         ${CMAKE_CURRENT_SOURCE_DIR}/tdse.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/td_read.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/pulse.cpp
 )
 
 target_include_directories(${PROJECT_NAME} 
@@ -22,6 +23,8 @@ find_package(yaml-cpp REQUIRED)
 find_package(HDF5 REQUIRED)
 
 find_package(OpenMP REQUIRED)
+
+find_package(TBB REQUIRED)
 
 find_package(BLAS REQUIRED)
 

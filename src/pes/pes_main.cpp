@@ -5,18 +5,27 @@
 
 int main(int argc, char *argv[]) {
   std::string opt_file, in_file = "dat/ct.dat";
-  int L_max, l_max;
+  int L_max, e_num = 0;
   std::string pot;
+  std::string base, option;
   std::string input_prefix, output_prefix;
   std::vector<int> state_sz;
 
   for (;;) {
-    switch (getopt(argc, argv, "hf:i:")) {
+    switch (getopt(argc, argv, "he:f:i:")) {
     case 'h':
       std::cout << "Program for generating the PES from coeffs\n"
+                << "-e <1 or 2> the number of electrons in the tdse\n"
                 << "-f <path> yaml input file with the input settings\n"
                 << "-i <path> file containing the coefficients\n";
       return -1;
+    case 'e':
+      e_num = std::stoi(optarg);
+      if (e_num != 1 && e_num != 2) {
+        std::cout << "Invalid number of electrons, use 1 or 2\n";
+        return -1;
+      }
+      continue;
     case 'f':
       opt_file = optarg;
       continue;
@@ -27,7 +36,18 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  pes::readConfig(opt_file, pot, L_max, l_max, state_sz);
+  switch (e_num) {
+  case 1:
+    base = "Basis_Settings";
+    option = "l_max";
+    break;
+  case 2:
+    base = "Global_Settings";
+    option = "L_max";
+    break;
+  }
+
+  pes::readConfig(opt_file, pot, base, option, L_max, state_sz);
 
   input_prefix = "dat/" + pot;
 
@@ -38,7 +58,14 @@ int main(int argc, char *argv[]) {
   std::filesystem::path inpath(in_file);
   output_prefix = inpath.parent_path().u8string() + "/" + pot;
 
-  pes::genPES(input_prefix, L_max, state_sz, ct, output_prefix);
+  switch (e_num) {
+  case 1:
+    pes::genPES1e(input_prefix, L_max, state_sz, ct, output_prefix);
+    break;
+  case 2:
+    pes::genPES2e(input_prefix, L_max, state_sz, ct, output_prefix);
+    break;
+  }
 
   return 0;
 }

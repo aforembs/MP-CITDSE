@@ -1,23 +1,22 @@
-#include "pes1e.hpp"
+#include "pes.hpp"
 
-int pes::readConfig(std::string file, std::string &pot, int &l_max,
+int pes::readConfig(std::string file, std::string &pot, std::string set_base,
+                    std::string option, int &L_max,
                     std::vector<int> &state_sz) {
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
   pot = settings["Global_Settings"]["potential"].as<std::string>();
   std::cout << "  Core Potential:                       " << pot << std::endl;
-
-  std::cout << "Basis Settings:" << std::endl;
-  l_max = settings["Basis_Settings"]["l_max"].as<int>();
-  std::cout << "  max l:                                " << l_max << std::endl;
+  L_max = settings[set_base][option].as<int>();
+  std::cout << "  max l/L:                              " << L_max << std::endl;
 
   std::cout << "Propagator Settings:" << std::endl;
-  int states_l = settings["Propagator_Settings"]["states_in_l"].size();
+  int states_L = settings["Propagator_Settings"]["states_in_l"].size();
 
-  assert(states_l == l_max + 1);
+  assert(states_L == L_max + 1);
 
   std::cout << "  No. of states in each l: ";
-  for (auto i = 0; i < states_l; ++i) {
+  for (auto i = 0; i < states_L; ++i) {
     state_sz.push_back(
         settings["Propagator_Settings"]["states_in_l"][i].as<int>());
     std::cout << " " << state_sz[i];
@@ -41,8 +40,8 @@ int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
   return 0;
 }
 
-int pes::genPES(std::string pot, int l_max, std::vector<int> &state_sz,
-                std::vector<std::complex<double>> &ct, std::string output) {
+int pes::genPES1e(std::string pot, int l_max, std::vector<int> &state_sz,
+                  std::vector<std::complex<double>> &ct, std::string output) {
   int n;
 
   // Read the energies of l=0
@@ -76,7 +75,7 @@ int pes::genPES(std::string pot, int l_max, std::vector<int> &state_sz,
   for (auto i = offs[l_max]; i < offs[l_max] + state_sz[l_max]; ++i) {
     PES_En.push_back(En[i]);
   }
-
+  double ion_yield = 0.0;
   // Loop for calculating dP/dEk = 2*|c_i|^2/|E_{i+1}-E_{i-1}|
   for (auto l = 0; l <= l_max; ++l) {
     for (auto i = 1; i < state_sz[l]; ++i) {
@@ -99,6 +98,7 @@ int pes::genPES(std::string pot, int l_max, std::vector<int> &state_sz,
   for (auto i = 0; i < static_cast<int>(PES_En.size()) - 1; ++i) {
     if (PES_En[i] > 0.0) {
       outfile << PES_En[i] << " " << PES[i] << "\n";
+      ion_yield += PES[i];
     }
   }
   outfile.close();
@@ -110,8 +110,72 @@ int pes::genPES(std::string pot, int l_max, std::vector<int> &state_sz,
   }
 
   // Print the ground population and the norm of c(t)
-  std::cout << std::setprecision(15) << "ground_pop: " << std::norm(ct[0])
-            << " norm: " << nrm << "\n";
+  std::cout << std::setprecision(16) << "ground state pop: " << std::norm(ct[0])
+            << "\nnorm: " << nrm << "\nyield: " << ion_yield << "\n";
+
+  return 0;
+}
+
+int pes::genPES2e(std::string pot, int L_max, std::vector<int> &state_sz,
+                  std::vector<std::complex<double>> &ct, std::string output) {
+  std::vector<int> offs;
+  auto sum = 0;
+  offs.push_back(sum);
+  int L_sz;
+
+  std::string filename;
+  std::unique_ptr<H5::H5File> file = nullptr;
+  std::unique_ptr<H5::DataSet> edata = nullptr;
+  std::vector<double> eig;
+  int L_full_sz;
+  double ion_yield = 0.0;
+  double exitation = 0.0;
+  // read sum energies
+  int off = 0;
+  for (auto L = 0; L <= L_max; ++L) {
+    L_sz = state_sz[L];
+    filename = pot + "CI" + std::to_string(L) + ".h5";
+    file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+    edata =
+        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En_CI")));
+    L_full_sz = edata->getSpace().getSimpleExtentNpoints();
+    eig.resize(L_full_sz);
+    edata->read(eig.data(), H5::PredType::NATIVE_DOUBLE);
+    file->close();
+
+    std::ofstream outfile(output + "_pes" + std::to_string(L) + ".dat",
+                          std::ios::out);
+    for (auto i = 0; i < L_sz - 1; ++i) {
+      outfile << std::setprecision(16) << eig[i] + 2.0 << " "
+              << std::norm(
+                     ct[off + i]) // * 2.0 / std::abs(eig[i + 1] - eig[i - 1])
+              << "\n";
+      if (eig[i] + 2.0 > 0.0) {
+        ion_yield += std::norm(ct[off + i]);
+      }
+      if (off + i > 0) {
+        exitation += std::norm(ct[off + i]);
+      }
+    }
+
+    if (L == 0) {
+      std::cout << std::setprecision(16)
+                << "\nground state pop: " << std::norm(ct[0]) << "\n";
+    }
+    outfile.close();
+    off += L_sz;
+  }
+
+  // Get the norm of c(t)
+  double nrm = 0;
+  for (auto &v : ct) {
+    nrm += std::norm(v);
+  }
+
+  // Print the ground population and the norm of c(t)
+  std::cout << std::setprecision(16) << "norm: " << nrm
+            << "\nyield: " << ion_yield << "\nexcited population: " << exitation
+            << "\n";
 
   return 0;
 }

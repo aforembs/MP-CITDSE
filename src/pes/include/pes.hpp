@@ -1,5 +1,5 @@
-#ifndef PES2E_HPP_
-#define PES2E_HPP_
+#ifndef PES_HPP_
+#define PES_HPP_
 
 /**
  * @file pes.hpp
@@ -29,18 +29,19 @@ extern "C" {
  */
 namespace pes {
 /**
- * @brief
+ * @brief Function for reading settings from a .yaml file
  *
  * @param file path to the .yaml file
  * @param pot the name of the selected potential
+ * @param set_base sub-setting group for L_max, different for 1e and 2e cases
+ * @param option setting name for L_max, different for 1e and 2e cases
  * @param L_max the maximum total angular momentum used
- * @param l_max the maximum 1-electron angular momentum used
  * @param state_sz vector containing the sizes of the coefficient vectors for
  * each total angular momentum 'L'
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
-               std::vector<int> &state_sz);
+int readConfig(std::string file, std::string &pot, std::string set_base,
+               std::string option, int &L_max, std::vector<int> &state_sz);
 
 /**
  * @brief Read the 2-electron state coefficients from a file
@@ -53,19 +54,34 @@ int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
 int readCt(std::string file, std::vector<std::complex<double>> &ct);
 
 /**
- * @brief Generate the photoelectron energy spectrum from the 2-electron state
+ * @brief Generate the photoelectron energy spectrum from the 1-electron state
  * coefficients
  *
  * @param pot the name of the selected potential
- * @param L_max the maximum total angular momentum used
+ * @param l_max the maximum 1-electron angular momentum used
  * @param state_sz vector containing the sizes of the coefficient vectors for
  * each angular momentum
  * @param ct vector containing the 1-electron state coefficients
  * @param output path to directory where the PES file will be saved
  * @return int default '0' error otherwise
  */
-int genPES(std::string pot, int L_max, std::vector<int> &state_sz,
-           std::vector<std::complex<double>> &ct, std::string output);
+int genPES1e(std::string pot, int l_max, std::vector<int> &state_sz,
+             std::vector<std::complex<double>> &ct, std::string output);
+
+/**
+ * @brief Generate the photoelectron energy spectrum from the 2-electron
+ * state coefficients
+ *
+ * @param pot the name of the selected potential
+ * @param L_max the maximum total angular momentum used
+ * @param state_sz vector containing the sizes of the coefficient vectors
+ * for each angular momentum
+ * @param ct vector containing the 1-electron state coefficients
+ * @param output path to directory where the PES file will be saved
+ * @return int default '0' error otherwise
+ */
+int genPES2e(std::string pot, int L_max, std::vector<int> &state_sz,
+             std::vector<std::complex<double>> &ct, std::string output);
 } // namespace pes
 
-#endif // PES2E_HPP_
+#endif // PES_HPP_
