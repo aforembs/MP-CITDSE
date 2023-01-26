@@ -23,8 +23,7 @@ all:
 	cd r12/ && [[ -d $(OBJ_DIR) ]] || mkdir $(OBJ_DIR) && $(MAKE)
 	cd dmx2e/ && [[ -d $(OBJ_DIR) ]] || mkdir $(OBJ_DIR) && $(MAKE)
 	cd cibasis/ && [[ -d $(OBJ_DIR) ]] || mkdir $(OBJ_DIR) && $(MAKE)
-	cd tdse2e/ && [[ -d $(OBJ_DIR) ]] || mkdir $(OBJ_DIR) && $(MAKE)
-	cd tdse1e/ && [[ -d $(OBJ_DIR) ]] || mkdir $(OBJ_DIR) && $(MAKE)
+	cd tdse/ && [[ -d $(OBJ_DIR) ]] || mkdir $(OBJ_DIR) && $(MAKE)
 	cd pes/ && [[ -d $(OBJ_DIR) ]] || mkdir $(OBJ_DIR) && $(MAKE)
 
 clean:
@@ -35,7 +34,6 @@ clean:
 	$(MAKE) -C r12/ clean
 	$(MAKE) -C dmx2e/ clean
 	$(MAKE) -C cibasis/ clean
-	$(MAKE) -C tdse2e/ clean
-	$(MAKE) -C tdse1e/ clean
+	$(MAKE) -C tdse/ clean
 	$(MAKE) -C pes/ clean
 	rm -f $(OBJ_DIR)/*
