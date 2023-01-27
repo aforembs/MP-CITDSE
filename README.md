@@ -10,14 +10,12 @@ As a form of result analysis this suite provides two programs for the calculatio
 `h1e`      - Solves the 1-electron TISE on a B-splines basis\
 `w1e`      - Returns the wave function values and integration parameters for subsequent programs\
 `dmx1e`    - Computes the 1-electron dipole matrices\
-`tdse1e`   - Solves the 1-electron TDSE for a given laser pulse\
-`pes-td1`  - Computes the photoelectron energy distribution from the 1-electron time dependent coefficients\
 `gen2eidx` - Indexes the configurations provided for each total (2-electron) angular momentum\
 `r12`      - Calculates the inter-electronic interactions for the 2-electron states\
 `dmx2e`    - Computes the 2-electron dipole matrices using the 1-electron dipoles\
 `cibasis`  - Forms the CI 2-electron basis\
-`tdse2e`   - Solves the 2-electron TDSE for a given laser pulse on the CI basis\
-`pes-td2`  - Computes the photoelectron energy distribution from the 2-electron time dependent coefficients
+`tdse`     - Solves either the '-e 1' (1-electron) or '-e 2' (2-electron) TDSE for a given laser pulse\
+`pes`      - Computes the photoelectron energy distribution from the provided '-e 1' or '-e 2' time dependent coefficients
 
 ## Requirements
 
@@ -66,7 +64,7 @@ For the 1-electron case do:
 bin/run-structure.sh -e 1 -f inp/H_test.yaml
 ```
 
-Alternatively you can run all of the programs individually
+Alternatively you can run the programs individually
 ```
 bin/h1e -f inp/H_test.yaml
 bin/w1e -f inp/H_test.yaml
@@ -74,13 +72,12 @@ bin/dmx1e -f inp/H_test.yaml
 ```
 #### TDSE Solution
 ```
-mkdir dat/H_tdat
-bin/tdse1e -f inp/H_test.yaml -o dat/H_tdat
+bin/tdse -e 1 -f inp/H_test.yaml -o dat/H_tdat
 ```
 Text files contatining the time dependent coefficients will then be available in dat/H_tdat.\
 To obtain the photoelectron energy distribution run:
 ```
-bin/pes-td1 -f inp/H_test.yaml -i dat/H_tdat/h_ct_<time>.dat
+bin/pes -e 1 -f inp/H_test.yaml -i dat/H_tdat/h_ct_<time>.dat
 ```
 This will produce a photoelectron distribution in the file dat/H_tdat/h_pes.dat
 
@@ -91,7 +88,7 @@ For the 2-electron case do:
 ```
 bin/run-structure.sh -e 2 -f inp/He_test.yaml -i inp/
 ```
-Alternatively you can run all of the programs individually
+Alternatively you can run the programs individually
 ```
 bin/h1e -f inp/He_test.yaml
 bin/w1e -f inp/He_test.yaml
@@ -103,13 +100,12 @@ bin/cibasis -f inp/He_test.yaml
 ```
 #### TDSE Solution
 ```
-mkdir dat/He_tdat
-bin/tdse2e -f inp/general.yaml -o dat/He_tdat
+bin/tdse -e 2 -f inp/general.yaml -o dat/He_tdat
 ```
 Text files contatining the time dependent coefficients will then be available in dat/H_tdat.\
 To obtain the photoelectron energy distribution run:
 ```
-bin/pes-td2 -f inp/He_test.yaml -i dat/He_tdat/he_ct_<time>.dat
+bin/pes -e 2 -f inp/He_test.yaml -i dat/He_tdat/he_ct_<time>.dat
 ```
 
 ## I/O
