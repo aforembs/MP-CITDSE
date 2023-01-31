@@ -11,16 +11,15 @@ int pes::readConfig(std::string file, std::string &pot, std::string set_base,
   std::cout << "  max l/L:                              " << L_max << std::endl;
 
   std::cout << "Propagator Settings:" << std::endl;
-  int states_L = settings["Propagator_Settings"]["states_in_l"].size();
-
-  assert(states_L == L_max + 1);
-
-  std::cout << "  No. of states in each l: ";
-  for (auto i = 0; i < states_L; ++i) {
-    state_sz.push_back(
-        settings["Propagator_Settings"]["states_in_l"][i].as<int>());
-    std::cout << " " << state_sz[i];
+  std::vector<int> loc_sz =
+      settings["Propagator_Settings"]["states_in_l"].as<std::vector<int>>();
+  assert(static_cast<int>(loc_sz.size()) == L_max + 1);
+  std::cout << "  states per l/L:          ";
+  for (auto i = 0; i < static_cast<int>(loc_sz.size()); ++i) {
+    std::cout << loc_sz[i] << " ";
+    state_sz.push_back(loc_sz[i]);
   }
+  loc_sz.clear();
   std::cout << std::endl;
 
   return 0;
