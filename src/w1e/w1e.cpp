@@ -124,13 +124,17 @@ int w1e::defaultPointLayout(int qsz, std::vector<uint8_t> &pq_dx, int &pti_sz) {
   int iv_sz = (qsz + 2 - odd_flag) / 2;
   std::fill(pq_dx.begin(), pq_dx.end(), 1);
   // default inner quadrature layout
+  int ids = 1;
   int idm = iv_sz - 1;
   int idp = idm + odd_flag;
   for (int i = 8; i > 1; --i) {
+    pq_dx[ids] = i;
+    pq_dx[ids + 1] = i;
     pq_dx[idm] = i;
     pq_dx[idm - 1] = i;
     pq_dx[idp] = i;
     pq_dx[idp + 1] = i;
+    ids += 2;
     idm -= 2;
     idp += 2;
   }

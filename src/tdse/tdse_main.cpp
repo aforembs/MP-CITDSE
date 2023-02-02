@@ -3,13 +3,14 @@
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
+#include <string>
 #include <unistd.h>
 
 int main(int argc, char *argv[]) {
   std::string opt_file;
   std::string out_dir;
   int L_max, cycles, e_num = 0;
-  std::string pot;
+  std::string pot, init_ct = "ground";
   std::string base, option;
   std::string en_pot, dip_pot;
   std::string en_set, dip_set;
@@ -19,12 +20,13 @@ int main(int argc, char *argv[]) {
   std::vector<int> state_sz;
 
   for (;;) {
-    switch (getopt(argc, argv, "he:f:o:")) {
+    switch (getopt(argc, argv, "he:f:o:s:")) {
     case 'h':
       std::cout << "Program for propagating either the 1- or 2-e^- tdse\n"
                 << "-e <1 or 2> the number of electrons in the tdse\n"
                 << "-f <path> yaml input file with the input settings\n"
-                << "-o <path> output directory for the coefficient files\n";
+                << "-o <path> output directory for the coefficient files\n"
+                << "-s <path> file with the start coefficients\n";
       return -1;
     case 'e':
       e_num = std::stoi(optarg);
@@ -38,6 +40,9 @@ int main(int argc, char *argv[]) {
       continue;
     case 'o':
       out_dir = optarg;
+      continue;
+    case 's':
+      init_ct = optarg;
       continue;
     }
     break;
@@ -59,7 +64,7 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  tdrd::readConfig(opt_file, pot, gauge, base, option, L_max, state_sz, dt, w,
+  tdrd::readConfig(opt_file, pot, base, option, L_max, gauge, state_sz, dt, w,
                    Io, cepd, cycles);
 
   switch (e_num) {
@@ -97,10 +102,20 @@ int main(int argc, char *argv[]) {
 
   std::vector<std::complex<double>> ct(ct_sz);
   ct[0] = std::complex<double>(1.0, 0.0);
-
   double t = 0.0;
+
+  if (init_ct.compare("ground") != 0) {
+    auto t_start = init_ct.find_first_of("0123456789");
+    auto t_end = init_ct.find_last_of("123456789");
+    auto t_sz = t_end - t_start + 1;
+
+    t = std::stod(&init_ct[t_start], &t_sz);
+    std::cout << "Start time (a.u.): " << t << "\n";
+    tdrd::readInitCt(init_ct, ct_sz, ct);
+  }
+
   double tau = pulse::sineT(w * conv::En_ev_au_, cycles);
-  int steps = tau / dt;
+  int steps = (tau - t) / dt;
 
   switch (gauge) {
   case 'v':

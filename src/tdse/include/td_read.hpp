@@ -36,10 +36,10 @@ namespace tdrd {
  *
  * @param file path to the .yaml file
  * @param pot the name of the selected potential
- * @param gauge the gauge of the dipole elements 'v' (velocity) / 'l' (length)
  * @param set_base sub-setting group for L_max, different for 1e and 2e cases
  * @param option setting name for L_max, different for 1e and 2e cases
  * @param L_max the maximum total angular momentum used
+ * @param gauge the gauge of the dipole elements 'v' (velocity) / 'l' (length)
  * @param state_sz vector containing the sizes of the coefficient vectors for
  * each total angular momentum
  * @param timestep the dt parameter used in the time propagation
@@ -49,8 +49,8 @@ namespace tdrd {
  * @param cycles number of cycles in the pulse
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, char &gauge,
-               std::string set_base, std::string option, int &L_max,
+int readConfig(std::string file, std::string &pot, std::string set_base,
+               std::string option, int &L_max, char &gauge,
                std::vector<int> &state_sz, double &timestep, double &w,
                double &Io, double &cepd, int &cycles);
 
@@ -87,6 +87,17 @@ int readEnergies(std::string pot, std::string setname, int L_max, int &ct_sz,
  */
 int readDipoles(std::string pot, std::string setname, char gauge, int L_max,
                 std::vector<int> &state_sz, stvupt &dipoles);
+
+/**
+ * @brief
+ *
+ * @param file
+ * @param ct_sz
+ * @param ct
+ * @return int
+ */
+int readInitCt(std::string file, int ct_sz,
+               std::vector<std::complex<double>> &ct);
 } // namespace tdrd
 
 #endif // TD_READ_HPP_

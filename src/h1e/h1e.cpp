@@ -140,38 +140,19 @@ int h1e::genCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
               w_bb.begin() + l * nk);
   }
 
-  if (nm2 > 200) {
-    for (int l = 0; l <= l_max; ++l) {
-      llp1 = l * (l + 1);
-      lnk = l * nk;
-#pragma omp parallel for private(nik)
-      for (int ni = 0; ni < nm2; ++ni) {
-        nik = ni * k;
-        for (int j = 0; j < k; ++j) {
-          aa[lnk + j + nik] = mass * ov_dBdB[j + nik] - ov_V[j + nik] +
-                              mass * llp1 * ov_1_r2[j + nik];
-        }
+  for (int l = 0; l <= l_max; ++l) {
+    llp1 = l * (l + 1);
+    lnk = l * nk;
+    for (int ni = 0; ni < nm2; ++ni) {
+      nik = ni * k;
+      for (int j = 0; j < k; ++j) {
+        aa[lnk + j + nik] = mass * ov_dBdB[j + nik] - ov_V[j + nik] +
+                            mass * llp1 * ov_1_r2[j + nik];
       }
-
-      LAPACKE_dsbgvd(LAPACK_COL_MAJOR, 'V', 'U', nm2, k - 1, k - 1, &aa[lnk], k,
-                     &w_bb[lnk], k, &Enl[l * nm2], &Cnl_tmp[l * nm22], nm2);
     }
-  } else {
-    for (int l = 0; l <= l_max; ++l) {
-      llp1 = l * (l + 1);
-      lnk = l * nk;
-#pragma omp parallel for private(nik)
-      for (int ni = 0; ni < nm2; ++ni) {
-        nik = ni * k;
-        for (int j = 0; j < k; ++j) {
-          aa[lnk + j + nik] = mass * ov_dBdB[j + nik] - ov_V[j + nik] +
-                              mass * llp1 * ov_1_r2[j + nik];
-        }
-      }
 
-      LAPACKE_dsbgv(LAPACK_COL_MAJOR, 'V', 'U', nm2, k - 1, k - 1, &aa[lnk], k,
-                    &w_bb[lnk], k, &Enl[l * nm2], &Cnl_tmp[l * nm22], nm2);
-    }
+    LAPACKE_dsbgvd(LAPACK_COL_MAJOR, 'V', 'U', nm2, k - 1, k - 1, &aa[lnk], k,
+                   &w_bb[lnk], k, &Enl[l * nm2], &Cnl_tmp[l * nm22], nm2);
   }
 
   for (int l = 0; l <= l_max; ++l) {

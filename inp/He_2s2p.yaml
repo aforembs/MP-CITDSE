@@ -1,7 +1,7 @@
 # Settings consistent among all programs
 Global_Settings:
   potential: "he"           # potential name
-  Outer_quadrature_size: 600 # size of outer quadrature
+  Outer_quadrature_size: 1800 # size of outer quadrature
   Quadrature_type: "gauss-legendre" # gauss-legendre or user-defined
   quad_file: "cheb.dat" # only read if above is "user-defined"
   Inner_Layout: "default" # default or user-defined
@@ -10,10 +10,10 @@ Global_Settings:
   gauge: 'v'                # length or velocity gauge
 # Settings for generating the 1e basis radial functions
 Basis_Settings:
-  state_no: 322             # number of 1e states +2
+  state_no: 3000            # number of 1e states +2
   max_spline_k: 9           # Splines for h1e
   GL_quad_points: 15        # quadrature for h1e
-  R_max: 240                # box radius in a.u.
+  R_max: 1000               # box radius in a.u.
   grid: "linear"            # grid type 
   knot_file: ""             # only read if above is "user-defined"
   l_max: 7                  # l <= l_max
@@ -24,10 +24,10 @@ R12_Settings:
   k_limit: "wigner" # "wigner" - default or an integer - only use if ground energy is incorrect 
 # Settings for the TDSE solver
 Propagator_Settings:
-  states_in_l: [3030,2799,2808,2808] #[389,389,389,389,389]
+  states_in_l: [3000,3000,3000,3000] #[389,389,389,389,389]
   dt: 0.1 # time step size
 Field_Parameters:
-  w: 15 # photon energy
+  w: 60 # photon energy
   Io: 1.0e14 # peak intensity
   cepd: 0.0  # phase delay
   cycles: 12 # number of field cycles

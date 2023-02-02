@@ -1,9 +1,10 @@
 #include "td_read.hpp"
 
-int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
-                     std::string set_base, std::string option, int &L_max,
-                     std::vector<int> &state_sz, double &timestep, double &w,
-                     double &Io, double &cepd, int &cycles) {
+int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
+                     std::string option, int &L_max, char &gauge,
+                     std::vector<int> &state_sz, double &timestep,
+                     //  int &pop_n, int &pop_l,
+                     double &w, double &Io, double &cepd, int &cycles) {
 
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
@@ -29,6 +30,10 @@ int tdrd::readConfig(std::string file, std::string &pot, char &gauge,
   timestep = settings["Propagator_Settings"]["dt"].as<double>();
   std::cout << "  timestep dt:                          " << timestep
             << std::endl;
+  // pop_n = settings["Propagator_Settings"]["pop(t)"]["n"].as<int>();
+  // pop_l = settings["Propagator_Settings"]["pop(t)"]["l"].as<int>();
+  // std::cout << "  population over time of state (n l):  " << pop_n << " "
+  //           << pop_l << std::endl;
 
   std::cout << "Field Parameters:" << std::endl;
   w = settings["Field_Parameters"]["w"].as<double>();
@@ -111,6 +116,22 @@ int tdrd::readDipoles(std::string pot, std::string setname, char gauge,
     dl->read(dipoles[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace,
              dl_space);
     file->close();
+  }
+
+  return 0;
+}
+
+int tdrd::readInitCt(std::string file, int ct_sz,
+                     std::vector<std::complex<double>> &ct) {
+  std::ifstream fl(file);
+  std::string temp;
+  for (auto i = 0; i < ct_sz; ++i) {
+    std::getline(fl, temp);
+    std::istringstream iss(temp);
+    int idx;
+    double real, complex;
+    iss >> idx >> real >> complex;
+    ct[i] = std::complex<double>(real, complex);
   }
 
   return 0;
