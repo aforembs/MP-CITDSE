@@ -2,9 +2,8 @@
 
 int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
                      std::string option, int &L_max, char &gauge,
-                     std::vector<int> &state_sz, double &timestep,
-                     //  int &pop_n, int &pop_l,
-                     double &w, double &Io, double &cepd, int &cycles) {
+                     std::vector<int> &state_sz, double &timestep, double &w,
+                     double &Io, double &cepd, int &cycles) {
 
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
@@ -30,10 +29,6 @@ int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
   timestep = settings["Propagator_Settings"]["dt"].as<double>();
   std::cout << "  timestep dt:                          " << timestep
             << std::endl;
-  // pop_n = settings["Propagator_Settings"]["pop(t)"]["n"].as<int>();
-  // pop_l = settings["Propagator_Settings"]["pop(t)"]["l"].as<int>();
-  // std::cout << "  population over time of state (n l):  " << pop_n << " "
-  //           << pop_l << std::endl;
 
   std::cout << "Field Parameters:" << std::endl;
   w = settings["Field_Parameters"]["w"].as<double>();

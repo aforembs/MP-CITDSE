@@ -130,10 +130,10 @@ public:
 };
 
 int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
-                fieldInit fieldst, fieldFcn field, double w, double Io,
-                double cepd, int cycles, int ct_sz, std::vector<int> &offs,
-                std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
-                std::vector<std::complex<double>> &ct) {
+                int pop_n, int pop_l, fieldInit fieldst, fieldFcn field,
+                double w, double Io, double cepd, int cycles, int ct_sz,
+                std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
+                stvupt &dipoles, std::vector<std::complex<double>> &ct) {
   double IoA, wA, Ao, cepds, Wenv;
   pulse::toAU(Io, w, IoA, wA);
 
@@ -179,9 +179,11 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
   boost::numeric::odeint::runge_kutta_fehlberg78<state_type> rkf;
 
   field_fl.open(output + "_field.dat", std::ios::out);
-  f_pop.open(output + "_pop.dat", std::ios::out);
+  f_pop.open(output + "_pop" + std::to_string(pop_n + 1) +
+                 std::to_string(pop_l) + ".dat",
+             std::ios::out);
 
-  f_pop << t << " " << std::norm(ct[0]) << "\n";
+  f_pop << t << " " << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
@@ -197,8 +199,8 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
       n /= ctnrm;
     }
 
-    f_pop << std::setprecision(16) << t << " " << std::norm(ct[0]) << " "
-          << ctnrm << "\n";
+    f_pop << std::setprecision(16) << t << " "
+          << std::norm(ct[offs[pop_l] + pop_n]) << " " << ctnrm << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";
@@ -217,10 +219,10 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 }
 
 int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
-                fieldInit fieldst, fieldFcn field, double w, double Io,
-                double cepd, int cycles, int ct_sz, std::vector<int> &offs,
-                std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
-                std::vector<std::complex<double>> &ct) {
+                int pop_n, int pop_l, fieldInit fieldst, fieldFcn field,
+                double w, double Io, double cepd, int cycles, int ct_sz,
+                std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
+                stvupt &dipoles, std::vector<std::complex<double>> &ct) {
   double IoA, wA, Ao, cepds, Wenv;
   pulse::toAU(Io, w, IoA, wA);
 
@@ -266,9 +268,11 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
   boost::numeric::odeint::runge_kutta_fehlberg78<state_type> rkf;
 
   field_fl.open(output + "_field.dat", std::ios::out);
-  f_pop.open(output + "_pop.dat", std::ios::out);
+  f_pop.open(output + "_pop" + std::to_string(pop_n + 1) +
+                 std::to_string(pop_l) + ".dat",
+             std::ios::out);
 
-  f_pop << t << " " << std::norm(ct[0]) << "\n";
+  f_pop << t << " " << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
@@ -284,7 +288,8 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
       n /= ctnrm;
     }
 
-    f_pop << std::setprecision(16) << t << " " << std::norm(ct[0]) << "\n";
+    f_pop << std::setprecision(16) << t << " "
+          << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";

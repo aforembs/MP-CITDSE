@@ -1,5 +1,6 @@
 #include "pes.hpp"
 #include <cstdlib>
+#include <filesystem>
 #include <iostream>
 #include <unistd.h>
 
@@ -10,14 +11,17 @@ int main(int argc, char *argv[]) {
   std::string base, option;
   std::string input_prefix, output_prefix;
   std::vector<int> state_sz;
+  bool s_flag = 0, l_flag = 0;
 
   for (;;) {
-    switch (getopt(argc, argv, "he:f:i:")) {
+    switch (getopt(argc, argv, "he:f:i:sl")) {
     case 'h':
       std::cout << "Program for generating the PES from coeffs\n"
                 << "-e <1 or 2> the number of electrons in the tdse\n"
                 << "-f <path> yaml input file with the input settings\n"
-                << "-i <path> file containing the coefficients\n";
+                << "-i <path> file containing the coefficients\n"
+                << "-s generate PES summed over all 'l/L'\n"
+                << "-l separate PES for each 'l'\n";
       return -1;
     case 'e':
       e_num = std::stoi(optarg);
@@ -32,8 +36,21 @@ int main(int argc, char *argv[]) {
     case 'i':
       in_file = optarg;
       continue;
+    case 's':
+      s_flag = 1;
+      continue;
+    case 'l':
+      l_flag = 1;
+      continue;
     }
     break;
+  }
+
+  std::filesystem::path inpath(in_file);
+  if (!std::filesystem::exists(inpath) ||
+      !std::filesystem::is_regular_file(in_file)) {
+    std::cout << "Invalid coefficient file path, -i <path>!!\n";
+    return -1;
   }
 
   switch (e_num) {
@@ -55,15 +72,15 @@ int main(int argc, char *argv[]) {
 
   pes::readCt(in_file, ct);
 
-  std::filesystem::path inpath(in_file);
   output_prefix = inpath.parent_path().u8string() + "/" + pot;
 
   switch (e_num) {
   case 1:
-    pes::genPES1e(input_prefix, L_max, state_sz, ct, output_prefix);
+    pes::genPES1e(input_prefix, l_flag, L_max, state_sz, ct, output_prefix);
     break;
   case 2:
-    pes::genPES2e(input_prefix, L_max, state_sz, ct, output_prefix);
+    pes::genPES2e(input_prefix, s_flag, l_flag, L_max, state_sz, ct,
+                  output_prefix);
     break;
   }
 

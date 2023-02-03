@@ -39,10 +39,10 @@ int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
   return 0;
 }
 
-int pes::genPES1e(std::string pot, int l_max, std::vector<int> &state_sz,
+int pes::genPES1e(std::string pot, bool l_flag, int l_max,
+                  std::vector<int> &state_sz,
                   std::vector<std::complex<double>> &ct, std::string output) {
   int n;
-
   // Read the energies of l=0
   auto filename = pot + std::to_string(0) + ".h5";
   auto file =
@@ -76,19 +76,49 @@ int pes::genPES1e(std::string pot, int l_max, std::vector<int> &state_sz,
   }
   double ion_yield = 0.0;
   // Loop for calculating dP/dEk = 2*|c_i|^2/|E_{i+1}-E_{i-1}|
-  for (auto l = 0; l <= l_max; ++l) {
-    for (auto i = 1; i < state_sz[l]; ++i) {
-      for (auto k = 1; k < static_cast<int>(PES_En.size()) - 1; ++k) {
-        auto ndiff = std::abs(PES_En[k] - PES_En[k - 1]);
-        auto pdiff = std::abs(PES_En[k + 1] - PES_En[k]);
+  if (!l_flag) {
+    for (auto l = 0; l <= l_max; ++l) {
+      for (auto i = 1; i < state_sz[l]; ++i) {
+        for (auto k = 1; k < static_cast<int>(PES_En.size()) - 1; ++k) {
+          auto ndiff = std::abs(PES_En[k] - PES_En[k - 1]);
+          auto pdiff = std::abs(PES_En[k + 1] - PES_En[k]);
 
-        bool cond = (En[offs[l] + i] > PES_En[k] - 0.5 * ndiff) &&
-                    (En[offs[l] + i] < PES_En[k] + 0.5 * pdiff);
-        if (cond) {
-          PES[k] += std::norm(ct[offs[l] + i]) * 2.0 / (ndiff + pdiff);
-          break;
+          bool cond = (En[offs[l] + i] > PES_En[k] - 0.5 * ndiff) &&
+                      (En[offs[l] + i] < PES_En[k] + 0.5 * pdiff);
+          if (cond) {
+            PES[k] += std::norm(ct[offs[l] + i]) * 2.0 / (ndiff + pdiff);
+            break;
+          }
         }
       }
+    }
+  } else {
+    std::vector<double> PES_l(2 * n);
+    for (auto l = 0; l <= l_max; ++l) {
+      for (auto i = 1; i < state_sz[l]; ++i) {
+        for (auto k = 1; k < static_cast<int>(PES_En.size()) - 1; ++k) {
+          auto ndiff = std::abs(PES_En[k] - PES_En[k - 1]);
+          auto pdiff = std::abs(PES_En[k + 1] - PES_En[k]);
+
+          bool cond = (En[offs[l] + i] > PES_En[k] - 0.5 * ndiff) &&
+                      (En[offs[l] + i] < PES_En[k] + 0.5 * pdiff);
+          if (cond) {
+            auto cf_en = std::norm(ct[offs[l] + i]) * 2.0 / (ndiff + pdiff);
+            PES[k] += cf_en;
+            PES_l[k] += cf_en;
+            break;
+          }
+        }
+      }
+      std::fstream lfile(output + "_pes" + std::to_string(l) + ".dat",
+                         std::ios::out);
+      for (auto i = 0; i < static_cast<int>(PES_En.size()) - 1; ++i) {
+        if (PES_En[i] > 0.0) {
+          lfile << PES_En[i] << " " << PES_l[i] << "\n";
+        }
+      }
+      lfile.close();
+      std::fill(PES_l.begin(), PES_l.end(), 0);
     }
   }
 
@@ -115,7 +145,8 @@ int pes::genPES1e(std::string pot, int l_max, std::vector<int> &state_sz,
   return 0;
 }
 
-int pes::genPES2e(std::string pot, int L_max, std::vector<int> &state_sz,
+int pes::genPES2e(std::string pot, bool s_flag, bool l_flag, int L_max,
+                  std::vector<int> &state_sz,
                   std::vector<std::complex<double>> &ct, std::string output) {
   std::vector<int> offs;
   auto sum = 0;
@@ -125,10 +156,23 @@ int pes::genPES2e(std::string pot, int L_max, std::vector<int> &state_sz,
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> edata = nullptr;
+  hsize_t count[1] = {1}, offset[1] = {0}, stride[1] = {1}, block[1] = {1};
   std::vector<double> eig;
   int L_full_sz;
   double ion_yield = 0.0;
   double exitation = 0.0;
+  double threshold = 0.0;
+
+  // read first ionisation threshold
+  filename = pot + "0.h5";
+  file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+  edata = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
+  auto set1 = edata->getSpace();
+  set1.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
+  edata->read(&threshold, H5::PredType::NATIVE_DOUBLE,
+              H5::DataSpace(1, count, NULL), set1);
+  file->close();
+
   // read sum energies
   int off = 0;
   for (auto L = 0; L <= L_max; ++L) {
@@ -145,11 +189,11 @@ int pes::genPES2e(std::string pot, int L_max, std::vector<int> &state_sz,
     std::ofstream outfile(output + "_pes" + std::to_string(L) + ".dat",
                           std::ios::out);
     for (auto i = 0; i < L_sz - 1; ++i) {
-      outfile << std::setprecision(16) << eig[i] + 2.0 << " "
+      outfile << std::setprecision(16) << eig[i] - threshold << " "
               << std::norm(
                      ct[off + i]) // * 2.0 / std::abs(eig[i + 1] - eig[i - 1])
               << "\n";
-      if (eig[i] + 2.0 > 0.0) {
+      if (eig[i] - threshold > 0.0) {
         ion_yield += std::norm(ct[off + i]);
       }
       if (off + i > 0) {

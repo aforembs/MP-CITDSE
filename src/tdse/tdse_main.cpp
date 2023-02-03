@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
   std::string opt_file;
   std::string out_dir;
   int L_max, cycles, e_num = 0;
+  int pop_n = 0, pop_l = 0;
   std::string pot, init_ct = "ground";
   std::string base, option;
   std::string en_pot, dip_pot;
@@ -20,13 +21,15 @@ int main(int argc, char *argv[]) {
   std::vector<int> state_sz;
 
   for (;;) {
-    switch (getopt(argc, argv, "he:f:o:s:")) {
+    switch (getopt(argc, argv, "he:f:o:s:n:l:")) {
     case 'h':
       std::cout << "Program for propagating either the 1- or 2-e^- tdse\n"
                 << "-e <1 or 2> the number of electrons in the tdse\n"
                 << "-f <path> yaml input file with the input settings\n"
                 << "-o <path> output directory for the coefficient files\n"
-                << "-s <path> file with the start coefficients\n";
+                << "-s <path> file with the start coefficients\n"
+                << "-n <int> primary quantum number of state to track\n"
+                << "-l <int> angular quantum number of state to track\n";
       return -1;
     case 'e':
       e_num = std::stoi(optarg);
@@ -43,6 +46,21 @@ int main(int argc, char *argv[]) {
       continue;
     case 's':
       init_ct = optarg;
+      continue;
+    case 'n':
+      pop_n = std::stoi(optarg);
+      if (pop_n < 1) {
+        std::cout << "Invalid primary quantum number -n, use int > 0\n";
+        return -1;
+      }
+      --pop_n;
+      continue;
+    case 'l':
+      pop_l = std::stoi(optarg);
+      if (pop_n < 0) {
+        std::cout << "Invalid angular momentum number -l, use int > 0\n";
+        return -1;
+      }
       continue;
     }
     break;
@@ -119,14 +137,14 @@ int main(int argc, char *argv[]) {
 
   switch (gauge) {
   case 'v':
-    tdse::propV(o_file_prefix, L_max, t, dt, steps, pulse::sineASetup,
-                pulse::sineAA, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
-                dipoles, ct);
+    tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
+                pulse::sineASetup, pulse::sineAA, w, Io, cepd, cycles, ct_sz,
+                offs, state_sz, eig, dipoles, ct);
     break;
   case 'l':
-    tdse::propL(o_file_prefix, L_max, t, dt, steps, pulse::sineESetup,
-                pulse::sineEE, w, Io, cepd, cycles, ct_sz, offs, state_sz, eig,
-                dipoles, ct);
+    tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
+                pulse::sineESetup, pulse::sineEE, w, Io, cepd, cycles, ct_sz,
+                offs, state_sz, eig, dipoles, ct);
     break;
   }
 

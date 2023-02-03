@@ -37,6 +37,8 @@ namespace tdse {
  * @param t the time at the start of the propagation
  * @param dt the time step
  * @param steps the total number of time steps
+ * @param pop_n
+ * @param pop_l
  * @param fieldst function pointer to the field initialisation fuction
  * @param field function pointer to the function used to generate the field at
  * time t
@@ -58,8 +60,8 @@ namespace tdse {
  * @return int default '0' error otherwise
  */
 int propV(std::string output, int L_max, double t, double dt, int steps,
-          fieldInit fieldst, fieldFcn field, double w, double Io, double cepd,
-          int cycles, int ct_sz, std::vector<int> &offs,
+          int pop_n, int pop_l, fieldInit fieldst, fieldFcn field, double w,
+          double Io, double cepd, int cycles, int ct_sz, std::vector<int> &offs,
           std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
           std::vector<std::complex<double>> &ct);
 
@@ -71,6 +73,8 @@ int propV(std::string output, int L_max, double t, double dt, int steps,
  * @param t the time at the start of the propagation
  * @param dt the time step
  * @param steps the total number of time steps
+ * @param pop_n
+ * @param pop_l
  * @param fieldst function pointer to the field initialisation fuction
  * @param field function pointer to the function used to generate the field at
  * time t
@@ -92,8 +96,8 @@ int propV(std::string output, int L_max, double t, double dt, int steps,
  * @return int default '0' error otherwise
  */
 int propL(std::string output, int L_max, double t, double dt, int steps,
-          fieldInit fieldst, fieldFcn field, double w, double Io, double cepd,
-          int cycles, int ct_sz, std::vector<int> &offs,
+          int pop_n, int pop_l, fieldInit fieldst, fieldFcn field, double w,
+          double Io, double cepd, int cycles, int ct_sz, std::vector<int> &offs,
           std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
           std::vector<std::complex<double>> &ct);
 } // namespace tdse
