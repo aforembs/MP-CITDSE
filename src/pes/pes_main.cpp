@@ -11,7 +11,7 @@ int main(int argc, char *argv[]) {
   std::string base, option;
   std::string input_prefix, output_prefix;
   std::vector<int> state_sz;
-  bool s_flag = 0, l_flag = 0;
+  bool s_flag = 0;
 
   for (;;) {
     switch (getopt(argc, argv, "he:f:i:sl")) {
@@ -38,9 +38,6 @@ int main(int argc, char *argv[]) {
       continue;
     case 's':
       s_flag = 1;
-      continue;
-    case 'l':
-      l_flag = 1;
       continue;
     }
     break;
@@ -76,11 +73,10 @@ int main(int argc, char *argv[]) {
 
   switch (e_num) {
   case 1:
-    pes::genPES1e(input_prefix, l_flag, L_max, state_sz, ct, output_prefix);
+    pes::genPES1e(input_prefix, s_flag, L_max, state_sz, ct, output_prefix);
     break;
   case 2:
-    pes::genPES2e(input_prefix, s_flag, l_flag, L_max, state_sz, ct,
-                  output_prefix);
+    pes::genPES2e(input_prefix, s_flag, L_max, state_sz, ct, output_prefix);
     break;
   }
 

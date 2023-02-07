@@ -58,7 +58,7 @@ int readCt(std::string file, std::vector<std::complex<double>> &ct);
  * coefficients
  *
  * @param pot the name of the selected potential
- * @param l_flag
+ * @param s_flag
  * @param l_max the maximum 1-electron angular momentum used
  * @param state_sz vector containing the sizes of the coefficient vectors for
  * each angular momentum
@@ -66,7 +66,7 @@ int readCt(std::string file, std::vector<std::complex<double>> &ct);
  * @param output path to directory where the PES file will be saved
  * @return int default '0' error otherwise
  */
-int genPES1e(std::string pot, bool l_flag, int l_max,
+int genPES1e(std::string pot, bool s_flag, int l_max,
              std::vector<int> &state_sz, std::vector<std::complex<double>> &ct,
              std::string output);
 
@@ -76,7 +76,6 @@ int genPES1e(std::string pot, bool l_flag, int l_max,
  *
  * @param pot the name of the selected potential
  * @param s_flag
- * @param l_flag
  * @param L_max the maximum total angular momentum used
  * @param state_sz vector containing the sizes of the coefficient vectors
  * for each angular momentum
@@ -84,7 +83,7 @@ int genPES1e(std::string pot, bool l_flag, int l_max,
  * @param output path to directory where the PES file will be saved
  * @return int default '0' error otherwise
  */
-int genPES2e(std::string pot, bool s_flag, bool l_flag, int L_max,
+int genPES2e(std::string pot, bool s_flag, int L_max,
              std::vector<int> &state_sz, std::vector<std::complex<double>> &ct,
              std::string output);
 } // namespace pes
