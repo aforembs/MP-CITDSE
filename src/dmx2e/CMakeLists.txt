@@ -14,6 +14,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_BINARY_DIR}/../src/include
         ${CMAKE_BINARY_DIR}/lib/
+        ${H5_INC}
 )
 
 find_package(yaml-cpp REQUIRED)

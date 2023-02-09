@@ -15,6 +15,7 @@ target_include_directories(${PROJECT_NAME}
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_BINARY_DIR}/../src/include
         ${BLA_INC}
+        ${H5_INC}
 )
 
 find_package(yaml-cpp REQUIRED)
@@ -25,7 +26,7 @@ find_package(OpenMP REQUIRED)
 
 find_package(TBB REQUIRED)
 
-find_package(BLAS REQUIRED)
+find_package(BLAS REQUIRED HINT ${BLA_HINT})
 
 find_package(GSL REQUIRED)
 
