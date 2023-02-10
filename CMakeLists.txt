@@ -27,14 +27,17 @@ if(NOT DEFINED BLA_VENDOR)
 endif()
 
 if(${BLA_VENDOR} MATCHES OpenBLAS) 
-    set(BLA_INC /opt/OpenBLAS/include)
+    set(BLAS_INC /opt/OpenBLAS/include)
 endif()
 
 if(DEFINED BLA_HINT)
     find_package(BLAS REQUIRED HINT ${BLA_HINT})
-    set(BLA_INC ${BLA_INC})
+    set(BLAS_INC ${BLA_INC})
 endif()
 
+if(DEFINED H5_INC)
+    set(H5_INC ${H5_INC})
+endif()
 
 add_subdirectory(3rd_party)
 

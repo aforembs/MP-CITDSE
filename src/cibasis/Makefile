@@ -21,8 +21,22 @@ ifndef BLAS_INC
 BLAS_INC = /opt/OpenBLAS/include
 endif
 
-CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC)
-LDFLAGS = -lhdf5 -lhdf5_cpp -lyaml-cpp -llapack $(BLAS_LIB) -fopenmp
+ifndef HDF5_LIB
+HDF5_LIB = -lhdf5 -lhdf5_cpp
+endif
+
+ifndef YAML_LIB
+YAML_LIB = -lyaml-cpp
+endif
+
+ifndef LAPACKE_LIB
+LAPACKE_LIB = -llapack
+endif
+
+CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 \
+ -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -I$(HDF5_INC) -I$(YAML_INC) -I$(LAPACKE_INC)
+LDFLAGS = $(HDF5_LIB) $(YAML_LIB) $(LAPACKE_LIB) $(BLAS_LIB) -fopenmp
+#-lhdf5_cpp -lyaml-cpp -llapack $(BLAS_LIB) -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
