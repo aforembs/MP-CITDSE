@@ -10,7 +10,7 @@ BLAS_INC = /opt/OpenBLAS/include -Wno-c99-extensions
 WIG_LIB = -lwigxjpf -L../../lib
 WIG_INC = ../../lib/include
 
-HDF5_LIB = -lhdf5 -lhdf5-cpp
+HDF5_LIB = -lhdf5 -lhdf5_cpp
 HDF5_INC = 
 
 YAML_LIB = -lyaml-cpp
