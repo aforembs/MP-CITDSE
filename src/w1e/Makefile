@@ -4,8 +4,8 @@ endif
 
 EXEC = ../../bin/w1e
 
-IDIR = include
-SH_IDIR = ../include
+IDIR = -Iinclude
+SH_IDIR = -I../include
 ODIR = obj
 
 VPATH := ../
@@ -26,7 +26,7 @@ YAML_LIB = -lyaml-cpp
 endif
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 \
--I$(IDIR) -I$(SH_IDIR) -fopenmp -I$(HDF5_INC) -I$(YAML_INC)
+-fopenmp $(IDIR) $(SH_IDIR) $(HDF5_INC) $(YAML_INC)
 LDFLAGS = $(HDF5_LIB) $(YAML_LIB) -L$(VPATH) -lgsl $(BLAS_LIB) -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))

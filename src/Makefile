@@ -5,10 +5,10 @@ OBJ_DIR = obj
 CPPC = g++
 
 BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib -Wno-c99-extensions
-BLAS_INC = /opt/OpenBLAS/include -Wno-c99-extensions
+BLAS_INC = -I/opt/OpenBLAS/include -Wno-c99-extensions
 
 WIG_LIB = -lwigxjpf -L../../lib
-WIG_INC = ../../lib/include
+WIG_INC = -I../../lib/include
 
 HDF5_LIB = -lhdf5 -lhdf5_cpp
 HDF5_INC = 

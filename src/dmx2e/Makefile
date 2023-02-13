@@ -4,8 +4,8 @@ endif
 
 EXEC = ../../bin/dmx2e
 
-IDIR = include
-SH_IDIR = ../include
+IDIR = -Iinclude
+SH_IDIR = -I../include
 ODIR = obj
 
 VPATH := ../
@@ -18,7 +18,7 @@ WIG_LIB = -lwigxjpf -L../../lib
 endif
 
 ifndef WIG_INC
-WIG_INC = ../../lib/include
+WIG_INC = -I../../lib/include
 endif
 
 ifndef HDF5_LIB
@@ -30,7 +30,7 @@ YAML_LIB = -lyaml-cpp
 endif
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 \
--fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(WIG_INC) -I$(HDF5_INC) -I$(YAML_INC)
+-fopenmp $(IDIR) $(SH_IDIR) $(WIG_INC) $(HDF5_INC) $(YAML_INC)
 LDFLAGS =  $(HDF5_LIB) $(YAML_LIB) -ltbb -L$(VPATH) $(WIG_LIB) -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))

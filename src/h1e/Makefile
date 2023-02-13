@@ -4,8 +4,8 @@ endif
 
 EXEC = ../../bin/h1e
 
-IDIR = include
-SH_IDIR = ../include
+IDIR = -Iinclude
+SH_IDIR = -I../include
 ODIR = obj
 
 VPATH := ../
@@ -18,7 +18,7 @@ BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
 endif
 
 ifndef BLAS_INC
-BLAS_INC = /opt/OpenBLAS/include
+BLAS_INC = -I/opt/OpenBLAS/include
 endif
 
 ifndef HDF5_LIB
@@ -30,7 +30,7 @@ YAML_LIB = -lyaml-cpp
 endif
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 \
- -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -I$(HDF5_INC) -I$(YAML_INC)
+ -fopenmp $(IDIR) $(SH_IDIR) $(BLAS_INC) $(HDF5_INC) $(YAML_INC)
 LDFLAGS = $(HDF5_LIB) $(YAML_LIB) -ltbb -fopenmp -lgsl $(BLAS_LIB)
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))

@@ -4,21 +4,18 @@ endif
 
 EXEC = ../../bin/cibasis
 
-IDIR = include
-SH_IDIR = ../include
+IDIR = -Iinclude
+SH_IDIR = -I../include
 ODIR = obj
 
-VPATH := ../
-
 SRC =cibasis_main.cpp cibasis.cpp
-SRC_SH=
 
 ifndef BLAS_LIB
 BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
 endif
 
 ifndef BLAS_INC
-BLAS_INC = /opt/OpenBLAS/include
+BLAS_INC = -I/opt/OpenBLAS/include
 endif
 
 ifndef HDF5_LIB
@@ -34,11 +31,9 @@ LAPACKE_LIB = -llapack
 endif
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 \
- -fopenmp -I$(IDIR) -I$(SH_IDIR) -I$(BLAS_INC) -I$(HDF5_INC) -I$(YAML_INC) -I$(LAPACKE_INC)
+ -fopenmp $(IDIR) $(SH_IDIR) $(BLAS_INC) $(HDF5_INC) $(YAML_INC) $(LAPACKE_INC)
 LDFLAGS = $(HDF5_LIB) $(YAML_LIB) $(LAPACKE_LIB) $(BLAS_LIB) -fopenmp
-#-lhdf5_cpp -lyaml-cpp -llapack $(BLAS_LIB) -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
-OBJ+=$(join $(addsuffix ../obj/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
 all: $(SRC) $(EXEC)
 
