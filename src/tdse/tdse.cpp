@@ -187,7 +187,8 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
              std::ios::out);
 
   f_pop << "#time (a.u.), population\n";
-  f_pop << t << " " << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
+  f_pop << std::setprecision(16) << t << " "
+        << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
@@ -204,7 +205,7 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
     }
 
     f_pop << std::setprecision(16) << t << " "
-          << std::norm(ct[offs[pop_l] + pop_n]) << " " << ctnrm << "\n";
+          << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
     if (st % print == 0) {
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";
@@ -281,7 +282,8 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
              std::ios::out);
 
   f_pop << "#time (a.u.), population\n";
-  f_pop << t << " " << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
+  f_pop << std::setprecision(16) << t << " "
+        << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
