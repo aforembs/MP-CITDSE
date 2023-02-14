@@ -31,6 +31,6 @@ find_package(BLAS REQUIRED HINT ${BLA_HINT})
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE 
-        yaml-cpp hdf5 hdf5_cpp tbb ${BLAS_LIBRARIES}
+        yaml-cpp hdf5 hdf5_cpp tbb ${BLAS_LIBRARIES} ${HDF5_LIBRARIES}
 )
 target_link_options(${PROJECT_NAME} PRIVATE -fopenmp)

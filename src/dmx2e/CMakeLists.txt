@@ -25,5 +25,5 @@ find_package(TBB REQUIRED)
 
 find_package(OpenMP REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE yaml-cpp hdf5 hdf5_cpp tbb wigxjpf)
+target_link_libraries(${PROJECT_NAME} PRIVATE yaml-cpp hdf5 hdf5_cpp tbb wigxjpf ${HDF5_LIBRARIES})
 target_link_options(${PROJECT_NAME} PRIVATE -fopenmp)
