@@ -50,6 +50,6 @@ int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
  */
 int genDipole(std::string pot, int L_max, int l_max, char gauge,
               std::string dir);
-}; // namespace dmx2e
+} // namespace dmx2e
 
 #endif // DMX2E_H_

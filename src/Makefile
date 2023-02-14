@@ -2,13 +2,15 @@ BIN_DIR = ../bin
 DAT_DIR = ../dat
 OBJ_DIR = obj
 
+LIB_DIR = ../../lib
+
 CPPC = g++
 
 BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib -Wno-c99-extensions
 BLAS_INC = -I/opt/OpenBLAS/include -Wno-c99-extensions
 
-WIG_LIB = -lwigxjpf -L../../lib
-WIG_INC = -I../../lib/include
+WIG_LIB = -lwigxjpf -L$(LIB_DIR)/wigxjpf/lib
+WIG_INC = -I$(LIB_DIR)/wigxjpf/inc
 
 HDF5_LIB = -lhdf5 -lhdf5_cpp
 HDF5_INC = 

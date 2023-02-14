@@ -71,6 +71,27 @@ int main(int argc, char *argv[]) {
     std::filesystem::create_directory(out_path);
   }
 
+  auto set_file = out_dir + "/settings.yaml";
+  const std::filesystem::path file_path{set_file};
+  std::filesystem::copy_options cpopt = std::filesystem::copy_options::none;
+  if (std::filesystem::exists(file_path)) {
+    char ovw = 'n';
+    std::cout << "File " << set_file << " exists. Overwrite? [y/n]\n";
+    std::cin >> ovw;
+    switch (ovw) {
+    case 'y':
+      cpopt = std::filesystem::copy_options::update_existing;
+      break;
+    case 'n':
+      std::cout << out_dir
+                << " contians old data, please choose a different output"
+                << " directory!\n";
+      return -1;
+    }
+  }
+
+  std::filesystem::copy_file(opt_file, set_file, cpopt);
+
   switch (e_num) {
   case 1:
     base = "Basis_Settings";
@@ -97,6 +118,11 @@ int main(int argc, char *argv[]) {
     en_set = "En_CI";
     dip_pot = "dat/" + pot + "CI_";
     dip_set = "CI_dip";
+    for (int L = 0; L <= L_max; ++L) {
+      std::filesystem::copy_file("dat/cfg-" + std::to_string(L) + ".inp",
+                                 out_dir + "/cfg-" + std::to_string(L) + ".inp",
+                                 cpopt);
+    }
     break;
   }
 

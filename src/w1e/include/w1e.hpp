@@ -11,6 +11,7 @@
 
 #include "fastgl.hpp"
 #include <H5Cpp.h>
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <numeric>

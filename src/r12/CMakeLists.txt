@@ -18,7 +18,7 @@ target_include_directories(${PROJECT_NAME}
     PRIVATE 
         ${CMAKE_CURRENT_SOURCE_DIR}/include
         ${CMAKE_BINARY_DIR}/../src/include
-        ${BLA_INC}
+        ${BLAS_INC}
         ${H5_INC}
 )
 

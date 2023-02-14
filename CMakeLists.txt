@@ -35,10 +35,6 @@ if(DEFINED BLA_HINT)
     set(BLAS_INC ${BLA_INC})
 endif()
 
-if(DEFINED H5_INC)
-    set(H5_INC ${H5_INC})
-endif()
-
 add_subdirectory(3rd_party)
 
 add_compile_options(

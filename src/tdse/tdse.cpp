@@ -145,6 +145,7 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+  f_out << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
   for (auto k = 0; k < ct_sz; ++k) {
     f_out << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
           << std::norm(ct[k]) << "\n";
@@ -179,10 +180,13 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
   boost::numeric::odeint::runge_kutta_fehlberg78<state_type> rkf;
 
   field_fl.open(output + "_field.dat", std::ios::out);
+  field_fl << "#time (a.u.), field (A(t) or E(t)) (a.u.)\n";
+
   f_pop.open(output + "_pop" + std::to_string(pop_n + 1) +
                  std::to_string(pop_l) + ".dat",
              std::ios::out);
 
+  f_pop << "#time (a.u.), population\n";
   f_pop << t << " " << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
@@ -206,6 +210,7 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";
       std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+      f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
       for (auto k = 0; k < ct_sz; ++k) {
         f_ct << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
              << std::norm(ct[k]) << "\n";
@@ -234,6 +239,7 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
 
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+  f_out << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
   for (auto k = 0; k < ct_sz; ++k) {
     f_out << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
           << std::norm(ct[k]) << "\n";
@@ -268,10 +274,13 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
   boost::numeric::odeint::runge_kutta_fehlberg78<state_type> rkf;
 
   field_fl.open(output + "_field.dat", std::ios::out);
+  field_fl << "#time (a.u.), field (A(t) or E(t)) (a.u.)\n";
+
   f_pop.open(output + "_pop" + std::to_string(pop_n + 1) +
                  std::to_string(pop_l) + ".dat",
              std::ios::out);
 
+  f_pop << "#time (a.u.), population\n";
   f_pop << t << " " << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
@@ -295,6 +304,7 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
       std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";
       std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+      f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
       for (auto k = 0; k < ct_sz; ++k) {
         f_ct << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
              << std::norm(ct[k]) << "\n";

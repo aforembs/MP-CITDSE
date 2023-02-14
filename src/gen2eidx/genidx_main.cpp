@@ -27,6 +27,13 @@ int main(int argc, char *argv[]) {
 
   genidx::readConfig(opt_file, pot, L_max);
 
+  auto cfg_prefix = inp_dir + "/cfg-";
+  for (int L = 0; L <= L_max; ++L) {
+    std::filesystem::copy_file(cfg_prefix + std::to_string(L) + ".inp",
+                               "dat/cfg-" + std::to_string(L) + ".inp",
+                               std::filesystem::copy_options::update_existing);
+  }
+
   out_prefix = "dat/" + pot;
 
   genidx::saveIdx(out_prefix, L_max, inp_dir);
