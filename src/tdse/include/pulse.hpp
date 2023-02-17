@@ -12,6 +12,14 @@
 #include <cmath>
 
 namespace pulse {
+
+struct params {
+  double Eo;
+  double w;
+  double cepd;
+  double Wenv;
+};
+
 /**
  * @brief Function for converting eV and W/cm^2 to atomic units
  *
@@ -29,7 +37,35 @@ void toAU(double IoW, double weV, double &IoAU, double &wAU);
  * @param cycles number of cycles
  * @return double pulse duration
  */
-double sineT(double w, int cycles);
+double period(double w, int cycles);
+
+/**
+ *
+ *
+ */
+void gaussESetup(double Io, double w, double tau, int cycles,
+                 pulse::params &pars);
+
+/**
+ * @brief
+ *
+ * @param Io
+ * @param w
+ * @param tau
+ * @param cycles
+ * @param pars
+ */
+void gaussASetup(double Io, double w, double tau, int cycles,
+                 pulse::params &pars);
+
+/**
+ * @brief
+ *
+ * @param pars
+ * @param t
+ * @return double
+ */
+double gauss(pulse::params &pars, double t);
 
 /**
  * @brief Function setting up the parameters for a pulse defined by a vector
@@ -43,8 +79,8 @@ double sineT(double w, int cycles);
  * @param cepds adjusted pulse frequency
  * @param Wenv pulse envelope frequency
  */
-void sineASetup(double Io, double w, double cepd, int cycles, double &Ao,
-                double &cepds, double &Wenv);
+void sineASetup(double Io, double w, double cepd, int cycles,
+                pulse::params &pars);
 
 /**
  * @brief Function returning the vector potential of the pulse at time 't' since
@@ -57,7 +93,7 @@ void sineASetup(double Io, double w, double cepd, int cycles, double &Ao,
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the vector potential at time t
  */
-double sineAA(double Ao, double w, double cepds, double Wenv, double t);
+double sineAA(pulse::params &pars, double t);
 
 /**
  * @brief Function returning the electric field of a pulse defined using a
@@ -70,7 +106,7 @@ double sineAA(double Ao, double w, double cepds, double Wenv, double t);
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the electric field at time t
  */
-double sineAE(double Ao, double w, double cepds, double Wenv, double t);
+double sineAE(pulse::params &pars, double t);
 
 /**
  * @brief Setup of a pulse defined by an electric field
@@ -83,8 +119,8 @@ double sineAE(double Ao, double w, double cepds, double Wenv, double t);
  * @param cepds adjusted pulse frequency
  * @param Wenv pulse envelope frequency
  */
-void sineESetup(double Io, double w, double cepd, int cycles, double &Eo,
-                double &cepds, double &Wenv);
+void sineESetup(double Io, double w, double cepd, int cycles,
+                pulse::params &pars);
 
 /**
  * @brief Function returning the vector potential of a pulse defined using an
@@ -97,7 +133,7 @@ void sineESetup(double Io, double w, double cepd, int cycles, double &Eo,
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the vector potential at time t
  */
-double sineEA(double Eo, double w, double cepds, double Wenv, double t);
+double sineEA(pulse::params &pars, double t);
 
 /**
  * @brief Function returning electric field of the pulse at time 't' since it's
@@ -110,7 +146,7 @@ double sineEA(double Eo, double w, double cepds, double Wenv, double t);
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the electric field at time t
  */
-double sineEE(double Eo, double w, double cepds, double Wenv, double t);
+double sineEE(pulse::params &pars, double t);
 } // namespace pulse
 
 #endif // PULSE_H_

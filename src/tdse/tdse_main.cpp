@@ -158,19 +158,23 @@ int main(int argc, char *argv[]) {
     tdrd::readInitCt(init_ct, ct_sz, ct);
   }
 
-  double tau = pulse::sineT(w * conv::En_ev_au_, cycles);
+  double tau = pulse::period(w * conv::En_ev_au_, cycles);
   int steps = (tau - t) / dt;
+
+  double auIo, auw;
+  pulse::toAU(Io, w, auIo, auw);
+  pulse::params pars;
 
   switch (gauge) {
   case 'v':
-    tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
-                pulse::sineASetup, pulse::sineAA, w, Io, cepd, cycles, ct_sz,
-                offs, state_sz, eig, dipoles, ct);
+    pulse::sineASetup(auIo, auw, 0.0, cycles, pars);
+    tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::sineAA,
+                pars, ct_sz, offs, state_sz, eig, dipoles, ct);
     break;
   case 'l':
-    tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
-                pulse::sineESetup, pulse::sineEE, w, Io, cepd, cycles, ct_sz,
-                offs, state_sz, eig, dipoles, ct);
+    pulse::sineESetup(auIo, auw, 0.0, cycles, pars);
+    tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::sineEE,
+                pars, ct_sz, offs, state_sz, eig, dipoles, ct);
     break;
   }
 

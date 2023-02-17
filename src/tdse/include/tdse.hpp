@@ -21,9 +21,7 @@ extern "C" {
 }
 
 using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
-using fieldInit = std::function<void(double, double, double, int, double &,
-                                     double &, double &)>;
-using fieldFcn = std::function<double(double, double, double, double, double)>;
+using fieldFcn = std::function<double(pulse::params &, double)>;
 
 /**
  * @brief Namespace for functions used in the propagation of the 2-electron TDSE
@@ -60,10 +58,9 @@ namespace tdse {
  * @return int default '0' error otherwise
  */
 int propV(std::string output, int L_max, double t, double dt, int steps,
-          int pop_n, int pop_l, fieldInit fieldst, fieldFcn field, double w,
-          double Io, double cepd, int cycles, int ct_sz, std::vector<int> &offs,
-          std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
-          std::vector<std::complex<double>> &ct);
+          int pop_n, int pop_l, fieldFcn field, pulse::params &pars, int ct_sz,
+          std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
+          stvupt &dipoles, std::vector<std::complex<double>> &ct);
 
 /**
  * @brief Function for propagating the 2-electron TDSE in the length gauge
@@ -96,10 +93,9 @@ int propV(std::string output, int L_max, double t, double dt, int steps,
  * @return int default '0' error otherwise
  */
 int propL(std::string output, int L_max, double t, double dt, int steps,
-          int pop_n, int pop_l, fieldInit fieldst, fieldFcn field, double w,
-          double Io, double cepd, int cycles, int ct_sz, std::vector<int> &offs,
-          std::vector<int> &state_sz, stvupt &eig, stvupt &dipoles,
-          std::vector<std::complex<double>> &ct);
+          int pop_n, int pop_l, fieldFcn field, pulse::params &pars, int ct_sz,
+          std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
+          stvupt &dipoles, std::vector<std::complex<double>> &ct);
 } // namespace tdse
 
 #endif // TDSE_HPP_

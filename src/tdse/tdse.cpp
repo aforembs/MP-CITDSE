@@ -130,18 +130,11 @@ public:
 };
 
 int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
-                int pop_n, int pop_l, fieldInit fieldst, fieldFcn field,
-                double w, double Io, double cepd, int cycles, int ct_sz,
-                std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
-                stvupt &dipoles, std::vector<std::complex<double>> &ct) {
-  double IoA, wA, Ao, cepds, Wenv;
-  pulse::toAU(Io, w, IoA, wA);
-
+                int pop_n, int pop_l, fieldFcn field, pulse::params &pars,
+                int ct_sz, std::vector<int> &offs, std::vector<int> &state_sz,
+                stvupt &eig, stvupt &dipoles,
+                std::vector<std::complex<double>> &ct) {
   int print = steps / 10;
-
-  fieldst(IoA, wA, cepd, cycles, Ao, cepds, Wenv);
-
-  std::cout << "Io (a.u.): " << IoA << " w (a.u.): " << wA << "\n";
 
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
@@ -191,8 +184,8 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
         << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
-    field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
-    MV.field = field(Ao, wA, cepds, Wenv, t + dt);
+    MV.field = field(pars, t + dt);
+    field_fl << t + dt << " " << MV.field << "\n";
 
     rkf.do_step(MV, ct, t, dt);
 
@@ -208,7 +201,7 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
           << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
     if (st % print == 0) {
-      std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";
+      std::cout << MV.field << "\n";
       std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
       f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
@@ -225,18 +218,11 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 }
 
 int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
-                int pop_n, int pop_l, fieldInit fieldst, fieldFcn field,
-                double w, double Io, double cepd, int cycles, int ct_sz,
-                std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
-                stvupt &dipoles, std::vector<std::complex<double>> &ct) {
-  double IoA, wA, Ao, cepds, Wenv;
-  pulse::toAU(Io, w, IoA, wA);
-
+                int pop_n, int pop_l, fieldFcn field, pulse::params &pars,
+                int ct_sz, std::vector<int> &offs, std::vector<int> &state_sz,
+                stvupt &eig, stvupt &dipoles,
+                std::vector<std::complex<double>> &ct) {
   int print = steps / 10;
-
-  fieldst(IoA, wA, cepd, cycles, Ao, cepds, Wenv);
-
-  std::cout << "Io (a.u.): " << IoA << " w (a.u.): " << wA << "\n";
 
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
@@ -286,8 +272,8 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
         << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
   for (auto st = 0; st < steps; ++st) {
-    field_fl << t + dt << " " << field(Ao, wA, cepds, Wenv, t + dt) << "\n";
-    MV.field = field(Ao, wA, cepds, Wenv, t + dt);
+    MV.field = field(pars, t + dt);
+    field_fl << t + dt << " " << MV.field << "\n";
 
     rkf.do_step(MV, ct, t, dt);
 
@@ -303,7 +289,7 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
           << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
 
     if (st % print == 0) {
-      std::cout << field(Ao, wA, cepds, Wenv, t) << "\n";
+      std::cout << MV.field << "\n";
       std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
       f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
