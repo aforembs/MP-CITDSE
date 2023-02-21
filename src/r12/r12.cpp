@@ -1,5 +1,4 @@
 #include "r12.hpp"
-#include "time_tst.hpp"
 
 int r_12::readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
                      std::string &k_limit, bool &lim_flag) {
@@ -58,7 +57,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
   double Y_norm = 0.0;
   std::vector<double> v_mat;
   double sum_k = 0.0;
-  idx4 e12, e12p;
+  dmtp::idx4 e12, e12p;
 
   int L_sz = 0, v_sz = 0;
   std::string filename;
@@ -70,7 +69,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
                                qr = nullptr, qw = nullptr, qri = nullptr;
   std::unique_ptr<H5::DataSet> V_set = nullptr;
   std::unique_ptr<H5::DataSet> L_set = nullptr;
-  std::vector<idx4> L_idx;
+  std::vector<dmtp::idx4> L_idx;
   H5::DataSpace cspace;
   hsize_t offset[2] = {0, 0}, stride[2] = {1, 1}, block[2] = {1, 1};
   hsize_t count[2], counti[2], dimms[2], dimmsi[2], v_dim[1];
@@ -173,10 +172,6 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
   std::vector<double> rk, rk_in;
   Rpowk(qsz, pti_sz, k_max, qx_o, qx_i, rk, rk_in);
 
-  omp_lock_t copylock;
-  omp_init_lock(&copylock);
-  uint64_t st_time;
-
   wig_table_init(2 * (k_max + 2), 6);
 
 #pragma omp parallel private(e12p)
@@ -201,9 +196,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
         std::cout << "L: " << L << " L_sz: " << L_sz << "\n";
 
         v_sz = L_sz * (L_sz + 1) / 2;
-        v_mat.reserve(v_sz); // error
-
-        st_time = GetTimeMs64();
+        v_mat.reserve(v_sz);
       }
 
       for (int NL2 = 0; NL2 < L_sz; ++NL2) {
@@ -282,8 +275,6 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
 
 #pragma omp single
       {
-        std::cout << "loop time: "
-                  << ((double)(GetTimeMs64() - st_time) / 1000.0) << "s\n";
         // save upper triangular V_12
         v_dim[0] = v_sz;
         outfile_name = pot + "V12_" + std::to_string(L) + ".h5";
@@ -302,7 +293,6 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
   }
 
   wig_table_free();
-  omp_destroy_lock(&copylock);
 
   return 0;
 }

@@ -22,12 +22,12 @@ int genidx::saveIdx(std::string pot, int L_max, std::string dir) {
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::H5File> outfile = nullptr;
   std::vector<double> en12, en;
-  std::vector<idx4> idx;
+  std::vector<dmtp::idx4> idx;
 
   int ncf, sym, t_sz;
   std::vector<cfg::line> cfgs;
-  en_data en_d;
-  idx4 idx_elm;
+  dmtp::en_data en_d;
+  dmtp::idx4 idx_elm;
 
   H5::DataSpace e_space;
   hsize_t offset[1] = {0}, stride[1] = {1}, block[1] = {1};

@@ -22,7 +22,7 @@
 #include <vector>
 
 /**
- * @brief Namespace for functions used in reading the cfg-<L>.inp files
+ * @brief Namespace for functions used in reading the "cfg-<L>.inp" files
  */
 namespace cfg {
 /**
@@ -43,10 +43,10 @@ struct line {
 };
 
 /**
- * @brief Function for reading the cfg-<L>.inp files and saving the lines into a
- * vector of cfg::line structures
+ * @brief Function for reading the "cfg-<L>.inp" files and saving the lines into
+ * a vector of cfg::line structures
  *
- * @param dir path to directory containing the cfg-<L>.inp files
+ * @param dir path to directory containing the "cfg-<L>.inp" files
  * @param L the total angular momentum
  * @param sym symmetry '1'/'3' singlet or triplet (for now only singlet)
  * @param ncf number of lines in the cfg file

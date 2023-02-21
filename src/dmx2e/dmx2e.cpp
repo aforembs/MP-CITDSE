@@ -50,7 +50,7 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
 
   int ncf, sym;
   std::vector<cfg::line> cfgs;
-  std::vector<idx4 *> buffs(2);
+  std::vector<dmtp::idx4 *> buffs(2);
   auto max_N = 0, max_nl = 0;
   cfg::line max_n2l;
 
@@ -65,8 +65,8 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
     max_nl = std::max(ncf, max_nl);
   }
   auto max_Nsz = max_nl * max_N;
-  std::vector<idx4> Li_idx(max_Nsz);
-  std::vector<idx4> Lf_idx(max_Nsz);
+  std::vector<dmtp::idx4> Li_idx(max_Nsz);
+  std::vector<dmtp::idx4> Lf_idx(max_Nsz);
 
   count[0] = max_N;
   count[1] = max_N;
