@@ -59,13 +59,14 @@ int readConfig(std::string file, std::string &pot, std::string set_base,
  * Interaction form of the time independent 2-electron Hamiltonian.
  *
  * @param pot the name of the selected potential
+ * @param setname the name of the energy dataset (different for 1e or 2e)
  * @param L_max the maximum total angular momentum used
  * @param ct_sz the size of the eigenenergy/coefficient vector
  * @param state_sz vector containing the sizes of the coefficient vectors for
  * each total angular momentum
  * @param offs vector of integers containing offsets to the start of each
  * angular momentum within the eigenenergy/coefficient vector
- * @param ens a vector of pointers to the first eigenenergy in each
+ * @param eig a vector of pointers to the first eigenenergy in each
  * 2-electron total angular momentum
  * @return int default '0' error otherwise
  */
@@ -77,6 +78,7 @@ int readEnergies(std::string pot, std::string setname, int L_max, int &ct_sz,
  * @brief Function for reading the 2-electron dipole transition matrices.
  *
  * @param pot the name of the selected potential
+ * @param setname the name of the dipole dataset (different for 1e or 2e)
  * @param gauge the gauge of the dipole elements 'v' (velocity) / 'l' (length)
  * @param L_max the maximum total angular momentum used
  * @param state_sz vector containing the sizes of the coefficient vectors for
@@ -89,12 +91,13 @@ int readDipoles(std::string pot, std::string setname, char gauge, int L_max,
                 std::vector<int> &state_sz, stvupt &dipoles);
 
 /**
- * @brief
+ * @brief Function for reading the initinal conditions, can be used for
+ * re-starting a tdse run
  *
- * @param file
- * @param ct_sz
- * @param ct
- * @return int
+ * @param file the path of the file containing the initial coefficients
+ * @param ct_sz the size of the coefficient vector
+ * @param ct a vector for storing the coefficient vector
+ * @return int default '0' error otherwise
  */
 int readInitCt(std::string file, int ct_sz,
                std::vector<std::complex<double>> &ct);

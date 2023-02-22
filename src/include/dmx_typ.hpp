@@ -11,23 +11,16 @@
 #include <vector>
 
 /**
- * @brief
+ * @brief Structures for storing the 1-electron information for each
+ * configuration
  *
  */
 namespace dmtp {
 
 /**
- * @brief
- *
- */
-struct l_ab {
-  int l1;
-  int l2;
-};
-
-/**
- * @brief
- *
+ * @brief Structure containing the uncorrelated energy of the direct product of
+ * 2 1-electron states as well as their primary and angular momentum quantum
+ * numbers.
  */
 struct en_data {
   double en;
@@ -38,7 +31,8 @@ struct en_data {
 };
 
 /**
- * @brief
+ * @brief The four integers defining the primary and angular quantum numbers of
+ * a 2-electron configuration.
  *
  */
 struct idx4 {
@@ -48,24 +42,6 @@ struct idx4 {
   int l2;
 };
 
-/**
- * @brief
- *
- */
-struct en_L {
-  int L;
-  std::vector<l_ab> l_pair;
-  std::vector<en_data> en_dat;
-};
-
-/**
- * @brief
- *
- */
-struct dmx_dim {
-  int row;
-  int col;
-};
 } // namespace dmtp
 
 #endif // DMX_TYP_H_

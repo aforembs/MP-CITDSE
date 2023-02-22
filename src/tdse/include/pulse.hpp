@@ -13,6 +13,10 @@
 
 namespace pulse {
 
+/**
+ * @brief Structure for storing the static parameters of the pulse
+ *
+ */
 struct params {
   double Eo;
   double w;
@@ -40,20 +44,27 @@ void toAU(double IoW, double weV, double &IoAU, double &wAU);
 double period(double w, int cycles);
 
 /**
+ * @brief Function setting up the parameters for a gaussian pulse defined by an
+ * electric field
  *
- *
+ * @param Io peak intensity in a.u.
+ * @param w photon energy in a.u.
+ * @param tau the period of the pulse envelope
+ * @param cycles the total number of cycles in the pulse
+ * @param pars structure containing the remaining static pulse parameters
  */
 void gaussESetup(double Io, double w, double tau, int cycles,
                  pulse::params &pars);
 
 /**
- * @brief
+ * @brief Function setting up the parameters for a gaussian pulse defined by a
+ * vector potential
  *
- * @param Io
- * @param w
- * @param tau
- * @param cycles
- * @param pars
+ * @param Io peak intensity in a.u.
+ * @param w photon energy in a.u.
+ * @param tau the period of the pulse envelope
+ * @param cycles the total number of cycles in the pulse
+ * @param pars structure containing the remaining static pulse parameters
  */
 void gaussASetup(double Io, double w, double tau, int cycles,
                  pulse::params &pars);
@@ -61,9 +72,9 @@ void gaussASetup(double Io, double w, double tau, int cycles,
 /**
  * @brief
  *
- * @param pars
- * @param t
- * @return double
+ * @param pars structure containing static pulse parameters
+ * @param t time in a.u. since the start of the pulse
+ * @return double the value of the pulse E(t) or A(t)
  */
 double gauss(pulse::params &pars, double t);
 
@@ -75,9 +86,7 @@ double gauss(pulse::params &pars, double t);
  * @param w photon energy in a.u.
  * @param cepd phase offset
  * @param cycles number of cycles
- * @param Ao peak vector potential in a.u.
- * @param cepds adjusted pulse frequency
- * @param Wenv pulse envelope frequency
+ * @param pars structure containing the remaining static pulse parameters
  */
 void sineASetup(double Io, double w, double cepd, int cycles,
                 pulse::params &pars);
@@ -86,10 +95,7 @@ void sineASetup(double Io, double w, double cepd, int cycles,
  * @brief Function returning the vector potential of the pulse at time 't' since
  * it's start.
  *
- * @param Ao peak vector potential in a.u.
- * @param w photon energy in a.u.
- * @param cepds adjusted pulse frequency
- * @param Wenv pulse envelope frequency
+ * @param pars structure containing static pulse parameters
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the vector potential at time t
  */
@@ -99,10 +105,7 @@ double sineAA(pulse::params &pars, double t);
  * @brief Function returning the electric field of a pulse defined using a
  * vector potential at time 't' since it's start.
  *
- * @param Ao peak vector potential in a.u.
- * @param w photon energy in a.u.
- * @param cepds adjusted pulse frequency
- * @param Wenv pulse envelope frequency
+ * @param pars structure containing static pulse parameters
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the electric field at time t
  */
@@ -115,9 +118,7 @@ double sineAE(pulse::params &pars, double t);
  * @param w photon energy in a.u.
  * @param cepd phase offset
  * @param cycles number of cycles
- * @param Eo peak electric field in a.u.
- * @param cepds adjusted pulse frequency
- * @param Wenv pulse envelope frequency
+ * @param pars structure containing the remaining static pulse parameters
  */
 void sineESetup(double Io, double w, double cepd, int cycles,
                 pulse::params &pars);
@@ -126,10 +127,7 @@ void sineESetup(double Io, double w, double cepd, int cycles,
  * @brief Function returning the vector potential of a pulse defined using an
  * electric field at time 't' since it's start.
  *
- * @param Eo peak electric field in a.u.
- * @param w photon energy in a.u.
- * @param cepds adjusted pulse frequency
- * @param Wenv pulse envelope frequency
+ * @param pars structure containing static pulse parameters
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the vector potential at time t
  */
@@ -139,10 +137,7 @@ double sineEA(pulse::params &pars, double t);
  * @brief Function returning electric field of the pulse at time 't' since it's
  * start.
  *
- * @param Ao peak electric field in a.u.
- * @param w photon energy in a.u.
- * @param cepds adjusted pulse frequency
- * @param Wenv pulse envelope frequency
+ * @param pars structure containing static pulse parameters
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the electric field at time t
  */

@@ -20,6 +20,10 @@ extern "C" {
 #include <cblas.h>
 }
 
+/**
+ * @brief Aliases for vectors of unique_ptr and the pulse function pointer.
+ *
+ */
 using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
 using fieldFcn = std::function<double(pulse::params &, double)>;
 
@@ -27,6 +31,7 @@ using fieldFcn = std::function<double(pulse::params &, double)>;
  * @brief Namespace for functions used in the propagation of the 2-electron TDSE
  */
 namespace tdse {
+
 /**
  * @brief Function for propagating the 2-electron TDSE in the velocity gauge
  *
@@ -35,15 +40,12 @@ namespace tdse {
  * @param t the time at the start of the propagation
  * @param dt the time step
  * @param steps the total number of time steps
- * @param pop_n
- * @param pop_l
- * @param fieldst function pointer to the field initialisation fuction
+ * @param pop_n primary quantum number of the state whose population will be
+ * tracked
+ * @param pop_l angular quantum number of the state
  * @param field function pointer to the function used to generate the field at
  * time t
- * @param Io the peak intensity of the electric field in W/cm^2
- * @param w the central photon energy of the pulse in eV
- * @param cepd phase offset
- * @param cycles number of cycles in the pulse
+ * @param pars structure containing static pulse parameters
  * @param ct_sz the size of the coefficient vector
  * @param offs vector of integers containing offsets to the start of each
  * angular momentum within the eigenenergy/coefficient vector
@@ -70,15 +72,12 @@ int propV(std::string output, int L_max, double t, double dt, int steps,
  * @param t the time at the start of the propagation
  * @param dt the time step
  * @param steps the total number of time steps
- * @param pop_n
- * @param pop_l
- * @param fieldst function pointer to the field initialisation fuction
+ * @param pop_n primary quantum number of the state whose population will be
+ * tracked
+ * @param pop_l angular quantum number of the state
  * @param field function pointer to the function used to generate the field at
  * time t
- * @param Io the peak intensity of the electric field in W/cm^2
- * @param w the central photon energy of the pulse in eV
- * @param cepd phase offset
- * @param cycles number of cycles in the pulse
+ * @param pars structure containing static pulse parameters
  * @param ct_sz the size of the coefficient vector
  * @param offs vector of integers containing offsets to the start of each
  * angular momentum within the eigenenergy/coefficient vector
