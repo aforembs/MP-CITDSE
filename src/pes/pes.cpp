@@ -29,6 +29,12 @@ int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
   std::ifstream fl(file);
   std::string temp;
   while (std::getline(fl, temp)) {
+    temp = std::regex_replace(temp, std::regex("^ +"), "");
+
+    if (temp[0] == '#') {
+      continue;
+    }
+
     std::istringstream iss(temp);
     int idx;
     double real, imag;

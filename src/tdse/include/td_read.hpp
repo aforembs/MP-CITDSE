@@ -18,6 +18,7 @@
 #include <iostream>
 #include <memory>
 #include <numeric>
+#include <regex>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 extern "C" {
@@ -44,6 +45,7 @@ namespace tdrd {
  * each total angular momentum
  * @param timestep the dt parameter used in the time propagation
  * @param w the central photon energy of the pulse in eV
+ * @param shape the shape of the pulse envelope
  * @param Io the peak intensity of the electric field in W/cm^2
  * @param cepd phase offset
  * @param cycles number of cycles in the pulse
@@ -51,8 +53,8 @@ namespace tdrd {
  */
 int readConfig(std::string file, std::string &pot, std::string set_base,
                std::string option, int &L_max, char &gauge,
-               std::vector<int> &state_sz, double &timestep, double &w,
-               double &Io, double &cepd, int &cycles);
+               std::vector<int> &state_sz, double &timestep, std::string &shape,
+               double &w, double &Io, double &cepd, int &cycles);
 
 /**
  * @brief Function for reading the eigenenergies of the Configuration

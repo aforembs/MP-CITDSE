@@ -2,8 +2,9 @@
 
 int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
                      std::string option, int &L_max, char &gauge,
-                     std::vector<int> &state_sz, double &timestep, double &w,
-                     double &Io, double &cepd, int &cycles) {
+                     std::vector<int> &state_sz, double &timestep,
+                     std::string &shape, double &w, double &Io, double &cepd,
+                     int &cycles) {
 
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
@@ -31,14 +32,16 @@ int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
             << std::endl;
 
   std::cout << "Field Parameters:" << std::endl;
+  shape = settings["Field_Parameters"]["shape"].as<std::string>();
+  std::cout << "  envelope shape:                       " << shape << std::endl;
   w = settings["Field_Parameters"]["w"].as<double>();
-  std::cout << "  w:                                    " << w << std::endl;
+  std::cout << "  photon energy:                        " << w << std::endl;
   Io = settings["Field_Parameters"]["Io"].as<double>();
-  std::cout << "  Io:                                   " << Io << std::endl;
+  std::cout << "  Peak intensity:                       " << Io << std::endl;
   cepd = settings["Field_Parameters"]["cepd"].as<double>();
-  std::cout << "  cepd:                                 " << cepd << std::endl;
+  std::cout << "  phase shift:                          " << cepd << std::endl;
   cycles = settings["Field_Parameters"]["cycles"].as<int>();
-  std::cout << "  cycles:                               " << cycles
+  std::cout << "  number of cycles:                     " << cycles
             << std::endl;
 
   return 0;
@@ -120,13 +123,21 @@ int tdrd::readInitCt(std::string file, int ct_sz,
                      std::vector<std::complex<double>> &ct) {
   std::ifstream fl(file);
   std::string temp;
-  for (auto i = 0; i < ct_sz; ++i) {
+  int i = 0;
+  while (i < ct_sz) {
     std::getline(fl, temp);
+    temp = std::regex_replace(temp, std::regex("^ +"), "");
+
+    if (temp[0] == '#') {
+      continue;
+    }
+
     std::istringstream iss(temp);
     int idx;
     double real, complex;
     iss >> idx >> real >> complex;
     ct[i] = std::complex<double>(real, complex);
+    ++i;
   }
 
   return 0;

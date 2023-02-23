@@ -17,6 +17,7 @@ int main(int argc, char *argv[]) {
   std::string en_set, dip_set;
   std::string o_file_prefix;
   char gauge;
+  std::string shape;
   double dt, w, Io, cepd;
   std::vector<int> state_sz;
 
@@ -103,8 +104,8 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  tdrd::readConfig(opt_file, pot, base, option, L_max, gauge, state_sz, dt, w,
-                   Io, cepd, cycles);
+  tdrd::readConfig(opt_file, pot, base, option, L_max, gauge, state_sz, dt,
+                   shape, w, Io, cepd, cycles);
 
   switch (e_num) {
   case 1:
@@ -165,17 +166,35 @@ int main(int argc, char *argv[]) {
   pulse::toAU(Io, w, auIo, auw);
   pulse::params pars;
 
-  switch (gauge) {
-  case 'v':
-    pulse::sineASetup(auIo, auw, 0.0, cycles, pars);
-    tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::sineAA,
-                pars, ct_sz, offs, state_sz, eig, dipoles, ct);
-    break;
-  case 'l':
-    pulse::sineESetup(auIo, auw, 0.0, cycles, pars);
-    tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::sineEE,
-                pars, ct_sz, offs, state_sz, eig, dipoles, ct);
-    break;
+  if (shape.compare("sine") == 0) {
+    switch (gauge) {
+    case 'v':
+      pulse::sineASetup(auIo, auw, 0.0, cycles, pars);
+      tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
+                  pulse::sineAA, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      break;
+    case 'l':
+      pulse::sineESetup(auIo, auw, 0.0, cycles, pars);
+      tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
+                  pulse::sineEE, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      break;
+    }
+  } else if (shape.compare("gaussian") == 0) {
+    switch (gauge) {
+    case 'v':
+      pulse::gaussASetup(auIo, auw, tau, cycles, 0.0, pars);
+      tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
+                  pulse::gauss, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      break;
+    case 'l':
+      pulse::gaussESetup(auIo, auw, tau, cycles, 0.0, pars);
+      tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
+                  pulse::gauss, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      break;
+    }
+  } else {
+    std::cout << "Invalid envelope shape, use \"sine\" or \"gaussian\"\n";
+    return -1;
   }
 
   return 0;

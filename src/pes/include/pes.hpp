@@ -17,6 +17,7 @@
 #include <cstring>
 #include <iostream>
 #include <lapacke.h>
+#include <regex>
 #include <vector>
 #include <yaml-cpp/yaml.h>
 extern "C" {

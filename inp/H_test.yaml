@@ -27,6 +27,7 @@ Propagator_Settings:
   states_in_l: [300,300,300,300,300,300]
   dt: 0.1 # time step size
 Field_Parameters:
+  shape: "sine" # envelope shape "sine" or "gaussian"
   w: 8.5 # photon energy
   Io: 1.0e13 # peak intensity
   cepd: 0.0  # phase delay

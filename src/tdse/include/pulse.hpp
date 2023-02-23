@@ -21,7 +21,8 @@ struct params {
   double Eo;
   double w;
   double cepd;
-  double Wenv;
+  double a;
+  double b;
 };
 
 /**
@@ -51,9 +52,10 @@ double period(double w, int cycles);
  * @param w photon energy in a.u.
  * @param tau the period of the pulse envelope
  * @param cycles the total number of cycles in the pulse
+ * @param cepd phase offset
  * @param pars structure containing the remaining static pulse parameters
  */
-void gaussESetup(double Io, double w, double tau, int cycles,
+void gaussESetup(double Io, double w, double tau, int cycles, double cepd,
                  pulse::params &pars);
 
 /**
@@ -64,9 +66,10 @@ void gaussESetup(double Io, double w, double tau, int cycles,
  * @param w photon energy in a.u.
  * @param tau the period of the pulse envelope
  * @param cycles the total number of cycles in the pulse
+ * @param cepd phase offset
  * @param pars structure containing the remaining static pulse parameters
  */
-void gaussASetup(double Io, double w, double tau, int cycles,
+void gaussASetup(double Io, double w, double tau, int cycles, double cepd,
                  pulse::params &pars);
 
 /**

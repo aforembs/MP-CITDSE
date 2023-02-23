@@ -3,30 +3,31 @@ Global_Settings:
   potential: "he"           # potential name
   Outer_quadrature_size: 600 # size of outer quadrature
   Quadrature_type: "gauss-legendre" # gauss-legendre or user-defined
-  quad_file: "cheb.dat" # only read if above is "user-defined"
+  quad_file: "cheb.dat" # read if type is "user-defined"
   Inner_Layout: "default" # default or user-defined
-  in_point_file: "points.dat" # only read if above is "user-defined"
+  in_point_file: "points.dat" # read if layout:"user-defined"
   L_max: 3                  # total L <= L_max
-  gauge: 'v'                # length or velocity gauge
+  gauge: 'v'               # 'l' length or 'v' velocity gauge
 # Settings for generating the 1e basis radial functions
 Basis_Settings:
   state_no: 322             # number of 1e states +2
   max_spline_k: 9           # Splines for h1e
   GL_quad_points: 15        # quadrature for h1e
   R_max: 240                # box radius in a.u.
-  grid: "linear"            # grid type 
-  knot_file: ""             # only read if above is "user-defined"
+  grid: "linear"            # grid type "linear", "sine", "exponential" or "user-defined"
+  knot_file: ""             # read if above is "user-defined"
   l_max: 7                  # l <= l_max
   atomic_no: 2              # nuclear charge
   mass: 0.5                 # 0.5 for atom 1 for positronium
 # Settings for the two electron interaction calculation
 R12_Settings:
-  k_limit: "wigner" # "wigner" - default or an integer - only use if ground energy is incorrect 
+  k_limit: "wigner" # "wigner" - default - or an integer only use if 2e ground energy is incorrect
 # Settings for the TDSE solver
 Propagator_Settings:
-  states_in_l: [3030,2799,2808,2808] #[389,389,389,389,389]
+  states_in_l: [3030,2799,2808,2808]
   dt: 0.1 # time step size
 Field_Parameters:
+  shape: "sine" # envelope shape "sine" or "gaussian"
   w: 15 # photon energy
   Io: 1.0e14 # peak intensity
   cepd: 0.0  # phase delay
