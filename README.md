@@ -1,6 +1,5 @@
 # ParTDSE
-
-A set of modern, portable, parallel programs for the ab-initio solution of the Time-Dependent Schrödinger Equation (TDSE) in the case of 1- and/or 2-electron atom-laser interactions written in C++ 17. In many ways this package is a spiritual successor to \[[1](<https://doi.org/10.1016/S0010-4655(02)00684-7>)\].
+**P**ortable **a**nd **r**obust **TDSE** is set of modern, portable, parallel programs for the ab-initio solution of the Time-Dependent Schrödinger Equation (TDSE) in the case of 1- and/or 2-electron atom-laser interactions written in C++ 17. In many ways this package is a spiritual successor to \[[1](<https://doi.org/10.1016/S0010-4655(02)00684-7>)\].
 
 Initially the 1-electron Time-Independent Schrödinger Equation (TISE) is solved on a basis of B-splines, as described in \[[2](https://iopscience.iop.org/article/10.1088/0034-4885/64/12/205)\]. The 1-electron dipole transition elements are then obtained, using the 1-electron eigenstates of the TISE. From here, solution of the 1-electron TDSE is possible. \
 Moving onto the 2-electron problem, the inter-electronic interactions and 2-electron dipole transition elements, are calculated before forming the Configuration Interaction (CI) basis. Once the 2-electron time dependent Hamiltonian is obtained in the CI basis the 2-electron TDSE ma be solved.\
