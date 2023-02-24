@@ -25,13 +25,7 @@ hdf5 - data storage library (apt-get, pacman, etc...) \
 yaml-cpp - library for human readable (yaml) format configuration files (apt-get, pacman, etc...) \
 boost - specifically ::odeint for the tdse program (apt-get, pacman, etc...) \
 any parallel BLAS library - with a source build of OpenBLAS being the preferred option as it is fast and integrates well with cmake. \
-[wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf) - library for wigner symbols \[[3](https://doi.org/10.1137/15M1021908)\]; (requires a fortran compiler) the cmake compilation downloads and links it automatically, if using make you need to download it from github and compile manually:
-
-```
-[[ -d lib ]] || mkdir lib && cd lib
-git clone https://github.com/nd-nuclear-theory/wigxjpf.git
-cd wigxjpf && make
-```
+[wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf) - library for wigner symbols \[[3](https://doi.org/10.1137/15M1021908)\]; (requires a fortran compiler) the cmake compilation downloads the latest version from github and links it automatically, for compilation with make a static version of the library (along with its licence) is provided in lib/wigxjpf.
 
 ## Compilation
 
