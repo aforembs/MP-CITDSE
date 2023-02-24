@@ -26,7 +26,7 @@ hdf5 - data storage library (apt-get, pacman, etc...) \
 yaml-cpp - library for human readable (yaml) format configuration files (apt-get, pacman, etc...) \
 boost - specifically ::odeint for the tdse program (apt-get, pacman, etc...) \
 any parallel BLAS library - with a source build of OpenBLAS being the preferred option as it is fast and integrates well with cmake. \
-[wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf) - library for wigner symbols \[[3](https://doi.org/10.1137/15M1021908)\]; the cmake compilation downloads and links it automatically, if using make you need to download it from github and compile manually:
+[wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf) - library for wigner symbols \[[3](https://doi.org/10.1137/15M1021908)\]; (requires a fortran compiler) the cmake compilation downloads and links it automatically, if using make you need to download it from github and compile manually:
 
 ```
 [[ -d lib ]] || mkdir lib && cd lib
@@ -108,7 +108,7 @@ In order to restart a previous run, or to start from custom initial conditions t
 bin/tdse -e 2 -f inp/H_test.yaml -o dat/H_tdat -s dat/H_tdat/h_ct_50.100000.dat
 ```
 
-The default pulse envelope shape is sin^2, a gaussian shape is also provided, to change the envelope you need to modify src/tdse/tdse_main.cpp and recompile (this may be changed in the future). If you would like to add your own pulse shapes modify src/tdse/pulse.cpp and src/tdse/include/pulse.hpp.
+The default pulse envelope shape is sin^2, a gaussian shape is also provided, to change the envelope you need to modify the Field_Parameters:shape: "" parameter in your .yaml file. If you would like to add your own pulse shapes add them to src/tdse/pulse.cpp and src/tdse/include/pulse.hpp, modify src/tdse/tdse_main.cpp.
 
 Text files contatining the time dependent coefficients will then be available in dat/H_tdat. The folder "dat/H_tdat" will be created at runtime, any UNIX-valid folder name can be used. \
 To obtain the photoelectron energy distribution run:
@@ -165,7 +165,7 @@ In order to restart a previous run, or to start from custom initial conditions t
 ```
 bin/tdse -e 2 -f inp/He_test.yaml -o dat/He_tdat -s dat/He_tdat/he_ct_50.100000.dat
 ```
-The default pulse envelope shape is sin^2, a gaussian shape is also provided, to change the envelope you need to modify src/tdse/tdse_main.cpp and recompile (this may be changed in the future). If you would like to add your own pulse shapes modify src/tdse/pulse.cpp and src/tdse/include/pulse.hpp.
+The default pulse envelope shape is sin^2, a gaussian shape is also provided, to change the envelope you need to modify the Field_Parameters:shape: "" parameter in your .yaml file. If you would like to add your own pulse shapes add them to src/tdse/pulse.cpp and src/tdse/include/pulse.hpp, modify src/tdse/tdse_main.cpp.
   
 Text files contatining the time dependent coefficients will then be available in dat/H_tdat.\
 To obtain the photoelectron energy distribution run:
