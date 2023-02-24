@@ -18,11 +18,11 @@ BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
 endif
 
 ifndef WIG_LIB
-WIG_LIB = -lwigxjpf -L../../lib
+WIG_LIB = -lwigxjpf -L../../lib/wigxjpf/lib
 endif
 
 ifndef WIG_INC
-WIG_INC = -I../../lib/include
+WIG_INC = -I../../lib/wigxjpf/include
 endif
 
 ifndef HDF5_LIB

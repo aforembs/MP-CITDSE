@@ -10,7 +10,7 @@ BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib -Wno-c99-extensions
 BLAS_INC = -I/opt/OpenBLAS/include -Wno-c99-extensions
 
 WIG_LIB = -lwigxjpf -L$(LIB_DIR)/wigxjpf/lib
-WIG_INC = -I$(LIB_DIR)/wigxjpf/inc
+WIG_INC = -I$(LIB_DIR)/wigxjpf/include/
 
 HDF5_LIB = -lhdf5 -lhdf5_cpp
 HDF5_INC = 
