@@ -1,5 +1,5 @@
-# ParTDSE
-**P**ortable **a**nd **r**obust **TDSE** is set of modern, portable, parallel programs for the ab-initio solution of the Time-Dependent Schrödinger Equation (TDSE) in the case of 1- and/or 2-electron atom-laser interactions written in C++ 17. In many ways this package is a spiritual successor to \[[1](<https://doi.org/10.1016/S0010-4655(02)00684-7>)\].
+# MP-CITDSE
+**M**odern **P**ortable - **C**onfiguration **I**nteraction **T**ime **D**ependent **S**chrödinger **E**quation: is set of programs for the ab-initio solution of the Time-Dependent Schrödinger Equation (TDSE) in the case of 1- and/or 2-electron atom-laser interactions written in C++ 17. In many ways this package is a spiritual successor to \[[1](<https://doi.org/10.1016/S0010-4655(02)00684-7>)\].
 
 Initially the 1-electron Time-Independent Schrödinger Equation (TISE) is solved on a basis of B-splines, as described in \[[2](https://iopscience.iop.org/article/10.1088/0034-4885/64/12/205)\]. The 1-electron dipole transition elements are then obtained, using the 1-electron eigenstates of the TISE. From here, solution of the 1-electron TDSE is possible. \
 Moving onto the 2-electron problem, the inter-electronic interactions and 2-electron dipole transition elements, are calculated before forming the Configuration Interaction (CI) basis. Once the 2-electron time dependent Hamiltonian is obtained in the CI basis the 2-electron TDSE ma be solved.\
@@ -103,7 +103,7 @@ bin/tdse -e 2 -f inp/H_test.yaml -o dat/H_tdat -s dat/H_tdat/h_ct_50.100000.dat
 
 The default pulse envelope shape is sin^2, a gaussian shape is also provided, to change the envelope you need to modify the Field_Parameters:shape: "" parameter in your .yaml file. If you would like to add your own pulse shapes add them to src/tdse/pulse.cpp and src/tdse/include/pulse.hpp, modify src/tdse/tdse_main.cpp.
 
-Text files contatining the time dependent coefficients will then be available in dat/H_tdat. The folder "dat/H_tdat" will be created at runtime, any UNIX-valid folder name can be used. \
+Text files contatining the time dependent coefficients will then be available in dat/H_tdat, a new file is created every 1/10th of the total pulse duration. The folder "dat/H_tdat" will be created at runtime, any UNIX-valid folder name can be used. \
 To obtain the photoelectron energy distribution run:
 
 ```
@@ -143,37 +143,14 @@ bin/cibasis -f inp/He_test.yaml
 
 #### TDSE Solution
 
+Works similarly to the 1-electron case, with the -e option is set to 2.
+
 ```
 bin/tdse -e 2 -f inp/He_test.yaml -o dat/He_tdat
-```
-
-If you wish to track the population of a specific state at each time step then use the optional parameters `-n <primary quantum number> -l <angular quantum number>`:
-
-```
 bin/tdse -e 2 -f inp/He_test.yaml -o dat/He_tdat -n 1 -l 1
-```
-
-In order to restart a previous run, or to start from custom initial conditions the program can be called with the `-s <path to coefficient file>` command line option, it will start at the time provided in the filename (eg: he_ct_0.0.dat will start at the beggining of the pulse but he_ct_50.1.dat will resume from 50.1 a.u. of time within the pulse)
-  
-```
-bin/tdse -e 2 -f inp/He_test.yaml -o dat/He_tdat -s dat/He_tdat/he_ct_50.100000.dat
-```
-The default pulse envelope shape is sin^2, a gaussian shape is also provided, to change the envelope you need to modify the Field_Parameters:shape: "" parameter in your .yaml file. If you would like to add your own pulse shapes add them to src/tdse/pulse.cpp and src/tdse/include/pulse.hpp, modify src/tdse/tdse_main.cpp.
-  
-Text files contatining the time dependent coefficients will then be available in dat/H_tdat.\
-To obtain the photoelectron energy distribution run:
-
-```
 bin/pes -e 2 -f inp/He_test.yaml -i dat/He_tdat/he_ct_<time>.dat
+bin/pes -e 2 -f inp/He_test.yaml -i dat/He_tdat/he_ct_<time>.dat -s
 ```
-
-By default this creates separate energy spectra for each 'l' in "dat/He_tdat/he_pes<l>.dat" files. A a total spectrum can also be obtained by using the -s option.
-
-```
-bin/pes -e 1 -f inp/He_test.yaml -i dat/He_tdat/he_ct_<time>.dat -s
-```
-
-which creates a "he_pes.dat" file.
 
 ## I/O
 
