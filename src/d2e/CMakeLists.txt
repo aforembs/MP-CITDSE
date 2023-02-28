@@ -1,4 +1,4 @@
-project(dmx2e)
+project(d2e)
 
 # add the executable
 add_executable(${PROJECT_NAME} ${SHARED_SOURCES})

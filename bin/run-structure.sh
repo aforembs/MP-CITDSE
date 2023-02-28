@@ -35,15 +35,15 @@ done
 if [[ ${NUM_E} == 1 ]]; then
   bin/h1e -f ${YAML_FILE}
   bin/w1e -f ${YAML_FILE}
-  bin/dmx1e -f ${YAML_FILE}
+  bin/d1e -f ${YAML_FILE}
 elif [[ ${NUM_E} == 2 ]]; then
   bin/h1e -f ${YAML_FILE}
   bin/w1e -f ${YAML_FILE}
-  bin/dmx1e -f ${YAML_FILE}
-  bin/gen2eidx -f ${YAML_FILE} -i ${CFG_DIR}
+  bin/d1e -f ${YAML_FILE}
+  bin/id2ec -f ${YAML_FILE} -i ${CFG_DIR}
   bin/r12 -f ${YAML_FILE} -i ${CFG_DIR}
-  bin/dmx2e -f ${YAML_FILE} -i ${CFG_DIR}
-  bin/cibasis -f ${YAML_FILE}
+  bin/d2e -f ${YAML_FILE} -i ${CFG_DIR}
+  bin/w2e -f ${YAML_FILE}
 else
   echo "Invalid number of electrons: ${NUM_E}."
   echo "Only 1 or 2 supported."

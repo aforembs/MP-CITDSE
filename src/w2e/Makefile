@@ -2,7 +2,7 @@ ifndef CPPC
 CPPC = g++
 endif
 
-EXEC = ../../bin/cibasis
+EXEC = ../../bin/w2e
 
 IDIR = -Iinclude
 SH_IDIR = -I../include

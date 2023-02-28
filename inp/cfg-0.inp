@@ -1,6 +1,6 @@
-    1	
-    0    0
-   15
+    1	    # symmetry 1 singlet or 3 triplet (unsupported)
+    0    0  # L and m_max
+   15       # number of lines to be read
     1    0    0    1  290  # 1ss N=1, 1
     1    1    1    1  290  # 2pp N=2, 2
     2    0    0    2  290  # 2ss
@@ -16,12 +16,3 @@
     3    2    2    3  160  # 5dd
     2    3    3    2  160  # 5ff
     1    4    4    1  160  # 5gg
-
-    6    0    0    6  160  # 6ss N=6, 6  
-    5    1    1    5  160  # 6pp
-    4    2    2    4  160  # 6dd
-    3    3    3    3  160  # 6ff
-    2    4    4    2  160  # 6ff
-    1    5    5    1  160  # 6hh  (problem in including l=5)
-################################
-

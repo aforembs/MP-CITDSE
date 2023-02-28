@@ -1,4 +1,4 @@
-project(gen2eidx)
+project(id2ec)
 
 # add the executable
 add_executable(${PROJECT_NAME} ${SH1_HEADER_FILES} ${SHARED_SOURCES})
