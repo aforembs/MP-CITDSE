@@ -127,6 +127,7 @@ int w1e::defaultPointLayout(int qsz, std::vector<uint8_t> &pq_dx, int &pti_sz) {
   int ids = 1;
   int idm = iv_sz - 1;
   int idp = idm + odd_flag;
+  pq_dx[0] = 0;
   for (int i = 8; i > 1; --i) {
     pq_dx[ids] = i;
     pq_dx[ids + 1] = i;
