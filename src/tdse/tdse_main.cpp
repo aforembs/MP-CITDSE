@@ -145,8 +145,8 @@ int main(int argc, char *argv[]) {
 
   tdrd::readDipoles(dip_pot, dip_set, gauge, L_max, state_sz, dipoles);
 
-  std::vector<std::complex<double>> ct(ct_sz);
-  ct[0] = std::complex<double>(1.0, 0.0);
+  std::vector<double> ct(ct_sz * 2);
+  ct[0] = 1.0;
   double t = 0.0;
 
   if (init_ct.compare("ground") != 0) {

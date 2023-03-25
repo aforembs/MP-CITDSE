@@ -33,6 +33,7 @@ int cib::formCIh0(std::string pot, int L_max, stvupt &vecs) {
     L_full_sz = data->getSpace().getSimpleExtentNpoints();
     ens.reserve(L_full_sz);
     data->read(ens.data(), H5::PredType::NATIVE_DOUBLE);
+    file->close();
 
     eig.resize(L_full_sz);
     vecs[L]->resize(L_full_sz * L_full_sz);

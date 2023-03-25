@@ -101,8 +101,7 @@ int readDipoles(std::string pot, std::string setname, char gauge, int L_max,
  * @param ct a vector for storing the coefficient vector
  * @return int default '0' error otherwise
  */
-int readInitCt(std::string file, int ct_sz,
-               std::vector<std::complex<double>> &ct);
+int readInitCt(std::string file, int ct_sz, std::vector<double> &ct);
 } // namespace tdrd
 
 #endif // TD_READ_HPP_

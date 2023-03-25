@@ -119,12 +119,11 @@ int tdrd::readDipoles(std::string pot, std::string setname, char gauge,
   return 0;
 }
 
-int tdrd::readInitCt(std::string file, int ct_sz,
-                     std::vector<std::complex<double>> &ct) {
+int tdrd::readInitCt(std::string file, int ct_sz, std::vector<double> &ct) {
   std::ifstream fl(file);
   std::string temp;
   int i = 0;
-  while (i < ct_sz) {
+  while (i < ct_sz * 2) {
     std::getline(fl, temp);
     temp = std::regex_replace(temp, std::regex("^ +"), "");
 
@@ -136,8 +135,9 @@ int tdrd::readInitCt(std::string file, int ct_sz,
     int idx;
     double real, complex;
     iss >> idx >> real >> complex;
-    ct[i] = std::complex<double>(real, complex);
-    ++i;
+    ct[i] = real;
+    ct[i + 1] = complex;
+    i += 2;
   }
 
   return 0;

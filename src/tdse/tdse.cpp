@@ -1,6 +1,6 @@
 #include "tdse.hpp"
 
-typedef std::vector<std::complex<double>> state_type;
+typedef std::vector<double> state_type;
 
 class MatVecV {
 public:
@@ -9,59 +9,66 @@ public:
   std::vector<int> state_sz;
   std::vector<int> offs;
   std::vector<double *> eig;
-  std::vector<std::complex<double> *> cdipole;
+  std::vector<double *> dipole;
 
   void operator()(state_type &x, state_type &dxdt,
                   [[maybe_unused]] double t) const {
-    constexpr std::complex<double> mI(0.0, -1.0);
-    auto alp_fl = std::complex<double>(field, 0.0);
-    auto alp_flm = std::complex<double>(-field, 0.0);
-    auto beta = std::complex<double>(0.0, 0.0);
-    auto bt2 = std::complex<double>(1.0, 0.0);
+    constexpr double beta = 0.0;
+    constexpr double bt2 = 1.0;
+    int off2m1 = 0;
+    int off2 = 0;
+    int off2p1 = offs[1] * 2;
 
     for (auto i = 0; i < state_sz[0]; ++i) {
-      dxdt[i] = eig[0][i] * mI * x[i];
+      auto i2 = i * 2;
+      dxdt[i2 + 1] = -eig[0][i] * x[i2];
+      dxdt[i2] = eig[0][i] * x[i2 + 1];
     }
 
-    cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0],
-                reinterpret_cast<double *>(&alp_flm),
-                reinterpret_cast<double *>(cdipole[0]), state_sz[0],
-                reinterpret_cast<double *>(&x[offs[1]]), 1,
-                reinterpret_cast<double *>(&bt2),
-                reinterpret_cast<double *>(&dxdt[0]), 1);
+    cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0], -field,
+                dipole[0], state_sz[0], &x[off2p1], 2, bt2, &dxdt[0], 2);
+    cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0], -field,
+                dipole[0], state_sz[0], &x[off2p1 + 1], 2, bt2, &dxdt[1], 2);
 
     for (auto L = 1; L < L_max; ++L) {
-      cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  reinterpret_cast<double *>(&alp_fl),
-                  reinterpret_cast<double *>(cdipole[L - 1]), state_sz[L - 1],
-                  reinterpret_cast<double *>(&x[offs[L - 1]]), 1,
-                  reinterpret_cast<double *>(&beta),
-                  reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
+      off2m1 = offs[L - 1] * 2;
+      off2 = offs[L] * 2;
+      off2p1 = offs[L + 1] * 2;
+      cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
+                  field, dipole[L - 1], state_sz[L - 1], &x[off2m1], 2, beta,
+                  &dxdt[off2], 2);
+      cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
+                  field, dipole[L - 1], state_sz[L - 1], &x[off2m1 + 1], 2,
+                  beta, &dxdt[off2 + 1], 2);
 
       for (auto i = 0; i < state_sz[L]; ++i) {
-        dxdt[offs[L] + i] =
-            eig[L][i] * mI * x[offs[L] + i] + bt2 * dxdt[offs[L] + i];
+        auto i2 = off2 + i * 2;
+        dxdt[i2 + 1] = -eig[L][i] * x[i2] + bt2 * dxdt[i2 + 1];
+        dxdt[i2] = eig[L][i] * x[i2 + 1] + bt2 * dxdt[i2];
       }
 
-      cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  reinterpret_cast<double *>(&alp_flm),
-                  reinterpret_cast<double *>(cdipole[L]), state_sz[L],
-                  reinterpret_cast<double *>(&x[offs[L + 1]]), 1,
-                  reinterpret_cast<double *>(&bt2),
-                  reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
+      cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
+                  -field, dipole[L], state_sz[L], &x[off2p1], 2, bt2,
+                  &dxdt[off2], 2);
+      cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
+                  -field, dipole[L], state_sz[L], &x[off2p1 + 1], 2, bt2,
+                  &dxdt[off2 + 1], 2);
     }
+    off2m1 = offs[L_max - 1] * 2;
+    off2 = offs[L_max] * 2;
 
-    cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], reinterpret_cast<double *>(&alp_fl),
-                reinterpret_cast<double *>(cdipole[L_max - 1]),
-                state_sz[L_max - 1],
-                reinterpret_cast<double *>(&x[offs[L_max - 1]]), 1,
-                reinterpret_cast<double *>(&beta),
-                reinterpret_cast<double *>(&dxdt[offs[L_max]]), 1);
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
+                state_sz[L_max - 1], field, dipole[L_max - 1],
+                state_sz[L_max - 1], &x[off2m1], 2, beta, &dxdt[off2], 2);
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
+                state_sz[L_max - 1], field, dipole[L_max - 1],
+                state_sz[L_max - 1], &x[off2m1 + 1], 2, beta, &dxdt[off2 + 1],
+                2);
 
     for (auto i = 0; i < state_sz[L_max]; ++i) {
-      dxdt[offs[L_max] + i] =
-          eig[L_max][i] * mI * x[offs[L_max] + i] + bt2 * dxdt[offs[L_max] + i];
+      auto i2 = off2 + i * 2;
+      dxdt[i2 + 1] = -eig[L_max][i] * x[i2] + bt2 * dxdt[i2 + 1];
+      dxdt[i2] = eig[L_max][i] * x[i2 + 1] + bt2 * dxdt[i2];
     }
   }
 };
@@ -73,58 +80,65 @@ public:
   std::vector<int> state_sz;
   std::vector<int> offs;
   std::vector<double *> eig;
-  std::vector<std::complex<double> *> cdipole;
+  std::vector<double *> dipole;
 
   void operator()(state_type &x, state_type &dxdt,
                   [[maybe_unused]] double t) const {
-    constexpr std::complex<double> mI(0.0, -1.0);
-    auto alp_fl = std::complex<double>(0.0, -field);
-    auto beta = std::complex<double>(0.0, 0.0);
-    auto bt2 = std::complex<double>(1.0, 0.0);
+    constexpr double beta = 0.0;
+    constexpr double bt2 = 1.0;
+    int off2m1 = 0;
+    int off2 = 0;
+    int off2p1 = offs[1] * 2;
 
     for (auto i = 0; i < state_sz[0]; ++i) {
-      dxdt[i] = eig[0][i] * mI * x[i];
+      auto i2 = i * 2;
+      dxdt[i2 + 1] = -eig[0][i] * x[i2];
+      dxdt[i2] = eig[0][i] * x[i2 + 1];
     }
 
-    cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0],
-                reinterpret_cast<double *>(&alp_fl),
-                reinterpret_cast<double *>(cdipole[0]), state_sz[0],
-                reinterpret_cast<double *>(&x[offs[1]]), 1,
-                reinterpret_cast<double *>(&bt2),
-                reinterpret_cast<double *>(&dxdt[0]), 1);
+    cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0], field,
+                dipole[0], state_sz[0], &x[off2p1], 2, bt2, &dxdt[1], 2);
+    cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[1], state_sz[0], field,
+                dipole[0], state_sz[0], &x[off2p1 + 1], 2, bt2, &dxdt[0], 2);
 
     for (auto L = 1; L < L_max; ++L) {
-      cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  reinterpret_cast<double *>(&alp_fl),
-                  reinterpret_cast<double *>(cdipole[L - 1]), state_sz[L - 1],
-                  reinterpret_cast<double *>(&x[offs[L - 1]]), 1,
-                  reinterpret_cast<double *>(&beta),
-                  reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
+      off2m1 = offs[L - 1] * 2;
+      off2 = offs[L] * 2;
+      off2p1 = offs[L + 1] * 2;
+      cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
+                  field, dipole[L - 1], state_sz[L - 1], &x[off2m1], 2, beta,
+                  &dxdt[off2 + 1], 2);
+      cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
+                  field, dipole[L - 1], state_sz[L - 1], &x[off2m1 + 1], 2,
+                  beta, &dxdt[off2], 2);
 
       for (auto i = 0; i < state_sz[L]; ++i) {
-        dxdt[offs[L] + i] =
-            eig[L][i] * mI * x[offs[L] + i] + bt2 * dxdt[offs[L] + i];
+        auto i2 = off2 + i * 2;
+        dxdt[i2 + 1] = -eig[L][i] * x[i2] + bt2 * dxdt[i2 + 1];
+        dxdt[i2] = eig[L][i] * x[i2 + 1] + bt2 * dxdt[i2];
       }
 
-      cblas_zgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  reinterpret_cast<double *>(&alp_fl),
-                  reinterpret_cast<double *>(cdipole[L]), state_sz[L],
-                  reinterpret_cast<double *>(&x[offs[L + 1]]), 1,
-                  reinterpret_cast<double *>(&bt2),
-                  reinterpret_cast<double *>(&dxdt[offs[L]]), 1);
+      cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
+                  field, dipole[L], state_sz[L], &x[off2p1], 2, bt2,
+                  &dxdt[off2 + 1], 2);
+      cblas_dgemv(CblasRowMajor, CblasTrans, state_sz[L + 1], state_sz[L],
+                  field, dipole[L], state_sz[L], &x[off2p1 + 1], 2, bt2,
+                  &dxdt[off2], 2);
     }
+    off2m1 = offs[L_max - 1] * 2;
+    off2 = offs[L_max] * 2;
 
-    cblas_zgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], reinterpret_cast<double *>(&alp_fl),
-                reinterpret_cast<double *>(cdipole[L_max - 1]),
-                state_sz[L_max - 1],
-                reinterpret_cast<double *>(&x[offs[L_max - 1]]), 1,
-                reinterpret_cast<double *>(&beta),
-                reinterpret_cast<double *>(&dxdt[offs[L_max]]), 1);
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
+                state_sz[L_max - 1], field, dipole[L_max - 1],
+                state_sz[L_max - 1], &x[off2m1], 2, beta, &dxdt[off2 + 1], 2);
+    cblas_dgemv(CblasRowMajor, CblasNoTrans, state_sz[L_max],
+                state_sz[L_max - 1], field, dipole[L_max - 1],
+                state_sz[L_max - 1], &x[off2m1 + 1], 2, beta, &dxdt[off2], 2);
 
     for (auto i = 0; i < state_sz[L_max]; ++i) {
-      dxdt[offs[L_max] + i] =
-          eig[L_max][i] * mI * x[offs[L_max] + i] + bt2 * dxdt[offs[L_max] + i];
+      auto i2 = off2 + i * 2;
+      dxdt[i2 + 1] = -eig[L_max][i] * x[i2] + bt2 * dxdt[i2 + 1];
+      dxdt[i2] = eig[L_max][i] * x[i2 + 1] + bt2 * dxdt[i2];
     }
   }
 };
@@ -132,32 +146,16 @@ public:
 int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
                 int pop_n, int pop_l, fieldFcn field, pulse::params &pars,
                 int ct_sz, std::vector<int> &offs, std::vector<int> &state_sz,
-                stvupt &eig, stvupt &dipoles,
-                std::vector<std::complex<double>> &ct) {
+                stvupt &eig, stvupt &dipoles, std::vector<double> &ct) {
   int print = steps / 10;
 
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
   f_out << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
-  for (auto k = 0; k < ct_sz; ++k) {
-    f_out << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
-          << std::norm(ct[k]) << "\n";
+  for (auto k = 0; k < ct_sz * 2; k += 2) {
+    f_out << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
   }
   f_out.close();
-
-  std::vector<state_type> cdipole;
-  for (auto L = 0; L < L_max; ++L) {
-    auto L_sz = state_sz[L];
-    auto L1_sz = state_sz[L + 1];
-    cdipole.push_back(state_type(L_sz * L1_sz));
-
-    for (auto i = 0; i < L_sz; ++i) {
-      for (auto jd = 0; jd < L1_sz; ++jd) {
-        cdipole[L][i * L1_sz + jd] =
-            std::complex<double>(dipoles[L].get()->at(i * L1_sz + jd), 0.0);
-      }
-    }
-  }
 
   MatVecV MV;
   MV.L_max = L_max;
@@ -166,7 +164,7 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 
   for (auto L = 0; L < L_max; ++L) {
     MV.eig.push_back(eig[L]->data());
-    MV.cdipole.push_back(cdipole[L].data());
+    MV.dipole.push_back(dipoles[L]->data());
   }
   MV.eig.push_back(eig[L_max]->data());
 
@@ -181,7 +179,9 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 
   f_pop << "#time (a.u.), population\n";
   f_pop << std::setprecision(16) << t << " "
-        << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
+        << std::norm(std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
+                                          ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
+        << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     MV.field = field(pars, t + dt);
@@ -191,23 +191,25 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 
     t += dt;
 
-    auto ctnrm = cblas_dznrm2(ct_sz, reinterpret_cast<double *>(&ct[0]), 1);
+    auto ctnrm = cblas_dznrm2(ct_sz, &ct[0], 1);
 
     for (auto &n : ct) {
       n /= ctnrm;
     }
 
     f_pop << std::setprecision(16) << t << " "
-          << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
+          << std::norm(
+                 std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
+                                      ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
+          << "\n";
 
     if (st % print == 0) {
       std::cout << MV.field << "\n";
       std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
       f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
-      for (auto k = 0; k < ct_sz; ++k) {
-        f_ct << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
-             << std::norm(ct[k]) << "\n";
+      for (auto k = 0; k < ct_sz * 2; k += 2) {
+        f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
       }
       f_ct.close();
     }
@@ -220,32 +222,16 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
                 int pop_n, int pop_l, fieldFcn field, pulse::params &pars,
                 int ct_sz, std::vector<int> &offs, std::vector<int> &state_sz,
-                stvupt &eig, stvupt &dipoles,
-                std::vector<std::complex<double>> &ct) {
+                stvupt &eig, stvupt &dipoles, std::vector<double> &ct) {
   int print = steps / 10;
 
   std::fstream f_out, field_fl, f_pop;
   f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
   f_out << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
-  for (auto k = 0; k < ct_sz; ++k) {
-    f_out << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
-          << std::norm(ct[k]) << "\n";
+  for (auto k = 0; k < ct_sz * 2; k += 2) {
+    f_out << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
   }
   f_out.close();
-
-  std::vector<state_type> cdipole;
-  for (auto L = 0; L < L_max; ++L) {
-    auto L_sz = state_sz[L];
-    auto L1_sz = state_sz[L + 1];
-    cdipole.push_back(state_type(L_sz * L1_sz));
-
-    for (auto i = 0; i < L_sz; ++i) {
-      for (auto jd = 0; jd < L1_sz; ++jd) {
-        cdipole[L][i * L1_sz + jd] =
-            std::complex<double>(dipoles[L].get()->at(i * L1_sz + jd), 0.0);
-      }
-    }
-  }
 
   MatVecL MV;
   MV.L_max = L_max;
@@ -254,7 +240,7 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
 
   for (auto L = 0; L < L_max; ++L) {
     MV.eig.push_back(eig[L]->data());
-    MV.cdipole.push_back(cdipole[L].data());
+    MV.dipole.push_back(dipoles[L]->data());
   }
   MV.eig.push_back(eig[L_max]->data());
 
@@ -269,7 +255,9 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
 
   f_pop << "#time (a.u.), population\n";
   f_pop << std::setprecision(16) << t << " "
-        << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
+        << std::norm(std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
+                                          ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
+        << "\n";
 
   for (auto st = 0; st < steps; ++st) {
     MV.field = field(pars, t + dt);
@@ -279,23 +267,25 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
 
     t += dt;
 
-    auto ctnrm = cblas_dznrm2(ct_sz, reinterpret_cast<double *>(&ct[0]), 1);
+    auto ctnrm = cblas_dznrm2(ct_sz, &ct[0], 1);
 
     for (auto &n : ct) {
       n /= ctnrm;
     }
 
     f_pop << std::setprecision(16) << t << " "
-          << std::norm(ct[offs[pop_l] + pop_n]) << "\n";
+          << std::norm(
+                 std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
+                                      ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
+          << "\n";
 
     if (st % print == 0) {
       std::cout << MV.field << "\n";
       std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
       f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
-      for (auto k = 0; k < ct_sz; ++k) {
-        f_ct << k << "  " << ct[k].real() << "  " << ct[k].imag() << " "
-             << std::norm(ct[k]) << "\n";
+      for (auto k = 0; k < ct_sz * 2; k += 2) {
+        f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
       }
       f_ct.close();
     }

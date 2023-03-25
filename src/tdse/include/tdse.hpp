@@ -62,7 +62,7 @@ namespace tdse {
 int propV(std::string output, int L_max, double t, double dt, int steps,
           int pop_n, int pop_l, fieldFcn field, pulse::params &pars, int ct_sz,
           std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
-          stvupt &dipoles, std::vector<std::complex<double>> &ct);
+          stvupt &dipoles, std::vector<double> &ct);
 
 /**
  * @brief Function for propagating the 2-electron TDSE in the length gauge
@@ -94,7 +94,7 @@ int propV(std::string output, int L_max, double t, double dt, int steps,
 int propL(std::string output, int L_max, double t, double dt, int steps,
           int pop_n, int pop_l, fieldFcn field, pulse::params &pars, int ct_sz,
           std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
-          stvupt &dipoles, std::vector<std::complex<double>> &ct);
+          stvupt &dipoles, std::vector<double> &ct);
 } // namespace tdse
 
 #endif // TDSE_HPP_
