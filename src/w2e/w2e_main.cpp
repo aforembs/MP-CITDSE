@@ -1,4 +1,4 @@
-#include "cibasis.hpp"
+#include "w2e.hpp"
 #include <cstdlib>
 #include <fenv.h>
 #include <iostream>
@@ -24,7 +24,7 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  cib::readConfig(opt_file, pot, gauge, L_max);
+  w2e::readConfig(opt_file, pot, gauge, L_max);
   file_prefix = "dat/" + pot;
 
   stvupt vecs;
@@ -33,9 +33,9 @@ int main(int argc, char *argv[]) {
         std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
-  cib::formCIh0(file_prefix, L_max, vecs);
+  w2e::formCIh0(file_prefix, L_max, vecs);
 
-  cib::formCIDipoles(file_prefix, gauge, L_max, vecs);
+  w2e::formCIDipoles(file_prefix, gauge, L_max, vecs);
 
   return 0;
 }

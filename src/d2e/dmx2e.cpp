@@ -108,8 +108,8 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
   file->close();
 
   T.reserve(Li_sz * Lf_sz);
-  T_dimms[0] = Lf_sz;
-  T_dimms[1] = Li_sz;
+  T_dimms[0] = Li_sz;
+  T_dimms[1] = Lf_sz;
 
   switch (gauge) {
   case 'v':
@@ -128,9 +128,9 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
   {
     wig_thread_temp_init(2 * l_max);
 
-    for (int idLf = 0; idLf < Lf_sz; ++idLf) { // up to sz Lf
+    for (int idLi = 0; idLi < Li_sz; ++idLi) { // up to sz Li
 #pragma omp for private(l1i, l2i, l1f, l2f, n1i, n2i, n1f, n2f)
-      for (int idLi = 0; idLi < Li_sz; ++idLi) { // up to sz Li
+      for (int idLf = 0; idLf < Lf_sz; ++idLf) { // up to sz Lf
         l1i = Li_idx[idLi].l1;
         n1i = Li_idx[idLi].n1;
         l2i = Li_idx[idLi].l2;
@@ -143,49 +143,49 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
         if (l1i + 1 == l1f && l2i == l2f && n2i == n2f) {
           Tif += pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
                  wig6jj(2 * l1i, 2 * l2i, 0, 2, 2, 2 * l1f) *
-                 D_data[l1i * max2 + n1i + max_N * n1f] /
+                 D_data[l1i * max2 + n1f + max_N * n1i] /
                  sqrt(static_cast<double>(l1f));
         }
         if (l2i + 1 == l2f && l1i == l1f && n1i == n1f) {
           Tif += pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
                  wig6jj(2 * l2i, 2 * l1i, 0, 2, 2, 2 * l2f) *
-                 D_data[l2i * max2 + n2i + max_N * n2f] /
+                 D_data[l2i * max2 + n2f + max_N * n2i] /
                  sqrt(static_cast<double>(l2f));
         }
         if (l1i + 1 == l2f && l2i == l1f && n2i == n1f) {
           Tif += pow(-1, l2i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
                  wig6jj(2 * l1i, 2 * l2i, 0, 2, 2, 2 * l2f) *
-                 D_data[l1i * max2 + n1i + max_N * n2f] /
+                 D_data[l1i * max2 + n2f + max_N * n1i] /
                  sqrt(static_cast<double>(l2f));
         }
         if (l2i + 1 == l1f && l1i == l2f && n1i == n2f) {
           Tif += pow(-1, l1i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
                  wig6jj(2 * l2i, 2 * l1i, 0, 2, 2, 2 * l1f) *
-                 D_data[l2i * max2 + n2i + max_N * n1f] /
+                 D_data[l2i * max2 + n1f + max_N * n2i] /
                  sqrt(static_cast<double>(l1f));
         }
         if (l1i - 1 == l1f && l2i == l2f && n2i == n2f) {
           Tif += dipT * pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                  wig6jj(2 * l1i, 2 * l2i, 0, 2, 2, 2 * l1f) *
-                 D_data[l1f * max2 + n1f + max_N * n1i] /
+                 D_data[l1f * max2 + n1i + max_N * n1f] /
                  sqrt(static_cast<double>(l1i));
         }
         if (l2i - 1 == l2f && l1i == l1f && n1i == n1f) {
           Tif += dipT * pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                  wig6jj(2 * l2i, 2 * l1i, 0, 2, 2, 2 * l2f) *
-                 D_data[l2f * max2 + n2f + max_N * n2i] /
+                 D_data[l2f * max2 + n2i + max_N * n2f] /
                  sqrt(static_cast<double>(l2i));
         }
         if (l1i - 1 == l2f && l2i == l1f && n2i == n1f) {
           Tif += dipT * pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                  wig6jj(2 * l1i, 2 * l2i, 0, 2, 2, 2 * l2f) *
-                 D_data[l2f * max2 + n2f + max_N * n1i] /
+                 D_data[l2f * max2 + n1i + max_N * n2f] /
                  sqrt(static_cast<double>(l1i));
         }
         if (l2i - 1 == l1f && l1i == l2f && n1i == n2f) {
           Tif += dipT * pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                  wig6jj(2 * l2i, 2 * l1i, 0, 2, 2, 2 * l1f) *
-                 D_data[l1f * max2 + n1f + max_N * n2i] /
+                 D_data[l1f * max2 + n2i + max_N * n1f] /
                  sqrt(static_cast<double>(l2i));
         }
         if (l1i == l2i && n1i == n2i) {
@@ -194,7 +194,7 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
         if (l1f == l2f && n1f == n2f) {
           Tif *= sq2;
         }
-        T[idLi + idLf * Li_sz] = Tif * Lsq;
+        T[idLf + idLi * Lf_sz] = Tif * Lsq;
       }
     }
 
@@ -235,17 +235,17 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
     file->close();
 
     T.reserve(Li_sz * Lf_sz);
-    T_dimms[0] = Lf_sz;
-    T_dimms[1] = Li_sz;
+    T_dimms[0] = Li_sz;
+    T_dimms[1] = Lf_sz;
 
     // calculate 2e dipoles
     Lsq = pow(-1, Lf_i) * sqrt(static_cast<double>(Lf_i));
 #pragma omp parallel
     {
       wig_thread_temp_init(2 * l_max);
-      for (int idLf = 0; idLf < Lf_sz; ++idLf) { // up to sz Lf
+      for (int idLi = 0; idLi < Li_sz; ++idLi) { // up to sz Li
 #pragma omp for private(l1i, l2i, l1f, l2f, n1i, n2i, n1f, n2f)
-        for (int idLi = 0; idLi < Li_sz; ++idLi) { // up to sz Li
+        for (int idLf = 0; idLf < Lf_sz; ++idLf) { // up to sz Lf
           l1i = buffs.at(buf_Li)[idLi].l1;
           n1i = buffs.at(buf_Li)[idLi].n1;
           l2i = buffs.at(buf_Li)[idLi].l2;
@@ -258,49 +258,49 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
           if (l1i + 1 == l1f && l2i == l2f && n2i == n2f) {
             Tif += pow(-1, l2i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
                    wig6jj(2 * l1i, 2 * l2i, L2, L2 + 2, 2, 2 * l1f) *
-                   D_data[l1i * max2 + n1i + max_N * n1f] /
+                   D_data[l1i * max2 + n1f + max_N * n1i] /
                    sqrt(static_cast<double>(l1f));
           }
           if (l2i + 1 == l2f && l1i == l1f && n1i == n1f) {
             Tif += pow(-1, l1i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
                    wig6jj(2 * l2i, 2 * l1i, L2, L2 + 2, 2, 2 * l2f) *
-                   D_data[l2i * max2 + n2i + max_N * n2f] /
+                   D_data[l2i * max2 + n2f + max_N * n2i] /
                    sqrt(static_cast<double>(l2f));
           }
           if (l1i + 1 == l2f && l2i == l1f && n2i == n1f) {
             Tif += pow(-1, l2i + l2f) * sqrt(4.0 * l2f * l2f - 1.0) *
                    wig6jj(2 * l1i, 2 * l2i, L2, L2 + 2, 2, 2 * l2f) *
-                   D_data[l1i * max2 + n1i + max_N * n2f] /
+                   D_data[l1i * max2 + n2f + max_N * n1i] /
                    sqrt(static_cast<double>(l2f));
           }
           if (l2i + 1 == l1f && l1i == l2f && n1i == n2f) {
             Tif += pow(-1, l1i + l1f) * sqrt(4.0 * l1f * l1f - 1.0) *
                    wig6jj(2 * l2i, 2 * l1i, L2, L2 + 2, 2, 2 * l1f) *
-                   D_data[l2i * max2 + n2i + max_N * n1f] /
+                   D_data[l2i * max2 + n1f + max_N * n2i] /
                    sqrt(static_cast<double>(l1f));
           }
           if (l1i - 1 == l1f && l2i == l2f && n2i == n2f) {
             Tif += dipT * pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                    wig6jj(2 * l1i, 2 * l2i, L2, L2 + 2, 2, 2 * l1f) *
-                   D_data[l1f * max2 + n1f + max_N * n1i] /
+                   D_data[l1f * max2 + n1i + max_N * n1f] /
                    sqrt(static_cast<double>(l1i));
           }
           if (l2i - 1 == l2f && l1i == l1f && n1i == n1f) {
             Tif += dipT * pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                    wig6jj(2 * l2i, 2 * l1i, L2, L2 + 2, 2, 2 * l2f) *
-                   D_data[l2f * max2 + n2f + max_N * n2i] /
+                   D_data[l2f * max2 + n2i + max_N * n2f] /
                    sqrt(static_cast<double>(l2i));
           }
           if (l1i - 1 == l2f && l2i == l1f && n2i == n1f) {
             Tif += dipT * pow(-1, l2i + l1i) * sqrt(4.0 * l1i * l1i - 1.0) *
                    wig6jj(2 * l1i, 2 * l2i, L2, L2 + 2, 2, 2 * l2f) *
-                   D_data[l2f * max2 + n2f + max_N * n1i] /
+                   D_data[l2f * max2 + n1i + max_N * n2f] /
                    sqrt(static_cast<double>(l1i));
           }
           if (l2i - 1 == l1f && l1i == l2f && n1i == n2f) {
             Tif += dipT * pow(-1, l1i + l2i) * sqrt(4.0 * l2i * l2i - 1.0) *
                    wig6jj(2 * l2i, 2 * l1i, L2, L2 + 2, 2, 2 * l1f) *
-                   D_data[l1f * max2 + n1f + max_N * n2i] /
+                   D_data[l1f * max2 + n2i + max_N * n1f] /
                    sqrt(static_cast<double>(l2i));
           }
           if (l1i == l2i && n1i == n2i) {
@@ -309,7 +309,7 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
           if (l1f == l2f && n1f == n2f) {
             Tif *= sq2;
           }
-          T[idLi + idLf * Li_sz] = Tif * Lsq;
+          T[idLf + idLi * Lf_sz] = Tif * Lsq;
         }
       }
       wig_temp_free();

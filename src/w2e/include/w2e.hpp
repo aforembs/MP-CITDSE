@@ -1,8 +1,8 @@
-#ifndef CIBASIS_HPP_
-#define CIBASIS_HPP_
+#ifndef W2E_HPP_
+#define W2E_HPP_
 
 /**
- * @file cibasis.hpp
+ * @file w2e.hpp
  * @author Andrew Forembski (andrew.forembski2@mail.dcu.ie)
  * @brief Functions used for generating the Configuration Interaction 2-electron
  * basis.
@@ -26,7 +26,7 @@ using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
 /**
  * @brief Namespace for CI basis functions
  */
-namespace cib {
+namespace w2e {
 /**
  * @brief Function for reading settings from a .yaml file
  *
@@ -63,4 +63,4 @@ int formCIh0(std::string pot, int L_max, stvupt &vecs);
 int formCIDipoles(std::string pot, char gauge, int L_max, stvupt &vecs);
 } // namespace cib
 
-#endif // CIBASIS_HPP_
+#endif // W2E_HPP_

@@ -8,7 +8,7 @@ IDIR = -Iinclude
 SH_IDIR = -I../include
 ODIR = obj
 
-SRC =cibasis_main.cpp cibasis.cpp
+SRC =w2e_main.cpp w2e.cpp
 
 ifndef BLAS_LIB
 BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib

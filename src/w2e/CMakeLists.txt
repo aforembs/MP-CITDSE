@@ -5,8 +5,8 @@ add_executable(${PROJECT_NAME} ${SH1_HEADER_FILES})
 
 target_sources(${PROJECT_NAME}
     PRIVATE 
-        ${CMAKE_CURRENT_SOURCE_DIR}/cibasis_main.cpp 
-        ${CMAKE_CURRENT_SOURCE_DIR}/cibasis.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/w2e_main.cpp 
+        ${CMAKE_CURRENT_SOURCE_DIR}/w2e.cpp
 )
 
 target_include_directories(${PROJECT_NAME} 

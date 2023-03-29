@@ -98,10 +98,10 @@ int tdrd::readDipoles(std::string pot, std::string setname, char gauge,
   for (auto L = 0; L < L_max; ++L) {
     L_sz = state_sz[L];
     L1_sz = state_sz[L + 1];
-    count[0] = L1_sz;
-    count[1] = L_sz;
-    dimms[0] = L1_sz;
-    dimms[1] = L_sz;
+    count[0] = L_sz;
+    count[1] = L1_sz;
+    dimms[0] = L_sz;
+    dimms[1] = L1_sz;
     memspace.setExtentSimple(2, dimms, NULL);
 
     dipoles[L]->resize(L_sz * L1_sz);

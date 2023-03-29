@@ -1,6 +1,6 @@
-#include "cibasis.hpp"
+#include "w2e.hpp"
 
-int cib::readConfig(std::string file, std::string &pot, char &gauge,
+int w2e::readConfig(std::string file, std::string &pot, char &gauge,
                     int &L_max) {
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
@@ -14,7 +14,7 @@ int cib::readConfig(std::string file, std::string &pot, char &gauge,
   return 0;
 }
 
-int cib::formCIh0(std::string pot, int L_max, stvupt &vecs) {
+int w2e::formCIh0(std::string pot, int L_max, stvupt &vecs) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> data = nullptr;
@@ -57,7 +57,7 @@ int cib::formCIh0(std::string pot, int L_max, stvupt &vecs) {
       }
     }
 
-    LAPACKE_dsyevd(LAPACK_ROW_MAJOR, 'V', 'U', L_full_sz, vecs[L]->data(),
+    LAPACKE_dsyevd(LAPACK_COL_MAJOR, 'V', 'L', L_full_sz, vecs[L]->data(),
                    L_full_sz, eig.data());
 
     dimms1[0] = L_full_sz;
@@ -82,7 +82,7 @@ int cib::formCIh0(std::string pot, int L_max, stvupt &vecs) {
   return 0;
 }
 
-int cib::formCIDipoles(std::string pot, char gauge, int L_max, stvupt &vecs) {
+int w2e::formCIDipoles(std::string pot, char gauge, int L_max, stvupt &vecs) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> dl = nullptr;
@@ -104,12 +104,12 @@ int cib::formCIDipoles(std::string pot, char gauge, int L_max, stvupt &vecs) {
     dl->read(dipole.data(), H5::PredType::NATIVE_DOUBLE);
     file->close();
 
-    cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, dimms[0], dimms[1],
-                dimms[1], 1.0, dipole.data(), dimms[1], vecs[L]->data(),
-                dimms[1], 0.0, temp.data(), dimms[1]);
+    cblas_dgemm(CblasColMajor, CblasNoTrans, CblasNoTrans, dimms[1], dimms[0],
+                dimms[0], 1.0, dipole.data(), dimms[1], vecs[L]->data(),
+                dimms[0], 0.0, temp.data(), dimms[1]);
 
-    cblas_dgemm(CblasRowMajor, CblasTrans, CblasNoTrans, dimms[0], dimms[1],
-                dimms[0], 1.0, vecs[L + 1]->data(), dimms[0], temp.data(),
+    cblas_dgemm(CblasColMajor, CblasTrans, CblasNoTrans, dimms[1], dimms[0],
+                dimms[1], 1.0, vecs[L + 1]->data(), dimms[1], temp.data(),
                 dimms[1], 0.0, dipole.data(), dimms[1]);
 
     filename =
