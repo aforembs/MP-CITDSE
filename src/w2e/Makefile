@@ -26,13 +26,13 @@ ifndef YAML_LIB
 YAML_LIB = -lyaml-cpp
 endif
 
-ifndef LAPACKE_LIB
-LAPACKE_LIB = -llapack
+ifndef LAPACK_LIB
+LAPACK_LIB = -llapack
 endif
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 \
  -fopenmp $(IDIR) $(SH_IDIR) $(BLAS_INC) $(HDF5_INC) $(YAML_INC) $(LAPACKE_INC)
-LDFLAGS = $(HDF5_LIB) $(YAML_LIB) $(LAPACKE_LIB) $(BLAS_LIB) -fopenmp
+LDFLAGS = $(HDF5_LIB) $(YAML_LIB) $(LAPACK_LIB) $(BLAS_LIB) -fopenmp
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 
 all: $(SRC) $(EXEC)
