@@ -15,13 +15,16 @@
 #include <iostream>
 #ifndef __INTEL_MKL__
 #include <lapacke.h>
+extern "C" {
+#include <cblas.h>
+}
+#else 
+#include <mkl_lapacke.h>
+#include <mkl_cblas.h>
 #endif
 #include <numeric>
 #include <vector>
 #include <yaml-cpp/yaml.h>
-extern "C" {
-#include <cblas.h>
-}
 
 using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
 

@@ -17,6 +17,8 @@
 #include <iostream>
 #ifndef __INTEL_MKL__
 #include <lapacke.h>
+#else
+#include <mkl_lapacke.h>
 #endif
 #include <omp.h>
 #include <string>

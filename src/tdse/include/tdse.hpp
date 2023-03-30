@@ -16,9 +16,13 @@
 #include <iomanip>
 #include <iostream>
 #include <vector>
+#ifndef __INTEL_MKL__
 extern "C" {
 #include <cblas.h>
 }
+#else
+#include <mkl_cblas.h>
+#endif
 
 /**
  * @brief Aliases for vectors of unique_ptr and the pulse function pointer.

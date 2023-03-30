@@ -32,4 +32,4 @@ target_link_libraries(${PROJECT_NAME}
         yaml-cpp ${YAML_CPP_LIBRARIES} tbb ${TBB_LIBRARIES} 
         ${BLAS_LIBRARIES} hdf5 hdf5_cpp ${HDF5_LIBRARIES}
 )
-target_link_options(${PROJECT_NAME} PRIVATE -fopenmp)
+target_link_options(${PROJECT_NAME} PRIVATE ${OpenMP_CXX_FLAGS})

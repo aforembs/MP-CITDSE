@@ -37,9 +37,11 @@ endif()
 
 add_subdirectory(3rd_party)
 
+find_package(OpenMP)
+
 add_compile_options(
     -Wall -Wextra -Wshadow -Wnon-virtual-dtor 
-    -pedantic -O3 -march=native -fopenmp
+    -pedantic -O3 -march=native ${OpenMP_CXX_FLAGS}
 )
 
 add_subdirectory(src/h1e)

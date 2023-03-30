@@ -16,15 +16,18 @@
 #include <complex>
 #include <cstring>
 #include <iostream>
-#ifndef __INTEL_MKL__
+#ifndef __INTEL_MKL__ 
 #include <lapacke.h>
+extern "C" {
+#include <cblas.h>
+}
+#else 
+#include <mkl_lapacke.h> 
+#include <mkl_cblas.h>
 #endif
 #include <regex>
 #include <vector>
 #include <yaml-cpp/yaml.h>
-extern "C" {
-#include <cblas.h>
-}
 
 /**
  * @brief Namespace for functions used to generate a photoelectron energy

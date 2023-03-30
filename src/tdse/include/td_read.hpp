@@ -21,9 +21,13 @@
 #include <regex>
 #include <vector>
 #include <yaml-cpp/yaml.h>
+#ifndef __INTEL_MKL__
 extern "C" {
 #include <cblas.h>
 }
+#else
+#include <mkl_cblas.h>
+#endif
 
 using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
 
