@@ -19,17 +19,33 @@ As a form of result analysis this suite provides two programs for the calculatio
 
 ## Requirements
 
-A C++17 or greater compatible compiler (eg. g++, clang++, ... etc.) \
-tbb - library for C++17 multithreading (apt-get, pacman, etc...) \
-hdf5 - data storage library (apt-get, pacman, etc...) \
-yaml-cpp - library for human readable (yaml) format configuration files (apt-get, pacman, etc...) \
-boost - specifically ::odeint for the tdse program (apt-get, pacman, etc...) \
+A C++17 or greater compatible compiler: **g++ >= 10, clang++ >= 7**, or equivalent version intel, amd, ... \
+tbb - library for C++17 multithreading \
+hdf5 - data storage library \
+yaml-cpp - library for human readable (yaml) format configuration files \
+boost - specifically ::odeint for the tdse program \
 any parallel BLAS library - with a source build of OpenBLAS being the preferred option as it is fast and integrates well with cmake. \
 [wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf) - library for wigner symbols \[[3](https://doi.org/10.1137/15M1021908)\]; (requires a fortran compiler) the cmake compilation downloads the latest version from github and links it automatically, for compilation with make a static version of the library (along with its licence) is provided in lib/wigxjpf.
 
+### Installing from repositories
+#### RHEL linux
+First make sure that you have the **crb** and **epel** repositories enabled then run:
+```
+sudo yum install yaml-cpp gsl gsl-devel boost boost-devel hdf5 hdf5-devel tbb-devel openblas openblas-devel lapack-devel
+```
+#### Debian/Ubuntu
+```
+sudo apt-get install libyaml-cpp-dev libhdf5-dev libboost-dev libgsl-dev libtbb-dev libopenblas-dev liblapacke-dev
+```
+#### Arch linux
+```
+sudo pacman -S yaml-cpp gsl boost hdf5 tbb openblas lapacke
+```
+
 ## Compilation
 
-#### Cmake
+#### Cmake 
+##### This method doesn't work on Debian/Ubuntu because the linking of hdf5 via cmake is broken on those systems
 
 Requires Cmake version 3.20 or greater.\
 To compile the code, including the wigxjpf library:
@@ -55,8 +71,9 @@ If you are installing on Debian you may need to add the location of libhdf5.so t
 ```
 
 #### Make
+##### Works out of the box for all RHEL Debian/Ubuntu or Arch based linux versions that ship with g++ >= 10
 
-First set the variables BLAS_LIB, BLAS_INC, WIG_LIB, WIG_INC to the correct paths in src/Makefile. If you're using some non-standard install locations, you may also need to set: HDF5_LIB, HDF5_INC, YAML_LIB, YAML_INC, LAPACKE_LIB and LAPACKE_INC.\
+First set the variables BLAS_LIB, BLAS_INC, WIG_LIB, WIG_INC to the correct paths in src/Makefile. If you're using some non-standard install locations, you may also need to set: HDF5_LIB, HDF5_INC, YAML_LIB, YAML_INC, LAPACK_LIB and LAPACK_INC.\
 Then simpy run:
 
 ```
