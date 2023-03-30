@@ -16,7 +16,9 @@
 #include <complex>
 #include <cstring>
 #include <iostream>
+#ifndef __INTEL_MKL__
 #include <lapacke.h>
+#endif
 #include <regex>
 #include <vector>
 #include <yaml-cpp/yaml.h>

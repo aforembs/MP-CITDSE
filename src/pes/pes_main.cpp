@@ -20,8 +20,7 @@ int main(int argc, char *argv[]) {
                 << "-e <1 or 2> the number of electrons in the tdse\n"
                 << "-f <path> yaml input file with the input settings\n"
                 << "-i <path> file containing the coefficients\n"
-                << "-s generate PES summed over all 'l/L'\n"
-                << "-l separate PES for each 'l'\n";
+                << "-s generate PES summed over all 'l/L'\n";
       return -1;
     case 'e':
       e_num = std::stoi(optarg);

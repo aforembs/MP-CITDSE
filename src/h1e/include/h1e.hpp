@@ -15,7 +15,9 @@
 #include <algorithm>
 #include <execution>
 #include <iostream>
+#ifndef __INTEL_MKL__
 #include <lapacke.h>
+#endif
 #include <omp.h>
 #include <string>
 #include <vector>

@@ -13,7 +13,9 @@
 #include <H5Cpp.h>
 #include <cassert>
 #include <iostream>
+#ifndef __INTEL_MKL__
 #include <lapacke.h>
+#endif
 #include <numeric>
 #include <vector>
 #include <yaml-cpp/yaml.h>
@@ -61,6 +63,6 @@ int formCIh0(std::string pot, int L_max, stvupt &vecs);
  * @return int default '0' error otherwise
  */
 int formCIDipoles(std::string pot, char gauge, int L_max, stvupt &vecs);
-} // namespace cib
+} // namespace w2e
 
 #endif // W2E_HPP_
