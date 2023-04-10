@@ -4,7 +4,7 @@ OBJ_DIR = obj
 
 LIB_DIR = ../../lib
 
-CPPC = g++
+CPPC = g++ #for Intel MKL headers add -D__INTEL_MKL__
 
 BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib -Wno-c99-extensions
 BLAS_INC = -I/opt/OpenBLAS/include -Wno-c99-extensions

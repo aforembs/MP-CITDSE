@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.20)
-cmake_policy(SET CMP0135 NEW)
 
 # set the project name
 project(ParTDSE VERSION 1.0)
@@ -28,6 +27,10 @@ endif()
 
 if(${BLA_VENDOR} MATCHES OpenBLAS) 
     set(BLAS_INC /opt/OpenBLAS/include)
+endif()
+
+if(${BLA_VENDOR} MATCHES Intel10_64lp)
+    add_compile_definitions(__INTEL_MKL__)
 endif()
 
 if(DEFINED BLA_HINT)
