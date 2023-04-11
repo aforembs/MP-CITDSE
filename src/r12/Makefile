@@ -13,10 +13,6 @@ VPATH := ../
 SRC = r12_main.cpp r12.cpp integrator.cpp
 SRC_SH = fastgl.cpp cfg_in.cpp
 
-ifndef BLAS_LIB
-BLAS_LIB = -lopenblas -L/opt/OpenBLAS/lib
-endif
-
 ifndef WIG_LIB
 WIG_LIB = -lwigxjpf -L../../lib/wigxjpf/lib
 endif
@@ -35,7 +31,7 @@ endif
 
 CPPFLAGS = -Wall -Wextra -Wshadow -Wnon-virtual-dtor -pedantic -O3 -march=native -std=c++17 \
 -fopenmp $(IDIR) $(SH_IDIR) $(WIG_INC) $(HDF5_INC) $(YAML_INC)
-LDFLAGS = $(HDF5_LIB) $(YAML_LIB) -ltbb -fopenmp -L$(VPATH) $(WIG_LIB) -lgsl $(BLAS_LIB)
+LDFLAGS = $(HDF5_LIB) $(YAML_LIB) -fopenmp -L$(VPATH) $(WIG_LIB)
 OBJ = $(patsubst %.cpp,$(ODIR)/%.o,$(SRC))
 OBJ+=$(join $(addsuffix ../$(ODIR)/, $(dir $(SRC_SH))), $(notdir $(SRC_SH:.cpp=.o)))
 
