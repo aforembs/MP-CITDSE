@@ -48,3 +48,12 @@ clean:
 	$(MAKE) -C tdse/ clean
 	$(MAKE) -C pes/ clean
 	rm -f $(OBJ_DIR)/*
+	cd h1e/ && rm -rf $(OBJ_DIR)
+	cd w1e/ && rm -rf $(OBJ_DIR)
+	cd d1e/ && rm -rf $(OBJ_DIR)
+	cd id2ec/ && rm -rf $(OBJ_DIR)
+	cd r12/ && rm -rf $(OBJ_DIR)
+	cd d2e/ && rm -rf $(OBJ_DIR)
+	cd w2e/ && rm -rf $(OBJ_DIR)
+	cd tdse/ && rm -rf $(OBJ_DIR)
+	cd pes/ && rm -rf $(OBJ_DIR)
