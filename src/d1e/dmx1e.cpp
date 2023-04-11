@@ -65,7 +65,7 @@ int dmx1e::genDipole(std::string pot, int qsz, char gauge, int l_max) {
   switch (gauge) {
   case 'v': {
     std::vector<double> wfnp;
-    wfnp.reserve(lc_sz);
+    wfnp.resize(lc_sz);
 #pragma omp parallel
     {
       for (int l = 0; l < l_max; ++l) {

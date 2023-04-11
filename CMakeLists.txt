@@ -38,6 +38,10 @@ if(DEFINED BLA_HINT)
     set(BLAS_INC ${BLA_INC})
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")     
+    set(Clang_W_FLAG -Wno-c99-extensions) 
+endif()
+
 add_subdirectory(3rd_party)
 
 find_package(OpenMP)
@@ -45,6 +49,7 @@ find_package(OpenMP)
 add_compile_options(
     -Wall -Wextra -Wshadow -Wnon-virtual-dtor 
     -pedantic -O3 -march=native ${OpenMP_CXX_FLAGS}
+    ${Clang_W_FLAG}
 )
 
 add_subdirectory(src/h1e)

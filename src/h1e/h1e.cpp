@@ -130,10 +130,10 @@ int h1e::genCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
   // int B_i V(r) B_j dr
   bsp::splineInt(nm2, k, glq_pt, gl_w, gl_x, ov_V, spl, kkn, v);
 
-  Enl.reserve(lm1 * nm2);
-  Cnl_tmp.reserve(lm1 * nm22);
-  aa.reserve(lm1 * nk);
-  w_bb.reserve(lm1 * nk);
+  Enl.resize(lm1 * nm2);
+  Cnl_tmp.resize(lm1 * nm22);
+  aa.resize(lm1 * nk);
+  w_bb.resize(lm1 * nk);
 
   for (int l = 0; l <= l_max; ++l) {
     std::copy(std::execution::seq, ov_BB.begin(), ov_BB.end(),

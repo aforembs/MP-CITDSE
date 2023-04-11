@@ -77,7 +77,7 @@ int prOuter(int n, int bo, int off, int ooff, std::vector<double> &kkn,
             std::vector<double> &p_out, std::vector<double> &p_der) {
   double Pl = 0;
   double Plp = 0;
-  int qi = 0;
+  uint qi = 0;
   size_t pi = 0;
   auto ksz = kkn.size();
   auto kn = gsl_vector_alloc(ksz);
@@ -97,7 +97,7 @@ int prOuter(int n, int bo, int off, int ooff, std::vector<double> &kkn,
     pi = i;
 
     // While glq_pt is between current knots
-    while (q_x[qi] > kkn[i] && q_x[qi] < kkn[i1]) {
+    while (qi < q_x.size() && q_x[qi] > kkn[i] && q_x[qi] < kkn[i1]) {
       Pl = 0;
       Plp = 0;
       // Calculate the B-spline values on the fly
@@ -181,7 +181,8 @@ int genRin(int qsz, int pti_sz, std::vector<double> &q_x,
            std::vector<uint8_t> &pq_dx, std::vector<double> &ri) {
   double dl, sl;
 
-  ri.reserve(pti_sz);
+  ri.resize(pti_sz);
+  uint iit = 0;
   double rm1 = 0.0;
   for (int i = 0; i < qsz; ++i) {
     auto r1 = q_x[i];
@@ -189,7 +190,8 @@ int genRin(int qsz, int pti_sz, std::vector<double> &q_x,
     dl = (r1 - rm1) * 0.5;
     sl = (r1 + rm1) * 0.5;
     for (uint8_t pt = 0; pt < p_num; ++pt) {
-      ri.emplace_back(dl * glx::GLobx[p_num][pt] + sl);
+      ri[iit] = dl * glx::GLobx[p_num][pt] + sl;
+      ++iit;
     }
     rm1 = r1;
   }
@@ -221,8 +223,8 @@ int prInner(int n, int bo, int off, int ooff, std::vector<double> &kkn,
     pi = i;
 
     // While glq_pt is between current knots
-    while (ri[r_id] > kkn[i] && ri[r_id] < kkn[i1] &&
-           r_id < static_cast<int>(ri.size())) {
+    while (r_id < static_cast<int>(ri.size()) && ri[r_id] > kkn[i] &&
+           ri[r_id] < kkn[i1]) {
       Pl = 0;
       // Calculate the B-spline values on the fly
       gsl_bspline_eval_nonzero(ri[r_id], B, &pi, &pi, bw);

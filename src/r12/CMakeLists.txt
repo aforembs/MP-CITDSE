@@ -28,13 +28,9 @@ find_package(HDF5 REQUIRED)
 
 find_package(OpenMP REQUIRED)
 
-find_package(TBB REQUIRED)
-
-find_package(BLAS REQUIRED HINT ${BLA_HINT})
-
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE 
-        yaml-cpp ${YAML_CPP_LIBRARIES} tbb ${TBB_LIBRARIES} gsl ${GSL_LIBRARIES} 
-        wigxjpf ${BLAS_LIBRARIES} hdf5 hdf5_cpp ${HDF5_LIBRARIES}
+        yaml-cpp ${YAML_CPP_LIBRARIES}
+        wigxjpf hdf5 hdf5_cpp ${HDF5_LIBRARIES}
 )
 target_link_options(${PROJECT_NAME} PRIVATE ${OpenMP_CXX_FLAGS})

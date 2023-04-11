@@ -55,11 +55,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
                   bool lim_flag, std::string k_limit) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
-  std::vector<double> v_mat;
   double sum_k = 0.0;
-  dmtp::idx4 e12, e12p;
-
-  int L_sz = 0, v_sz = 0;
   std::string filename;
   std::string outfile_name;
 
@@ -69,17 +65,16 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
                                qr = nullptr, qw = nullptr, qri = nullptr;
   std::unique_ptr<H5::DataSet> V_set = nullptr;
   std::unique_ptr<H5::DataSet> L_set = nullptr;
-  std::vector<dmtp::idx4> L_idx;
   H5::DataSpace cspace;
   hsize_t offset[2] = {0, 0}, stride[2] = {1, 1}, block[2] = {1, 1};
   hsize_t count[2], counti[2], dimms[2], dimmsi[2], v_dim[1];
   H5::DataSpace memspace, memspacei;
 
   int ncf, sym, max_N = 0, l1_m = 0, l2_m = 0;
-  std::vector<cfg::line> cfgs;
   cfg::line max_line;
 
   for (auto li = 0; li <= L_max; ++li) {
+    std::vector<cfg::line> cfgs;
     cfg::readCfg(dir, li, sym, ncf, cfgs);
 
     max_line = *std::max_element(cfgs.begin(), cfgs.end(),
@@ -97,6 +92,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
         cfgs.begin(), cfgs.end(),
         [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
     l1_m = std::max(l1_m, max_line.l1);
+    cfgs.clear();
   }
   int k_max = l1_m + l2_m;
   if (lim_flag) {
@@ -114,7 +110,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
 
   memspace.setExtentSimple(2, dimms, NULL);
 
-  // reserve space for wavefunctions
+  // resize space for wavefunctions
   auto e1_lm = std::max(l1_m, l2_m);
   std::vector<double> wfn_o(lc_sz * (e1_lm + 1));
 
@@ -170,6 +166,11 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
 
   // Precalculate r^k
   std::vector<double> rk, rk_in;
+  std::vector<double> v_mat;
+  std::vector<dmtp::idx4> L_idx;
+  dmtp::idx4 e12, e12p;
+  int L_sz = 0, v_sz = 0;
+
   Rpowk(qsz, pti_sz, k_max, qx_o, qx_i, rk, rk_in);
 
   wig_table_init(2 * (k_max + 2), 6);
@@ -189,14 +190,14 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
         L_set = std::make_unique<H5::DataSet>(
             H5::DataSet(file->openDataSet("idx")));
         L_sz = L_set->getSpace().getSimpleExtentNpoints() / 4;
-        L_idx.reserve(L_sz);
-        L_set->read(&L_idx[0], H5::PredType::NATIVE_INT32);
+        L_idx.resize(L_sz);
+        L_set->read(L_idx.data(), H5::PredType::NATIVE_INT32);
         file->close();
 
         std::cout << "L: " << L << " L_sz: " << L_sz << "\n";
 
         v_sz = L_sz * (L_sz + 1) / 2;
-        v_mat.reserve(v_sz);
+        v_mat.resize(v_sz);
       }
 
       for (int NL2 = 0; NL2 < L_sz; ++NL2) {
@@ -217,7 +218,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
           min_dir =
               ((L + e12.l2 + e12p.l1) >> 0) & 1; // check if L+lb+lc is odd
           min_exc = ((L + e12.l1 + e12p.l1) >> 0) & 1;
-          for (int k = 0; k <= k_max; ++k) {
+          for (int k = 0; k < k_max; ++k) {
             /* for direct check if:
               (-)^{L+lb+lc}=(-)^{L+la+ld},
               |la-lc| <= k <= la+lc,
@@ -283,9 +284,8 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
         V_set =
             std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
                 "V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim))));
-        V_set->write(&v_mat[0], H5::PredType::NATIVE_DOUBLE);
+        V_set->write(v_mat.data(), H5::PredType::NATIVE_DOUBLE);
         outfile->close();
-        v_mat.clear();
       }
     }
 
@@ -293,6 +293,11 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
   }
 
   wig_table_free();
+
+  L_idx.clear();
+  v_mat.clear();
+  rk.clear();
+  rk_in.clear();
 
   return 0;
 }

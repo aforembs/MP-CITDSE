@@ -28,7 +28,7 @@ int cfg::readCfg(std::string dir, int L, int &sym, int &ncf,
   iss >> ncf;
 
   cfg::line cf_l;
-  cfgs.reserve(ncf);
+  cfgs.resize(ncf);
 
   for (auto i = 0; i < ncf; ++i) {
     std::getline(cfgfile, line);
@@ -45,7 +45,7 @@ int cfg::readCfg(std::string dir, int L, int &sym, int &ncf,
       cf_l.n2max = val;
       if (abs(cf_l.l1 - cf_l.l2) <= L && L <= (cf_l.l1 + cf_l.l2) &&
           ((L >> 0) & 1) == (((cf_l.l1 + cf_l.l2) >> 0) & 1))
-        cfgs.emplace_back(cf_l);
+        cfgs[i] = cf_l;
       else
         std::cout << "cfg-" << L << ".inp, line: (" << i + 1
                   << ") has an invalid configuration, skipping\n";

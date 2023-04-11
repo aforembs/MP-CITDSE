@@ -48,7 +48,7 @@ int genidx::saveIdx(std::string pot, int L_max, std::string dir) {
           return a.n2max < b.n2max;
         });
     auto max_Nsz = max_n2l.n2max;
-    en12.reserve(max_Nsz * 2);
+    en12.resize(max_Nsz * 2);
     count[0] = max_Nsz;
     dimms[0] = max_Nsz;
     memspace_l.setExtentSimple(1, dimms, NULL);

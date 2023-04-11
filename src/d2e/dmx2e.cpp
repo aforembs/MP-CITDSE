@@ -72,7 +72,7 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
   count[1] = max_N;
   dimms[0] = max_N;
   dimms[1] = max_N;
-  D_data.reserve(max_N * max_N * l_max);
+  D_data.resize(max_N * max_N * l_max);
   auto max2 = max_N * max_N;
 
   // Read all 1e dipoles
@@ -107,7 +107,7 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
   L_set->read(&Lf_idx[0], H5::PredType::NATIVE_INT32);
   file->close();
 
-  T.reserve(Li_sz * Lf_sz);
+  T.resize(Li_sz * Lf_sz);
   T_dimms[0] = Li_sz;
   T_dimms[1] = Lf_sz;
 
@@ -234,7 +234,7 @@ int dmx2e::genDipole(std::string pot, int L_max, int l_max, char gauge,
     L_set->read(buffs.at(buf_Lf), H5::PredType::NATIVE_INT32);
     file->close();
 
-    T.reserve(Li_sz * Lf_sz);
+    T.resize(Li_sz * Lf_sz);
     T_dimms[0] = Li_sz;
     T_dimms[1] = Lf_sz;
 

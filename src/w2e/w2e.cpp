@@ -31,14 +31,14 @@ int w2e::formCIh0(std::string pot, int L_max, stvupt &vecs) {
     data =
         std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("e_2e")));
     L_full_sz = data->getSpace().getSimpleExtentNpoints();
-    ens.reserve(L_full_sz);
+    ens.resize(L_full_sz);
     data->read(ens.data(), H5::PredType::NATIVE_DOUBLE);
     file->close();
 
     eig.resize(L_full_sz);
     vecs[L]->resize(L_full_sz * L_full_sz);
     v_sz = L_full_sz * (L_full_sz + 1) / 2;
-    v12.reserve(v_sz);
+    v12.resize(v_sz);
 
     // read V_12 triangular format
     filename = pot + "V12_" + std::to_string(L) + ".h5";
