@@ -96,7 +96,7 @@ public:
       dxdt[i2] = eig[0][i] * x[i2 + 1];
     }
 
-    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], field,
+    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], -field,
                 dipole[0], state_sz[1], &x[off2p1], 2, bt2, &dxdt[1], 2);
     cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], field,
                 dipole[0], state_sz[1], &x[off2p1 + 1], 2, bt2, &dxdt[0], 2);
@@ -106,7 +106,7 @@ public:
       off2 = offs[L] * 2;
       off2p1 = offs[L + 1] * 2;
       cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  field, dipole[L - 1], state_sz[L], &x[off2m1], 2, beta,
+                  -field, dipole[L - 1], state_sz[L], &x[off2m1], 2, beta,
                   &dxdt[off2 + 1], 2);
       cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
                   field, dipole[L - 1], state_sz[L], &x[off2m1 + 1], 2,
@@ -119,7 +119,7 @@ public:
       }
 
       cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  field, dipole[L], state_sz[L+1], &x[off2p1], 2, bt2,
+                  -field, dipole[L], state_sz[L+1], &x[off2p1], 2, bt2,
                   &dxdt[off2 + 1], 2);
       cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L],
                   field, dipole[L], state_sz[L+1], &x[off2p1 + 1], 2, bt2,
@@ -129,7 +129,7 @@ public:
     off2 = offs[L_max] * 2;
 
     cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], field, dipole[L_max - 1],
+                state_sz[L_max - 1], -field, dipole[L_max - 1],
                 state_sz[L_max], &x[off2m1], 2, beta, &dxdt[off2 + 1], 2);
     cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max],
                 state_sz[L_max - 1], field, dipole[L_max - 1],
