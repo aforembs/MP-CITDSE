@@ -19,12 +19,13 @@ As a form of result analysis this suite provides two programs for the calculatio
 
 ## Requirements
 
-A C++17 or greater compatible compiler: **g++ >= 10, clang++ >= 7**, or equivalent version intel, amd, ... \
+A C++17 or greater compatible compiler: **g++ >= 10, clang++ >= 7**; Intel's 2023 version of the **icpx** compiler and AMD's equivalent version of **aocc-clang++** have both been tested and work as intended. \
+\
 tbb - library for C++17 multithreading \
 hdf5 - data storage library \
 yaml-cpp - library for human readable (yaml) format configuration files \
 boost - specifically ::odeint for the tdse program \
-any parallel BLAS library - with a source build of OpenBLAS being the preferred option as it is fast and integrates well with cmake. \
+any parallel BLAS library - OpenBLAS and Intel MKL have both been tested and work as intended. \
 [wigxjpf](https://github.com/nd-nuclear-theory/wigxjpf) - library for wigner symbols \[[3](https://doi.org/10.1137/15M1021908)\]; (requires a fortran compiler) the cmake compilation downloads the latest version from github and links it automatically, for compilation with make a static version of the library (along with its licence) is provided in lib/wigxjpf.
 
 ### Installing from repositories
