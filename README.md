@@ -9,11 +9,11 @@ As a form of result analysis this suite provides two programs for the calculatio
 
 `h1e` - Solves the 1-electron TISE on a B-splines basis\
 `w1e` - Returns the wave function values and integration parameters for subsequent programs\
-`dmx1e` - Computes the 1-electron dipole matrices\
-`gen2eidx` - Indexes the configurations provided for each total (2-electron) angular momentum\
+`d1e` - Computes the 1-electron dipole matrices\
+`id2ec` - Indexes the configurations provided for each total (2-electron) angular momentum\
 `r12` - Calculates the inter-electronic interactions for the 2-electron states\
-`dmx2e` - Computes the 2-electron dipole matrices using the 1-electron dipoles\
-`cibasis` - Forms the CI 2-electron basis\
+`d2e` - Computes the 2-electron dipole matrices using the 1-electron dipoles\
+`w2e` - Forms the CI 2-electron basis\
 `tdse` - Solves either the '-e 1' (1-electron) or '-e 2' (2-electron) TDSE for a given laser pulse\
 `pes` - Computes the photoelectron energy distribution from the provided '-e 1' or '-e 2' time dependent coefficients
 
@@ -98,7 +98,7 @@ Alternatively you can run the programs individually
 ```
 bin/h1e -f inp/H_test.yaml
 bin/w1e -f inp/H_test.yaml
-bin/dmx1e -f inp/H_test.yaml
+bin/d1e -f inp/H_test.yaml
 ```
 
 #### TDSE Solution
@@ -152,11 +152,11 @@ Alternatively you can run the programs individually
 ```
 bin/h1e -f inp/He_test.yaml
 bin/w1e -f inp/He_test.yaml
-bin/dmx1e -f inp/He_test.yaml
-bin/gen2eidx -f inp/He_test.yaml -i inp/
+bin/d1e -f inp/He_test.yaml
+bin/id2ec -f inp/He_test.yaml -i inp/
 bin/r12 -f inp/He_test.yaml -i inp/
-bin/dmx2e -f inp/He_test.yaml -i inp/
-bin/cibasis -f inp/He_test.yaml
+bin/d2e -f inp/He_test.yaml -i inp/
+bin/w2e -f inp/He_test.yaml
 ```
 
 #### TDSE Solution
