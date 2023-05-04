@@ -88,7 +88,7 @@ int pes::genPES1e(std::string pot, bool s_flag, int l_max,
   }
 
   std::vector<double> PES_En;
-  PES_En.insert(PES_En.end(), En.begin(), En.begin() + state_sz[0]);
+  PES_En.insert(PES_En.end(), En.begin() + offs[1], En.begin() + offs[2]);
   double ion_yield = 0.0;
   // Loop for calculating dP/dEk = |c_i|^2
   std::vector<double> PES(state_sz[l_max]);
@@ -103,7 +103,8 @@ int pes::genPES1e(std::string pot, bool s_flag, int l_max,
                     (En[offs[l] + i] < PES_En[k] + 0.5 * pdiff);
         if (cond) {
           auto cf_en = std::norm(ct[offs[l] + i]);
-          PES_l[k] += cf_en;
+          PES_l[k] += cf_en * 2.0 / (ndiff + pdiff);
+          ion_yield += (PES_En[k] > 0) * cf_en;
           break;
         }
       }
@@ -113,7 +114,6 @@ int pes::genPES1e(std::string pot, bool s_flag, int l_max,
     for (auto i = 0; i < state_sz[0] - 1; ++i) {
       if (PES_En[i] > 0.0) {
         lfile << PES_En[i] << " " << PES_l[i] << "\n";
-        ion_yield += PES_l[i];
       }
     }
     lfile.close();
@@ -197,9 +197,10 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
     std::ofstream outfile(output + "_pes" + std::to_string(L) + ".dat",
                           std::ios::out);
     for (auto i = 1; i < L_sz - 1; ++i) {
-      outfile << std::setprecision(16) << eig[i] - threshold << " "
-              << std::norm(ct[off + i]) << "\n";
-      if (eig[i] - threshold > 0.0) {
+      auto en_1e = eig[i] - threshold;
+      if (en_1e > 0.0) {
+        outfile << std::setprecision(16) << en_1e << " "
+                << std::norm(ct[off + i]) * 2.0 / (eig[i+1] - eig[i-1]) << "\n";
         ion_yield += std::norm(ct[off + i]);
       }
       if (off + i > 0) {
@@ -219,26 +220,26 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
     std::vector<double> PES(state_sz[L_max]);
     for (auto L = 0; L <= L_max; ++L) {
       for (auto i = 1; i < state_sz[L]; ++i) {
-        for (auto k = 1; k < state_sz[L_max]; ++k) {
-          auto ndiff = std::abs(eig_full[offs[L_max] + k] -
-                                eig_full[offs[L_max] + k - 1]);
-          auto pdiff = std::abs(eig_full[offs[L_max] + k + 1] -
-                                eig_full[offs[L_max] + k]);
+        for (auto k = 1; k < state_sz[1]; ++k) {
+          auto ndiff = std::abs(eig_full[offs[1] + k] -
+                                eig_full[offs[1] + k - 1]);
+          auto pdiff = std::abs(eig_full[offs[1] + k + 1] -
+                                eig_full[offs[1] + k]);
 
           bool cond =
               (eig_full[offs[L] + i] >
-               eig_full[offs[L_max] + k] - 0.5 * ndiff) &&
-              (eig_full[offs[L] + i] < eig_full[offs[L_max] + k] + 0.5 * pdiff);
+               eig_full[offs[1] + k] - 0.5 * ndiff) &&
+              (eig_full[offs[L] + i] < eig_full[offs[1] + k] + 0.5 * pdiff);
           if (cond) {
-            PES[k] += std::norm(ct[offs[L] + i]);
+            PES[k] += std::norm(ct[offs[L] + i]) * 2.0 / (ndiff + pdiff);
             break;
           }
         }
       }
     }
     std::fstream outfile(output + "_pes.dat", std::ios::out);
-    for (auto i = 0; i < state_sz[L_max] - 1; ++i) {
-      auto energy = eig_full[offs[L_max] + i] - threshold;
+    for (auto i = 0; i < state_sz[1] - 1; ++i) {
+      auto energy = eig_full[offs[1] + i] - threshold;
       if (energy > 0.0) {
         outfile << energy << " " << PES[i] << "\n";
       }
