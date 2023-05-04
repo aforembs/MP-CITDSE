@@ -6,7 +6,6 @@ Global_Settings:
   quad_file: "cheb.dat" # only read if above is "user-defined"
   Inner_Layout: "default" # default or user-defined
   in_point_file: "points.dat" # only read if above is "user-defined"
-  L_max: 3                  # total L <= L_max
   gauge: 'v'                # length or velocity gauge
 # Settings for generating the 1e basis radial functions
 Basis_Settings:
@@ -19,9 +18,6 @@ Basis_Settings:
   l_max: 5                  # l <= l_max
   atomic_no: 1              # nuclear charge
   mass: 0.5                 # 0.5 for atom 1 for positronium
-# Settings for the two electron interaction calculation
-R12_Settings:
-  k_limit: "wigner" # "wigner" - default or an integer - only use if ground energy is incorrect 
 # Settings for the TDSE solver
 Propagator_Settings:
   states_in_l: [300,300,300,300,300,300]
