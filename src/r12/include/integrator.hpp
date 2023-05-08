@@ -10,6 +10,7 @@
  */
 
 #include <cmath>
+#include <cstdint>
 #include <fstream>
 #include <iomanip>
 #include <iostream>
