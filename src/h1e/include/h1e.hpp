@@ -13,6 +13,7 @@
 #include "bsp_gsl.hpp"
 #include <H5Cpp.h>
 #include <algorithm>
+#include <cmath>
 #include <execution>
 #include <iostream>
 #ifndef __INTEL_MKL__

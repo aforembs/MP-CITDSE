@@ -166,7 +166,7 @@ int h1e::genCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
       for (auto i = 0; i < k; ++i)
         val += Cnl_tmp[idxh + i] * spl[i + (k - 1) * k * glq_pt];
 
-      if (val < 0.0) {
+      if (std::signbit(val)) {
         std::transform(std::execution::seq, st_it, end_it, st_it,
                        [](auto &a) { return a * -1.0; });
       }
