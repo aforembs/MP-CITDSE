@@ -149,13 +149,13 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
                 stvupt &eig, stvupt &dipoles, std::vector<double> &ct) {
   int print = steps / 10;
 
-  std::fstream f_out, field_fl, f_pop;
-  f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
-  f_out << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
+  std::fstream f_ct, field_fl, f_pop;
+  f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+  f_ct << "#Index, Re(c(t)), Im(c(t))\n";
   for (auto k = 0; k < ct_sz * 2; k += 2) {
-    f_out << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
+    f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
   }
-  f_out.close();
+  f_ct.close();
 
   MatVecV MV;
   MV.L_max = L_max;
@@ -205,17 +205,24 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 
     if (st % print == 0) {
       std::cout << MV.field << "\n";
-      std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
-      f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
+      f_ct << "#Index, Re(c(t)), Im(c(t))\n";
       for (auto k = 0; k < ct_sz * 2; k += 2) {
         f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
       }
       f_ct.close();
     }
   }
+
+  f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+  f_ct << "#Index, Re(c(t)), Im(c(t))\n";
+  for (auto k = 0; k < ct_sz * 2; k += 2) {
+    f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
+  }
+  f_ct.close();
   field_fl.close();
   f_pop.close();
+
   return 0;
 }
 
@@ -225,13 +232,13 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
                 stvupt &eig, stvupt &dipoles, std::vector<double> &ct) {
   int print = steps / 10;
 
-  std::fstream f_out, field_fl, f_pop;
-  f_out.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
-  f_out << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
+  std::fstream f_ct, field_fl, f_pop;
+  f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+  f_ct << "#Index, Re(c(t)), Im(c(t))\n";
   for (auto k = 0; k < ct_sz * 2; k += 2) {
-    f_out << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
+    f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
   }
-  f_out.close();
+  f_ct.close();
 
   MatVecL MV;
   MV.L_max = L_max;
@@ -281,16 +288,23 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
 
     if (st % print == 0) {
       std::cout << MV.field << "\n";
-      std::fstream f_ct;
       f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
-      f_ct << "#Index, Re(c(t)), Im(c(t)), |c(t)|^2\n";
+      f_ct << "#Index, Re(c(t)), Im(c(t))\n";
       for (auto k = 0; k < ct_sz * 2; k += 2) {
         f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
       }
       f_ct.close();
     }
   }
+
+  f_ct.open(output + "_ct_" + std::to_string(t) + ".dat", std::ios::out);
+  f_ct << "#Index, Re(c(t)), Im(c(t))\n";
+  for (auto k = 0; k < ct_sz * 2; k += 2) {
+    f_ct << k / 2 << "  " << ct[k] << "  " << ct[k + 1] << "\n";
+  }
+  f_ct.close();
   field_fl.close();
   f_pop.close();
+
   return 0;
 }

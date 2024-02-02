@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
   auto set_file = out_dir + "/settings.yaml";
   const std::filesystem::path file_path{set_file};
   std::filesystem::copy_options cpopt = std::filesystem::copy_options::none;
-  if (std::filesystem::exists(file_path)) {
+  if (std::filesystem::exists(file_path) && init_ct.compare("ground") == 0) {
     char ovw = 'n';
     std::cout << "File " << set_file << " exists. Overwrite? [y/n]\n";
     std::cin >> ovw;
@@ -150,11 +150,11 @@ int main(int argc, char *argv[]) {
   double t = 0.0;
 
   if (init_ct.compare("ground") != 0) {
-    auto t_start = init_ct.find_first_of("0123456789");
-    auto t_end = init_ct.find_last_of("123456789");
+    std::string fln = std::filesystem::path(init_ct).filename();
+    auto t_start = fln.find_first_of("0123456789");
+    auto t_end = fln.find_last_of("123456789");
     auto t_sz = t_end - t_start + 1;
-
-    t = std::stod(&init_ct[t_start], &t_sz);
+    double t = std::stod(&fln[t_start], &t_sz);
     std::cout << "Start time (a.u.): " << t << "\n";
     tdrd::readInitCt(init_ct, ct_sz, ct);
   }
