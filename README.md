@@ -193,4 +193,7 @@ B-splines in atomic and molecular physics. Reports on progress in physics.
 6j, and 9j Symbols Using Prime Factorization and Multiword Integer Arithmetic,
 SIAM J. Sci. Comput., 38(1) (2016), A376-A384.
 
-## Cite as (Add once published)
+## Cite as
+Andrew, Forembski and Lampros AA Nikolopoulos. "MP-CITDSE: A set of ab-initio
+programs for the simulation of hydrogenic and helium-like atom-laser interactions."
+Computer Physics Communications 291 (2023): 108820.
