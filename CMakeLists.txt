@@ -48,7 +48,7 @@ find_package(OpenMP)
 
 add_compile_options(
     -Wall -Wextra -Wshadow -Wnon-virtual-dtor 
-    -pedantic -O3 -march=native ${OpenMP_CXX_FLAGS}
+    -pedantic -g -O3 -march=native ${OpenMP_CXX_FLAGS}
     ${Clang_W_FLAG}
 )
 

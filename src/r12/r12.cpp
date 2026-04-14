@@ -169,7 +169,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
   std::vector<double> v_mat;
   std::vector<dmtp::idx4> L_idx;
   dmtp::idx4 e12, e12p;
-  int L_sz = 0, v_sz = 0;
+  uint L_sz = 0, v_sz = 0;
 
   Rpowk(qsz, pti_sz, k_max, qx_o, qx_i, rk, rk_in);
 
@@ -179,7 +179,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
   {
     wig_thread_temp_init(2 * (k_max + 2));
 
-    for (int L = 0; L <= L_max; ++L) {
+    for (uint L = 0; L <= L_max; ++L) {
 
 // Read n1l1;n2l2 indices for NL states
 #pragma omp single
@@ -200,14 +200,14 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
         v_mat.resize(v_sz);
       }
 
-      for (int NL2 = 0; NL2 < L_sz; ++NL2) {
+      for (uint NL2 = 0; NL2 < L_sz; ++NL2) {
         // set n1'l1';n2'l2'
         e12p = L_idx[NL2];
         bool eqvp = e12p.n1 == e12p.n2 && e12p.l1 == e12p.l2;
 
 #pragma omp barrier
 #pragma omp for private(e12, Y_norm, sum_k, min_dir, min_exc)
-        for (int NL1 = NL2; NL1 < L_sz; ++NL1) {
+        for (uint NL1 = NL2; NL1 < L_sz; ++NL1) {
           // set n1l1;n2l2
           e12 = L_idx[NL1];
 
