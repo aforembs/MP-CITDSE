@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
       continue;
     case 'l':
       pop_l = std::stoi(optarg);
-      if (pop_n < 0) {
+      if (pop_l < 0) {
         std::cout << "Invalid angular momentum number -l, use int > 0\n";
         return -1;
       }
