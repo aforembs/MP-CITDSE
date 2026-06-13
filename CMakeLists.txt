@@ -62,6 +62,11 @@ endif()
 
 add_subdirectory(3rd_party)
 
+find_package(yaml-cpp REQUIRED)
+if(NOT TARGET yaml-cpp::yaml-cpp)
+    add_library(yaml-cpp::yaml-cpp ALIAS yaml-cpp)
+endif()
+
 find_package(OpenMP)
 
 add_compile_options(

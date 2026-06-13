@@ -39,7 +39,7 @@ find_package(GSL QUIET)
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 
 if(yaml-cpp_FOUND)
-    target_link_libraries(tests PRIVATE yaml-cpp)
+    target_link_libraries(tests PRIVATE yaml-cpp::yaml-cpp)
     target_compile_definitions(tests PRIVATE HAS_YAML_CPP)
 endif()
 

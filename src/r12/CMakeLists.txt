@@ -22,15 +22,13 @@ target_include_directories(${PROJECT_NAME}
         ${H5_INC}
 )
 
-find_package(yaml-cpp REQUIRED)
-
 find_package(HDF5 REQUIRED COMPONENTS C CXX)
 
 find_package(OpenMP REQUIRED)
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE 
-        yaml-cpp ${YAML_CPP_LIBRARIES}
+        yaml-cpp::yaml-cpp
         wigxjpf hdf5::hdf5 hdf5::hdf5_cpp
 )
 target_link_options(${PROJECT_NAME} PRIVATE ${OpenMP_CXX_FLAGS})
