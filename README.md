@@ -46,7 +46,6 @@ sudo pacman -S yaml-cpp gsl boost hdf5 tbb openblas lapacke
 ## Compilation
 
 #### Cmake 
-##### This method doesn't work on Debian/Ubuntu because the linking of hdf5 via cmake is broken on those systems
 
 Requires Cmake version 3.20 or greater.\
 To compile the code, including the wigxjpf library:
@@ -65,11 +64,13 @@ cmake -DBLA_VENDOR=<blas library> -DBLA_HINT=<path to blas library> -DBLA_INC=<p
 
 instead of the above cmake call.
 
-If you are installing on Debian you may need to add the location of libhdf5.so to your PATH, you can then include the headers by using the:
+If HDF5 is installed in a non-standard location (e.g. Debian/Ubuntu's serial layout), set the path with:
 
 ```
--DH5_INC=<path/to/hdf5/include>
+-DH5_ROOT=<path/to/hdf5>
 ```
+
+On Debian/Ubuntu the serial paths are detected automatically.
 
 #### Make
 ##### Works out of the box for all RHEL Debian/Ubuntu or Arch based linux versions that ship with g++ >= 10
