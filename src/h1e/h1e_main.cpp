@@ -53,11 +53,11 @@ int main(int argc, char *argv[]) {
     } else if (fs::path(k_file).extension().string().compare(".bin") == 0) {
       bsp::genKnots(n, k, r_max, k_file, 'b', kkn);
     } else {
-      std::cout << "Invalid knot file extension, use .txt or .bin\n";
+      std::cerr << "Invalid knot file extension, use .txt or .bin\n";
       return -1;
     }
   } else {
-    std::cout << "Invalid knot type, use 'linear', 'exponential', 'sine' or "
+    std::cerr << "Invalid knot type, use 'linear', 'exponential', 'sine' or "
                  "'custom'\n";
     return -1;
   }

@@ -9,7 +9,7 @@ int cfg::readCfg(std::string dir, int L, int &sym, int &ncf,
   int val;
 
   if (!std::filesystem::exists(filename)) {
-    std::cout << "Input file: " << filename << " does not exist!\n";
+    std::cerr << "Input file: " << filename << " does not exist!\n";
     return -1;
   }
 

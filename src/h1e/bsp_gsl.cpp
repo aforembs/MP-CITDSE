@@ -34,7 +34,7 @@ int bsp::genKnots(int n, int k, int R_max, double fkn, char type,
     }
 
   } else {
-    std::cout << "Invalid knot type !\n";
+    std::cerr << "Invalid knot type !\n";
     return 1;
   }
   for (int i = n; i < n + k; ++i) {
@@ -67,7 +67,7 @@ int bsp::genKnots(int n, int k, int R_max, std::string file, char type,
     kkn.insert(std::end(kkn), std::istream_iterator<double>(fl),
                std::istream_iterator<double>());
   } else {
-    std::cout << "Invalid knot file type !\n";
+    std::cerr << "Invalid knot file type !\n";
     return -1;
   }
 
@@ -139,7 +139,7 @@ int bsp::splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
   kn->owner = 0;
 
   size_t nbreak = n + 2 - k;
-  auto dB = gsl_matrix_alloc(k, 2);
+  auto dB = gsl_matrix_alloc(n, 2);
   gsl_bspline_workspace *bw = gsl_bspline_alloc(k, nbreak);
   bw->knots = kn;
 
@@ -151,7 +151,6 @@ int bsp::splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
     splinesp.emplace_back(0.0);
   }
 
-  size_t pi = 0;
   for (auto i = k - 1; i < n; ++i) {
     i1 = i + 1;
     dl = kkn[i1] - kkn[i];
@@ -160,11 +159,11 @@ int bsp::splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
     for (int p = 0; p < glq_pt; ++p) {
       x = dl * 0.5 * gl_x[p] + sl * 0.5; // x-transformation
 
-      pi = i;
-      gsl_bspline_deriv_eval_nonzero(x, 1, dB, &pi, &pi, bw);
+      gsl_bspline_deriv_eval(x, 1, dB, bw);
+      int start = i - k + 1;
       for (int j = 0; j < k; ++j) {
-        splines.emplace_back(gsl_matrix_get(dB, j, 0));
-        splinesp.emplace_back(gsl_matrix_get(dB, j, 1));
+        splines.emplace_back(gsl_matrix_get(dB, start + j, 0));
+        splinesp.emplace_back(gsl_matrix_get(dB, start + j, 1));
       }
     }
   }
