@@ -203,7 +203,6 @@ int prInner(int n, int bo, int off, int ooff, std::vector<double> &kkn,
             std::vector<double> &p_in) {
   double Pl = 0;
   int r_id = 0;
-  size_t pi = 0;
   auto ksz = kkn.size();
   auto kn = gsl_vector_alloc(ksz);
   kn->size = ksz;
@@ -212,23 +211,23 @@ int prInner(int n, int bo, int off, int ooff, std::vector<double> &kkn,
   kn->owner = 0;
 
   size_t nbreak = n + 2 - bo;
-  auto B = gsl_vector_alloc(bo);
+  auto B = gsl_vector_alloc(n);
   gsl_bspline_workspace *bw = gsl_bspline_alloc(bo, nbreak);
   bw->knots = kn;
 
   // Loop over knot regions
   for (auto i = bo - 1; i < n; ++i) {
     auto i1 = i + 1;
-    pi = i;
 
     // While glq_pt is between current knots
     while (r_id < static_cast<int>(ri.size()) && ri[r_id] > kkn[i] &&
            ri[r_id] < kkn[i1]) {
       Pl = 0;
       // Calculate the B-spline values on the fly
-      gsl_bspline_eval_nonzero(ri[r_id], B, &pi, &pi, bw);
+      gsl_bspline_eval(ri[r_id], B, bw);
+      int start = i - bo + 1;
       for (auto j = 0; j < bo; ++j) {
-        Pl += Cf[off + i1 - bo + j] * B->data[j];
+        Pl += Cf[off + i1 - bo + j] * B->data[start + j];
       }
       p_in[ooff + r_id] = Pl;
       ++r_id;
