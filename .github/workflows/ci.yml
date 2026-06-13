@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: |
+          sudo apt-get update && sudo apt-get install -y clang-format
+          find src -name '*.cpp' -o -name '*.hpp' | xargs clang-format --dry-run --Werror -style=file
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y \
+            cmake \
+            g++ \
+            libhdf5-dev \
+            libyaml-cpp-dev \
+            libgsl-dev \
+            libopenblas-dev \
+            libomp-dev \
+            libtbb-dev
+      - name: Configure
+        run: cmake -B build -S . -DBUILD_TESTING=OFF
+      - name: Build
+        run: cmake --build build -j$(nproc)

@@ -1,14 +1,12 @@
 #include "genidx.hpp"
 
-int genidx::readConfig(std::string file, std::string &pot, int &L_max) {
+int genidx::readConfig(std::string file, std::string& pot, int& L_max) {
   YAML::Node settings = YAML::LoadFile(file);
 
   pot = settings["Global_Settings"]["potential"].as<std::string>();
-  std::cout << "Core Potential:                              " << pot
-            << std::endl;
+  std::cout << "Core Potential:                              " << pot << std::endl;
   L_max = settings["Global_Settings"]["L_max"].as<int>();
-  std::cout << "Maximum total two electron angular momentum: " << L_max
-            << std::endl;
+  std::cout << "Maximum total two electron angular momentum: " << L_max << std::endl;
 
   return 0;
 }
@@ -43,10 +41,9 @@ int genidx::saveIdx(std::string pot, int L_max, std::string dir) {
       t_sz += cfgs[i].n2max - cfgs[i].n2min;
     }
 
-    auto max_n2l = *std::max_element(
-        cfgs.begin(), cfgs.end(), [](cfg::line const &a, cfg::line const &b) {
-          return a.n2max < b.n2max;
-        });
+    auto max_n2l =
+        *std::max_element(cfgs.begin(), cfgs.end(),
+                          [](cfg::line const& a, cfg::line const& b) { return a.n2max < b.n2max; });
     auto max_Nsz = max_n2l.n2max;
     en12.resize(max_Nsz * 2);
     count[0] = max_Nsz;
@@ -72,16 +69,14 @@ int genidx::saveIdx(std::string pot, int L_max, std::string dir) {
 
     last_l1 = 0;
     last_l2 = 0;
-    for (const auto &line : cfgs) {
+    for (const auto& line : cfgs) {
       l1 = line.l1;
       l2 = line.l2;
 
       if (l1 != last_l1) {
         filename = pot + std::to_string(l1) + ".h5";
-        file =
-            std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-        e1 =
-            std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
+        file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+        e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
         e_space = e1->getSpace();
         e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
         e1->read(&en12[0], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
@@ -90,14 +85,11 @@ int genidx::saveIdx(std::string pot, int L_max, std::string dir) {
 
       if (l2 != last_l2) {
         filename = pot + std::to_string(l2) + ".h5";
-        file =
-            std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-        e1 =
-            std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
+        file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+        e1 = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
         e_space = e1->getSpace();
         e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-        e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l,
-                 e_space);
+        e1->read(&en12[max_Nsz], H5::PredType::NATIVE_DOUBLE, memspace_l, e_space);
         file->close();
       }
 
@@ -115,17 +107,16 @@ int genidx::saveIdx(std::string pot, int L_max, std::string dir) {
 
     // write the energies to a file
     outfile_name = pot + "2_" + std::to_string(L) + "En.h5";
-    outfile =
-        std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
-    ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-        "e_2e", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz))));
+    outfile = std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
+    ei = std::make_unique<H5::DataSet>(H5::DataSet(
+        outfile->createDataSet("e_2e", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, write_sz))));
     ei->write(&en[0], H5::PredType::NATIVE_DOUBLE);
 
     en.clear();
 
     // write indices to file
-    ei = std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-        "idx", H5::PredType::NATIVE_INT32, H5::DataSpace(1, idx_sz))));
+    ei = std::make_unique<H5::DataSet>(H5::DataSet(
+        outfile->createDataSet("idx", H5::PredType::NATIVE_INT32, H5::DataSpace(1, idx_sz))));
     ei->write(&idx[0], H5::PredType::NATIVE_INT32);
     outfile->close();
 

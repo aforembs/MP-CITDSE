@@ -8,8 +8,9 @@
  * @version 1.0
  */
 
-#include <H5Cpp.h>
 #include "ModelV.hpp"
+
+#include <H5Cpp.h>
 #include <cmath>
 #include <cstring>
 #include <fstream>
@@ -37,8 +38,7 @@ namespace bsp {
  * @param kkn vector containing the knots
  * @return int default '0' error otherwise
  */
-int genKnots(int n, int k, int R_max, double fkn, char type,
-             std::vector<double> &kkn);
+int genKnots(int n, int k, int R_max, double fkn, char type, std::vector<double>& kkn);
 
 /**
  * @brief Function for reading a custom knot sequence over [0,R] from a user
@@ -52,8 +52,7 @@ int genKnots(int n, int k, int R_max, double fkn, char type,
  * @param kkn vector containing the knots
  * @return int default '0' error otherwise
  */
-int genKnots(int n, int k, int R_max, std::string file, char type,
-             std::vector<double> &kkn);
+int genKnots(int n, int k, int R_max, std::string file, char type, std::vector<double>& kkn);
 
 /**
  * @brief Function for saving the knot distribution to a HDF5 file.
@@ -68,7 +67,7 @@ int genKnots(int n, int k, int R_max, std::string file, char type,
  * @return int default '0' error otherwise
  */
 int wrKnotsH5(int n, int k, int R_max, double fkn, char type, std::string file,
-              std::vector<double> &kkn);
+              std::vector<double>& kkn);
 
 /**
  * @brief Function for generating B-splines bases and their first order
@@ -86,9 +85,8 @@ int wrKnotsH5(int n, int k, int R_max, double fkn, char type, std::string file,
  * B-splines bases at the 'gl_x' points
  * @return int default '0' error otherwise
  */
-int splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
-            std::vector<double> &kkn, std::vector<double> &splines,
-            std::vector<double> &splinesp);
+int splines(int n, int k, int glq_pt, std::vector<double>& gl_x, std::vector<double>& kkn,
+            std::vector<double>& splines, std::vector<double>& splinesp);
 
 /**
  * @brief Function for calculating the integral over B-splines
@@ -107,10 +105,9 @@ int splines(int n, int k, int glq_pt, std::vector<double> &gl_x,
  * function to be integrated V(x)
  * @return int default '0' error otherwise
  */
-int splineInt(int n, int k, int glq_pt, std::vector<double> &gl_w,
-              std::vector<double> &gl_x, std::vector<double> &ov,
-              std::vector<double> &spl, std::vector<double> &kkn,
-              std::unique_ptr<ModelV> &Vptr);
+int splineInt(int n, int k, int glq_pt, std::vector<double>& gl_w, std::vector<double>& gl_x,
+              std::vector<double>& ov, std::vector<double>& spl, std::vector<double>& kkn,
+              std::unique_ptr<ModelV>& Vptr);
 } // namespace bsp
 
 #endif // BSP_GSL_H_

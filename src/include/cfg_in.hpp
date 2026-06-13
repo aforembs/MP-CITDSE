@@ -9,6 +9,7 @@
  */
 
 #include "dmx_typ.hpp"
+
 #include <H5Cpp.h>
 #include <algorithm>
 #include <execution>
@@ -53,8 +54,7 @@ struct line {
  * @param cfgs vector containing lines from a cfg file
  * @return int default '0' error otherwise
  */
-int readCfg(std::string dir, int L, int &sym, int &ncf,
-            std::vector<line> &cfgs);
+int readCfg(std::string dir, int L, int& sym, int& ncf, std::vector<line>& cfgs);
 } // namespace cfg
 
 #endif // CFG_IN_H_

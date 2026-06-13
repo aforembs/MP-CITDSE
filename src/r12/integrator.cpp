@@ -38,16 +38,15 @@ constexpr const double GLobw10[10] = {
     0.292042683679683757875582257374,  0.224889342063126452119457821731,
     0.133305990851070111126227170755,  0.0222222222222222222222222222222};
 
-constexpr const double *GLobw[9] = {GLobw2, GLobw3, GLobw4, GLobw5, GLobw6,
+constexpr const double* GLobw[9] = {GLobw2, GLobw3, GLobw4, GLobw5, GLobw6,
                                     GLobw7, GLobw8, GLobw9, GLobw10};
 } // namespace glw
 
-double intfn::fsltrLob(int k, int qsz, int pti_sz, int lc_sz, int lci_sz,
-                       int n1, int l1, int n2, int l2, int n3, int l3, int n4,
-                       int l4, std::vector<double> &q_w,
-                       std::vector<uint8_t> &pq_dx, std::vector<double> &rk,
-                       std::vector<double> &rk_in, std::vector<double> &wfn_o,
-                       std::vector<double> &wfn_i) {
+double intfn::fsltrLob(int k, int qsz, int pti_sz, int lc_sz, int lci_sz, int n1, int l1, int n2,
+                       int l2, int n3, int l3, int n4, int l4, std::vector<double>& q_w,
+                       std::vector<uint8_t>& pq_dx, std::vector<double>& rk,
+                       std::vector<double>& rk_in, std::vector<double>& wfn_o,
+                       std::vector<double>& wfn_i) {
   int kp1 = k + 1;
   int p2i_o = l2 * lc_sz + n2 * qsz;     // P(r2)
   int p2p_o = l4 * lc_sz + n4 * qsz;     // P'(r2)
@@ -108,8 +107,7 @@ double intfn::fsltrLob(int k, int qsz, int pti_sz, int lc_sz, int lci_sz,
     for (uint pt = 1; pt <= num_pti; ++pt) {
       pr2_in = wfn_i[p2i_i + in_idx] * wfn_i[p2p_i + in_idx];
       Jk_loc += glw::GLobw[num_pti][pt] * rk_in[in_idx + k * pti_sz] * pr2_in;
-      Qk_loc += glw::GLobw[num_pti][pt] * (1.0 / rk_in[in_idx + kp1 * pti_sz]) *
-                pr2_in;
+      Qk_loc += glw::GLobw[num_pti][pt] * (1.0 / rk_in[in_idx + kp1 * pti_sz]) * pr2_in;
       ++in_idx;
     }
     Jk_loc += glw::GLobw[num_pti][num_pti + 1] * pr1k * pr2;

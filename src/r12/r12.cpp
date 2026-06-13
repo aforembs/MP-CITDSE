@@ -1,21 +1,17 @@
 #include "r12.hpp"
 
-int r_12::readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
-                     std::string &k_limit, bool &lim_flag) {
+int r_12::readConfig(std::string file, int& qsz, std::string& pot, int& L_max, std::string& k_limit,
+                     bool& lim_flag) {
   YAML::Node settings = YAML::LoadFile(file);
 
   pot = settings["Global_Settings"]["potential"].as<std::string>();
-  std::cout << "Core Potential:                              " << pot
-            << std::endl;
+  std::cout << "Core Potential:                              " << pot << std::endl;
   qsz = settings["Global_Settings"]["Outer_quadrature_size"].as<int>();
-  std::cout << "No. of GL-quadrature points between knots:   " << qsz
-            << std::endl;
+  std::cout << "No. of GL-quadrature points between knots:   " << qsz << std::endl;
   L_max = settings["Global_Settings"]["L_max"].as<int>();
-  std::cout << "Maximum total two electron angular momentum: " << L_max
-            << std::endl;
+  std::cout << "Maximum total two electron angular momentum: " << L_max << std::endl;
   k_limit = settings["R12_Settings"]["k_limit"].as<std::string>();
-  std::cout << "Maximum k wigner-6j or user limited:         " << k_limit
-            << std::endl;
+  std::cout << "Maximum k wigner-6j or user limited:         " << k_limit << std::endl;
   if (k_limit.compare("wigner") == 0) {
     lim_flag = false;
   } else {
@@ -25,9 +21,8 @@ int r_12::readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
   return 0;
 }
 
-int Rpowk(int qsz, int pti_sz, int k_max, std::vector<double> &qx_o,
-          std::vector<double> &qx_i, std::vector<double> &r_out,
-          std::vector<double> &r_in) {
+int Rpowk(int qsz, int pti_sz, int k_max, std::vector<double>& qx_o, std::vector<double>& qx_i,
+          std::vector<double>& r_out, std::vector<double>& r_in) {
   r_out.resize((k_max + 1) * qsz);
   r_in.resize((k_max + 1) * pti_sz);
   auto km1 = 0;
@@ -51,8 +46,8 @@ int Rpowk(int qsz, int pti_sz, int k_max, std::vector<double> &qx_o,
   return 0;
 }
 
-int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
-                  bool lim_flag, std::string k_limit) {
+int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir, bool lim_flag,
+                  std::string k_limit) {
   bool min_dir = 0, min_exc = 0;
   double Y_norm = 0.0;
   double sum_k = 0.0;
@@ -61,8 +56,8 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
 
   // HDF5 defines
   std::unique_ptr<H5::H5File> outfile = nullptr, file = nullptr;
-  std::unique_ptr<H5::DataSet> Po = nullptr, Pi = nullptr, Pidx = nullptr,
-                               qr = nullptr, qw = nullptr, qri = nullptr;
+  std::unique_ptr<H5::DataSet> Po = nullptr, Pi = nullptr, Pidx = nullptr, qr = nullptr,
+                               qw = nullptr, qri = nullptr;
   std::unique_ptr<H5::DataSet> V_set = nullptr;
   std::unique_ptr<H5::DataSet> L_set = nullptr;
   H5::DataSpace cspace;
@@ -77,20 +72,19 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
     std::vector<cfg::line> cfgs;
     cfg::readCfg(dir, li, sym, ncf, cfgs);
 
-    max_line = *std::max_element(cfgs.begin(), cfgs.end(),
-                                 [](cfg::line const &a, cfg::line const &b) {
-                                   return a.n2max < b.n2max;
-                                 });
+    max_line =
+        *std::max_element(cfgs.begin(), cfgs.end(),
+                          [](cfg::line const& a, cfg::line const& b) { return a.n2max < b.n2max; });
     max_N = std::max(max_N, max_line.n2max);
 
-    max_line = *std::max_element(
-        cfgs.begin(), cfgs.end(),
-        [](cfg::line const &a, cfg::line const &b) { return a.l2 < b.l2; });
+    max_line =
+        *std::max_element(cfgs.begin(), cfgs.end(),
+                          [](cfg::line const& a, cfg::line const& b) { return a.l2 < b.l2; });
     l2_m = std::max(l2_m, max_line.l2);
 
-    max_line = *std::max_element(
-        cfgs.begin(), cfgs.end(),
-        [](cfg::line const &a, cfg::line const &b) { return a.l1 < b.l1; });
+    max_line =
+        *std::max_element(cfgs.begin(), cfgs.end(),
+                          [](cfg::line const& a, cfg::line const& b) { return a.l1 < b.l1; });
     l1_m = std::max(l1_m, max_line.l1);
     cfgs.clear();
   }
@@ -136,8 +130,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
 
   cspace.selectHyperslab(H5S_SELECT_SET, counti, offset, stride, block);
   Pi->read(wfn_i.data(), H5::PredType::NATIVE_DOUBLE, memspacei, cspace);
-  Pidx =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_idx")));
+  Pidx = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_idx")));
   Pidx->read(pq_dx.data(), H5::PredType::NATIVE_UCHAR);
   qr = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Qr_o")));
   qr->read(qx_o.data(), H5::PredType::NATIVE_DOUBLE);
@@ -159,8 +152,7 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
     Pi = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("Pr_i")));
     cspace = Pi->getSpace();
     cspace.selectHyperslab(H5S_SELECT_SET, counti, offset, stride, block);
-    Pi->read(&wfn_i[l * lci_sz], H5::PredType::NATIVE_DOUBLE, memspacei,
-             cspace);
+    Pi->read(&wfn_i[l * lci_sz], H5::PredType::NATIVE_DOUBLE, memspacei, cspace);
     file->close();
   }
 
@@ -185,10 +177,8 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
 #pragma omp single
       {
         filename = pot + "2_" + std::to_string(L) + "En.h5";
-        file =
-            std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-        L_set = std::make_unique<H5::DataSet>(
-            H5::DataSet(file->openDataSet("idx")));
+        file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+        L_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("idx")));
         L_sz = L_set->getSpace().getSimpleExtentNpoints() / 4;
         L_idx.resize(L_sz);
         L_set->read(L_idx.data(), H5::PredType::NATIVE_INT32);
@@ -212,11 +202,10 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
           e12 = L_idx[NL1];
 
           // sqrt([la][lc][lb][ld])
-          Y_norm = sqrt((2 * e12.l1 + 1) * (2 * e12p.l1 + 1) *
-                        (2 * e12.l2 + 1) * (2 * e12p.l2 + 1));
+          Y_norm =
+              sqrt((2 * e12.l1 + 1) * (2 * e12p.l1 + 1) * (2 * e12.l2 + 1) * (2 * e12p.l2 + 1));
           sum_k = 0.0;
-          min_dir =
-              ((L + e12.l2 + e12p.l1) >> 0) & 1; // check if L+lb+lc is odd
+          min_dir = ((L + e12.l2 + e12p.l1) >> 0) & 1; // check if L+lb+lc is odd
           min_exc = ((L + e12.l1 + e12p.l1) >> 0) & 1;
           for (int k = 0; k < k_max; ++k) {
             /* for direct check if:
@@ -226,18 +215,15 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
             if (min_dir == (((L + e12.l1 + e12p.l2) >> 0) & 1) &&
                 ((abs(e12.l1 - e12p.l1) <= k) && (k <= e12.l1 + e12p.l1)) &&
                 ((abs(e12.l2 - e12p.l2) <= k) && (k <= e12.l2 + e12p.l2)) &&
-                !(((k + e12.l1 + e12p.l1) >> 0) & 1) &&
-                !(((k + e12.l2 + e12p.l2) >> 0) & 1) &&
+                !(((k + e12.l1 + e12p.l1) >> 0) & 1) && !(((k + e12.l2 + e12p.l2) >> 0) & 1) &&
                 !std::isinf(1.0 / rk_in[(k + 1) * pti_sz])) {
               sum_k += pow(-1, min_dir) *
-                       intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz, e12.n1,
-                                       e12.l1, e12.n2, e12.l2, e12p.n1, e12p.l1,
-                                       e12p.n2, e12p.l2, qw_o, pq_dx, rk, rk_in,
-                                       wfn_o, wfn_i) *
+                       intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz, e12.n1, e12.l1, e12.n2,
+                                       e12.l2, e12p.n1, e12p.l1, e12p.n2, e12p.l2, qw_o, pq_dx, rk,
+                                       rk_in, wfn_o, wfn_i) *
                        wig3jj(2 * e12.l1, 2 * k, 2 * e12p.l1, 0, 0, 0) *
                        wig3jj(2 * e12.l2, 2 * k, 2 * e12p.l2, 0, 0, 0) *
-                       wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l2,
-                              2 * e12.l1, 2 * k);
+                       wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l2, 2 * e12.l1, 2 * k);
             }
             /* for exchange check if:
               (-)^{L+la+lc}=(-)^{L+lb+ld},
@@ -246,18 +232,15 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
             if (min_exc == (((L + e12.l2 + e12p.l2) >> 0) & 1) &&
                 ((abs(e12.l1 - e12p.l2) <= k) && (k <= e12.l1 + e12p.l2)) &&
                 ((abs(e12.l2 - e12p.l1) <= k) && (k <= e12.l2 + e12p.l1)) &&
-                !(((k + e12.l1 + e12p.l2) >> 0) & 1) &&
-                !(((k + e12.l2 + e12p.l1) >> 0) & 1) &&
+                !(((k + e12.l1 + e12p.l2) >> 0) & 1) && !(((k + e12.l2 + e12p.l1) >> 0) & 1) &&
                 !std::isinf(1.0 / rk_in[(k + 1) * pti_sz])) {
               sum_k += pow(-1, min_exc) *
-                       intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz, e12.n1,
-                                       e12.l1, e12.n2, e12.l2, e12p.n2, e12p.l2,
-                                       e12p.n1, e12p.l1, qw_o, pq_dx, rk, rk_in,
-                                       wfn_o, wfn_i) *
+                       intfn::fsltrLob(k, qsz, pti_sz, lc_sz, lci_sz, e12.n1, e12.l1, e12.n2,
+                                       e12.l2, e12p.n2, e12p.l2, e12p.n1, e12p.l1, qw_o, pq_dx, rk,
+                                       rk_in, wfn_o, wfn_i) *
                        wig3jj(2 * e12.l1, 2 * k, 2 * e12p.l2, 0, 0, 0) *
                        wig3jj(2 * e12.l2, 2 * k, 2 * e12p.l1, 0, 0, 0) *
-                       wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l1,
-                              2 * e12.l2, 2 * k);
+                       wig6jj(2 * e12p.l1, 2 * e12p.l2, 2 * L, 2 * e12.l1, 2 * e12.l2, 2 * k);
             }
           }
 
@@ -279,11 +262,9 @@ int r_12::r12Glob(std::string pot, int L_max, int qsz, std::string dir,
         // save upper triangular V_12
         v_dim[0] = v_sz;
         outfile_name = pot + "V12_" + std::to_string(L) + ".h5";
-        outfile = std::make_unique<H5::H5File>(
-            H5::H5File(outfile_name, H5F_ACC_TRUNC));
-        V_set =
-            std::make_unique<H5::DataSet>(H5::DataSet(outfile->createDataSet(
-                "V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim))));
+        outfile = std::make_unique<H5::H5File>(H5::H5File(outfile_name, H5F_ACC_TRUNC));
+        V_set = std::make_unique<H5::DataSet>(H5::DataSet(
+            outfile->createDataSet("V_12", H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, v_dim))));
         V_set->write(v_mat.data(), H5::PredType::NATIVE_DOUBLE);
         outfile->close();
       }

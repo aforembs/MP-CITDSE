@@ -11,19 +11,20 @@
 
 #include "cfg_in.hpp"
 #include "dmx_typ.hpp"
+
 #include <H5Cpp.h>
 #include <cassert>
 #include <complex>
 #include <cstring>
 #include <iostream>
-#ifndef __INTEL_MKL__ 
+#ifndef __INTEL_MKL__
 #include <lapacke.h>
 extern "C" {
 #include <cblas.h>
 }
-#else 
-#include <mkl_lapacke.h> 
+#else
 #include <mkl_cblas.h>
+#include <mkl_lapacke.h>
 #endif
 #include <regex>
 #include <vector>
@@ -46,8 +47,8 @@ namespace pes {
  * each total angular momentum 'L'
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, std::string set_base,
-               std::string option, int &L_max, std::vector<int> &state_sz);
+int readConfig(std::string file, std::string& pot, std::string set_base, std::string option,
+               int& L_max, std::vector<int>& state_sz);
 
 /**
  * @brief Read the 2-electron state coefficients from a file
@@ -57,7 +58,7 @@ int readConfig(std::string file, std::string &pot, std::string set_base,
  * @param ct vector containing the 1-electron state coefficients
  * @return int default '0' error otherwise
  */
-int readCt(std::string file, std::vector<std::complex<double>> &ct);
+int readCt(std::string file, std::vector<std::complex<double>>& ct);
 
 /**
  * @brief Generate the photoelectron energy spectrum from the 1-electron state
@@ -72,9 +73,8 @@ int readCt(std::string file, std::vector<std::complex<double>> &ct);
  * @param output path to directory where the PES file will be saved
  * @return int default '0' error otherwise
  */
-int genPES1e(std::string pot, bool s_flag, int l_max,
-             std::vector<int> &state_sz, std::vector<std::complex<double>> &ct,
-             std::string output);
+int genPES1e(std::string pot, bool s_flag, int l_max, std::vector<int>& state_sz,
+             std::vector<std::complex<double>>& ct, std::string output);
 
 /**
  * @brief Generate the photoelectron energy spectrum from the 2-electron
@@ -89,9 +89,8 @@ int genPES1e(std::string pot, bool s_flag, int l_max,
  * @param output path to directory where the PES file will be saved
  * @return int default '0' error otherwise
  */
-int genPES2e(std::string pot, bool s_flag, int L_max,
-             std::vector<int> &state_sz, std::vector<std::complex<double>> &ct,
-             std::string output);
+int genPES2e(std::string pot, bool s_flag, int L_max, std::vector<int>& state_sz,
+             std::vector<std::complex<double>>& ct, std::string output);
 } // namespace pes
 
 #endif // PES_HPP_

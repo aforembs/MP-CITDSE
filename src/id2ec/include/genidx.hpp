@@ -11,6 +11,7 @@
 
 #include "cfg_in.hpp"
 #include "dmx_typ.hpp"
+
 #include <H5Cpp.h>
 #include <iostream>
 #include <memory>
@@ -29,7 +30,7 @@ namespace genidx {
  * @param L_max the maximum total angular momentum used
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, int &L_max);
+int readConfig(std::string file, std::string& pot, int& L_max);
 
 /**
  * @brief Function for saving the primary and angular momentum quantum numbers

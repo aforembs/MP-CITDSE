@@ -10,6 +10,7 @@
  */
 
 #include "dmx_typ.hpp"
+
 #include <H5Cpp.h>
 #include <cassert>
 #include <iostream>
@@ -18,9 +19,9 @@
 extern "C" {
 #include <cblas.h>
 }
-#else 
-#include <mkl_lapacke.h>
+#else
 #include <mkl_cblas.h>
+#include <mkl_lapacke.h>
 #endif
 #include <numeric>
 #include <vector>
@@ -41,7 +42,7 @@ namespace w2e {
  * @param L_max the maximum total angular momentum used
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, char &gauge, int &L_max);
+int readConfig(std::string file, std::string& pot, char& gauge, int& L_max);
 
 /**
  * @brief Function for calculating and saving the eigenergies and eigenvectors
@@ -53,7 +54,7 @@ int readConfig(std::string file, std::string &pot, char &gauge, int &L_max);
  * @param vecs the eigenvectors of the CI basis
  * @return int default '0' error otherwise
  */
-int formCIh0(std::string pot, int L_max, stvupt &vecs);
+int formCIh0(std::string pot, int L_max, stvupt& vecs);
 
 /**
  * @brief Function for projecting the dipole matrix elements onto the CI basis
@@ -65,7 +66,7 @@ int formCIh0(std::string pot, int L_max, stvupt &vecs);
  * @param vecs the eigenvectors of the CI basis
  * @return int default '0' error otherwise
  */
-int formCIDipoles(std::string pot, char gauge, int L_max, stvupt &vecs);
+int formCIDipoles(std::string pot, char gauge, int L_max, stvupt& vecs);
 } // namespace w2e
 
 #endif // W2E_HPP_

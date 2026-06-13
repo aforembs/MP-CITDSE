@@ -11,6 +11,7 @@
 #include "cfg_in.hpp"
 #include "dmx_typ.hpp"
 #include "wigxjpf.h"
+
 #include <H5Cpp.h>
 #include <algorithm>
 #include <cmath>
@@ -34,8 +35,7 @@ namespace dmx2e {
  * @param gauge the gauge of the dipole elements 'v' (velocity) / 'l' (length)
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
-               char &gauge);
+int readConfig(std::string file, std::string& pot, int& L_max, int& l_max, char& gauge);
 
 /**
  * @brief Function for calculating the 2-electron dipole matrix elements
@@ -48,8 +48,7 @@ int readConfig(std::string file, std::string &pot, int &L_max, int &l_max,
  * 2-electron configuraitons are included
  * @return int default '0' error otherwise
  */
-int genDipole(std::string pot, int L_max, int l_max, char gauge,
-              std::string dir);
+int genDipole(std::string pot, int L_max, int l_max, char gauge, std::string dir);
 } // namespace dmx2e
 
 #endif // DMX2E_H_

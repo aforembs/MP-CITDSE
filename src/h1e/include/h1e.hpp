@@ -11,6 +11,7 @@
 
 #include "ModelV.hpp"
 #include "bsp_gsl.hpp"
+
 #include <H5Cpp.h>
 #include <algorithm>
 #include <cmath>
@@ -47,9 +48,8 @@ namespace h1e {
  * @param mass 0.5 for atom 1 for positronium
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, int &n, int &k, int &glq_pt, int &R_max,
-               std::string &grid, std::string &k_file, std::string &pot,
-               int &l_max, int &z, double &mass);
+int readConfig(std::string file, int& n, int& k, int& glq_pt, int& R_max, std::string& grid,
+               std::string& k_file, std::string& pot, int& l_max, int& z, double& mass);
 
 /**
  * @brief Function for solving the 1-electron TISE on a B-splines basis
@@ -70,11 +70,9 @@ int readConfig(std::string file, int &n, int &k, int &glq_pt, int &R_max,
  * @param outFile path of the HDF5 output file
  * @return int default '0' error otherwise
  */
-int genCoeff(int n, int k, int glq_pt, int l_max, double z, double mass,
-             std::string pot, std::vector<double> &gl_w,
-             std::vector<double> &gl_x, std::vector<double> &kkn,
-             std::vector<double> &spl, std::vector<double> &splp,
-             std::string outFile);
+int genCoeff(int n, int k, int glq_pt, int l_max, double z, double mass, std::string pot,
+             std::vector<double>& gl_w, std::vector<double>& gl_x, std::vector<double>& kkn,
+             std::vector<double>& spl, std::vector<double>& splp, std::string outFile);
 
 } // namespace h1e
 

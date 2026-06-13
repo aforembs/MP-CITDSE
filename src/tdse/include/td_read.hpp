@@ -10,6 +10,7 @@
  */
 
 #include "dmx_typ.hpp"
+
 #include <H5Cpp.h>
 #include <cassert>
 #include <complex>
@@ -55,10 +56,9 @@ namespace tdrd {
  * @param cycles number of cycles in the pulse
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, std::string set_base,
-               std::string option, int &L_max, char &gauge,
-               std::vector<int> &state_sz, double &timestep, std::string &shape,
-               double &w, double &Io, double &cepd, int &cycles);
+int readConfig(std::string file, std::string& pot, std::string set_base, std::string option,
+               int& L_max, char& gauge, std::vector<int>& state_sz, double& timestep,
+               std::string& shape, double& w, double& Io, double& cepd, int& cycles);
 
 /**
  * @brief Function for reading the eigenenergies of the Configuration
@@ -76,9 +76,8 @@ int readConfig(std::string file, std::string &pot, std::string set_base,
  * 2-electron total angular momentum
  * @return int default '0' error otherwise
  */
-int readEnergies(std::string pot, std::string setname, int L_max, int &ct_sz,
-                 std::vector<int> &state_sz, std::vector<int> &offs,
-                 stvupt &eig);
+int readEnergies(std::string pot, std::string setname, int L_max, int& ct_sz,
+                 std::vector<int>& state_sz, std::vector<int>& offs, stvupt& eig);
 
 /**
  * @brief Function for reading the 2-electron dipole transition matrices.
@@ -94,7 +93,7 @@ int readEnergies(std::string pot, std::string setname, int L_max, int &ct_sz,
  * @return int default '0' error otherwise
  */
 int readDipoles(std::string pot, std::string setname, char gauge, int L_max,
-                std::vector<int> &state_sz, stvupt &dipoles);
+                std::vector<int>& state_sz, stvupt& dipoles);
 
 /**
  * @brief Function for reading the initinal conditions, can be used for
@@ -105,7 +104,7 @@ int readDipoles(std::string pot, std::string setname, char gauge, int L_max,
  * @param ct a vector for storing the coefficient vector
  * @return int default '0' error otherwise
  */
-int readInitCt(std::string file, int ct_sz, std::vector<double> &ct);
+int readInitCt(std::string file, int ct_sz, std::vector<double>& ct);
 } // namespace tdrd
 
 #endif // TD_READ_HPP_

@@ -25,16 +25,16 @@ if(GSL_FOUND)
     target_sources(tests PRIVATE ${CMAKE_SOURCE_DIR}/src/h1e/bsp_gsl.cpp)
 endif()
 
+find_package(yaml-cpp QUIET)
+find_package(HDF5 QUIET COMPONENTS C CXX)
+find_package(GSL QUIET)
+
 target_include_directories(tests PRIVATE
     ${CMAKE_SOURCE_DIR}/src/include
     ${CMAKE_SOURCE_DIR}/src/h1e/include
     ${CMAKE_BINARY_DIR}/../src/include
-    ${H5_INC}
+    ${HDF5_INCLUDE_DIRS}
 )
-
-find_package(yaml-cpp QUIET)
-find_package(HDF5 QUIET COMPONENTS C CXX)
-find_package(GSL QUIET)
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain)
 

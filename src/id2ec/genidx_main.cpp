@@ -1,9 +1,10 @@
 #include "genidx.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file, inp_dir, pot, out_prefix;
   int L_max;
 

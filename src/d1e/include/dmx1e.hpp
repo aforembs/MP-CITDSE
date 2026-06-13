@@ -11,6 +11,7 @@
 #include "dmx_typ.hpp"
 #include "fastgl.hpp"
 #include "integrator.hpp"
+
 #include <H5Cpp.h>
 #include <cmath>
 #include <iostream>
@@ -31,8 +32,7 @@ namespace dmx1e {
  * @param l_max the maximum 1-electron angular momentum used
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, std::string &pot, int &qsz, char &gauge,
-               int &l_max);
+int readConfig(std::string file, std::string& pot, int& qsz, char& gauge, int& l_max);
 
 /**
  * @brief Function for generating and saving the 1-electron dipole matrices

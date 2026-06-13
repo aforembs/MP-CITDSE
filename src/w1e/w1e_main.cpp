@@ -1,11 +1,12 @@
 #include "w1e.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <unistd.h>
 
 namespace fs = std::filesystem;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file;
   int qsz, R_max, l_max;
   std::string pot;
@@ -29,8 +30,7 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  w1e::readConfig(opt_file, qsz, R_max, l_max, pot, quad_type, quad_file,
-                  in_quad_layout, pt_file);
+  w1e::readConfig(opt_file, qsz, R_max, l_max, pot, quad_type, quad_file, in_quad_layout, pt_file);
 
   out_prefix = "dat/" + pot;
 

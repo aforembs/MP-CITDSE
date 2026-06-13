@@ -1,12 +1,13 @@
 #include "fastgl.hpp"
 #include "h1e.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <unistd.h>
 
 namespace fs = std::filesystem;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file;
   auto n = 400;
   auto k = 9;
@@ -38,8 +39,7 @@ int main(int argc, char *argv[]) {
     std::filesystem::create_directory(out_path);
   }
 
-  h1e::readConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z,
-                  mass);
+  h1e::readConfig(opt_file, n, k, glq_pt, r_max, grid, k_file, pot, l_max, z, mass);
 
   if (grid.compare("linear") == 0) {
     bsp::genKnots(n, k, r_max, fkn, 'l', kkn);
@@ -77,8 +77,7 @@ int main(int argc, char *argv[]) {
   auto splp = std::vector<double>();
   bsp::splines(n, k, glq_pt, gl_x, kkn, spl, splp);
 
-  h1e::genCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp,
-                out_dir);
+  h1e::genCoeff(n, k, glq_pt, l_max, z, mass, pot, gl_w, gl_x, kkn, spl, splp, out_dir);
 
   return 0;
 }

@@ -8,11 +8,10 @@ public:
   double field;
   std::vector<int> state_sz;
   std::vector<int> offs;
-  std::vector<double *> eig;
-  std::vector<double *> dipole;
+  std::vector<double*> eig;
+  std::vector<double*> dipole;
 
-  void operator()(state_type &x, state_type &dxdt,
-                  [[maybe_unused]] double t) const {
+  void operator()(state_type& x, state_type& dxdt, [[maybe_unused]] double t) const {
     constexpr double beta = 0.0;
     constexpr double bt2 = 1.0;
     int off2m1 = 0;
@@ -25,21 +24,19 @@ public:
       dxdt[i2] = eig[0][i] * x[i2 + 1];
     }
 
-    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], -field,
-                dipole[0], state_sz[1], &x[off2p1], 2, bt2, &dxdt[0], 2);
-    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], -field,
-                dipole[0], state_sz[1], &x[off2p1 + 1], 2, bt2, &dxdt[1], 2);
+    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], -field, dipole[0], state_sz[1],
+                &x[off2p1], 2, bt2, &dxdt[0], 2);
+    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], -field, dipole[0], state_sz[1],
+                &x[off2p1 + 1], 2, bt2, &dxdt[1], 2);
 
     for (auto L = 1; L < L_max; ++L) {
       off2m1 = offs[L - 1] * 2;
       off2 = offs[L] * 2;
       off2p1 = offs[L + 1] * 2;
-      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  field, dipole[L - 1], state_sz[L], &x[off2m1], 2, beta,
-                  &dxdt[off2], 2);
-      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  field, dipole[L - 1], state_sz[L], &x[off2m1 + 1], 2,
-                  beta, &dxdt[off2 + 1], 2);
+      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1], field, dipole[L - 1],
+                  state_sz[L], &x[off2m1], 2, beta, &dxdt[off2], 2);
+      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1], field, dipole[L - 1],
+                  state_sz[L], &x[off2m1 + 1], 2, beta, &dxdt[off2 + 1], 2);
 
       for (auto i = 0; i < state_sz[L]; ++i) {
         auto i2 = off2 + i * 2;
@@ -47,23 +44,18 @@ public:
         dxdt[i2] = eig[L][i] * x[i2 + 1] + bt2 * dxdt[i2];
       }
 
-      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  -field, dipole[L], state_sz[L+1], &x[off2p1], 2, bt2,
-                  &dxdt[off2], 2);
-      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  -field, dipole[L], state_sz[L+1], &x[off2p1 + 1], 2, bt2,
-                  &dxdt[off2 + 1], 2);
+      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L], -field, dipole[L],
+                  state_sz[L + 1], &x[off2p1], 2, bt2, &dxdt[off2], 2);
+      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L], -field, dipole[L],
+                  state_sz[L + 1], &x[off2p1 + 1], 2, bt2, &dxdt[off2 + 1], 2);
     }
     off2m1 = offs[L_max - 1] * 2;
     off2 = offs[L_max] * 2;
 
-    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], field, dipole[L_max - 1],
-                state_sz[L_max], &x[off2m1], 2, beta, &dxdt[off2], 2);
-    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], field, dipole[L_max - 1],
-                state_sz[L_max], &x[off2m1 + 1], 2, beta, &dxdt[off2 + 1],
-                2);
+    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max], state_sz[L_max - 1], field,
+                dipole[L_max - 1], state_sz[L_max], &x[off2m1], 2, beta, &dxdt[off2], 2);
+    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max], state_sz[L_max - 1], field,
+                dipole[L_max - 1], state_sz[L_max], &x[off2m1 + 1], 2, beta, &dxdt[off2 + 1], 2);
 
     for (auto i = 0; i < state_sz[L_max]; ++i) {
       auto i2 = off2 + i * 2;
@@ -79,11 +71,10 @@ public:
   double field;
   std::vector<int> state_sz;
   std::vector<int> offs;
-  std::vector<double *> eig;
-  std::vector<double *> dipole;
+  std::vector<double*> eig;
+  std::vector<double*> dipole;
 
-  void operator()(state_type &x, state_type &dxdt,
-                  [[maybe_unused]] double t) const {
+  void operator()(state_type& x, state_type& dxdt, [[maybe_unused]] double t) const {
     constexpr double beta = 0.0;
     constexpr double bt2 = 1.0;
     int off2m1 = 0;
@@ -96,21 +87,19 @@ public:
       dxdt[i2] = eig[0][i] * x[i2 + 1];
     }
 
-    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], -field,
-                dipole[0], state_sz[1], &x[off2p1], 2, bt2, &dxdt[1], 2);
-    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], field,
-                dipole[0], state_sz[1], &x[off2p1 + 1], 2, bt2, &dxdt[0], 2);
+    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], -field, dipole[0], state_sz[1],
+                &x[off2p1], 2, bt2, &dxdt[1], 2);
+    cblas_dgemv(CblasColMajor, CblasTrans, state_sz[1], state_sz[0], field, dipole[0], state_sz[1],
+                &x[off2p1 + 1], 2, bt2, &dxdt[0], 2);
 
     for (auto L = 1; L < L_max; ++L) {
       off2m1 = offs[L - 1] * 2;
       off2 = offs[L] * 2;
       off2p1 = offs[L + 1] * 2;
-      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  -field, dipole[L - 1], state_sz[L], &x[off2m1], 2, beta,
-                  &dxdt[off2 + 1], 2);
-      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1],
-                  field, dipole[L - 1], state_sz[L], &x[off2m1 + 1], 2,
-                  beta, &dxdt[off2], 2);
+      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1], -field, dipole[L - 1],
+                  state_sz[L], &x[off2m1], 2, beta, &dxdt[off2 + 1], 2);
+      cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L], state_sz[L - 1], field, dipole[L - 1],
+                  state_sz[L], &x[off2m1 + 1], 2, beta, &dxdt[off2], 2);
 
       for (auto i = 0; i < state_sz[L]; ++i) {
         auto i2 = off2 + i * 2;
@@ -118,22 +107,18 @@ public:
         dxdt[i2] = eig[L][i] * x[i2 + 1] + bt2 * dxdt[i2];
       }
 
-      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  -field, dipole[L], state_sz[L+1], &x[off2p1], 2, bt2,
-                  &dxdt[off2 + 1], 2);
-      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L],
-                  field, dipole[L], state_sz[L+1], &x[off2p1 + 1], 2, bt2,
-                  &dxdt[off2], 2);
+      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L], -field, dipole[L],
+                  state_sz[L + 1], &x[off2p1], 2, bt2, &dxdt[off2 + 1], 2);
+      cblas_dgemv(CblasColMajor, CblasTrans, state_sz[L + 1], state_sz[L], field, dipole[L],
+                  state_sz[L + 1], &x[off2p1 + 1], 2, bt2, &dxdt[off2], 2);
     }
     off2m1 = offs[L_max - 1] * 2;
     off2 = offs[L_max] * 2;
 
-    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], -field, dipole[L_max - 1],
-                state_sz[L_max], &x[off2m1], 2, beta, &dxdt[off2 + 1], 2);
-    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max],
-                state_sz[L_max - 1], field, dipole[L_max - 1],
-                state_sz[L_max], &x[off2m1 + 1], 2, beta, &dxdt[off2], 2);
+    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max], state_sz[L_max - 1], -field,
+                dipole[L_max - 1], state_sz[L_max], &x[off2m1], 2, beta, &dxdt[off2 + 1], 2);
+    cblas_dgemv(CblasColMajor, CblasNoTrans, state_sz[L_max], state_sz[L_max - 1], field,
+                dipole[L_max - 1], state_sz[L_max], &x[off2m1 + 1], 2, beta, &dxdt[off2], 2);
 
     for (auto i = 0; i < state_sz[L_max]; ++i) {
       auto i2 = off2 + i * 2;
@@ -143,10 +128,9 @@ public:
   }
 };
 
-int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
-                int pop_n, int pop_l, fieldFcn field, pulse::params &pars,
-                int ct_sz, std::vector<int> &offs, std::vector<int> &state_sz,
-                stvupt &eig, stvupt &dipoles, std::vector<double> &ct) {
+int tdse::propV(std::string output, int L_max, double t, double dt, int steps, int pop_n, int pop_l,
+                fieldFcn field, pulse::params& pars, int ct_sz, std::vector<int>& offs,
+                std::vector<int>& state_sz, stvupt& eig, stvupt& dipoles, std::vector<double>& ct) {
   int print = steps / 10;
 
   std::fstream f_ct, field_fl, f_pop;
@@ -173,8 +157,7 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
   field_fl.open(output + "_field.dat", std::ios::out);
   field_fl << "#time (a.u.), field (A(t) or E(t)) (a.u.)\n";
 
-  f_pop.open(output + "_pop" + std::to_string(pop_n + 1) +
-                 std::to_string(pop_l) + ".dat",
+  f_pop.open(output + "_pop" + std::to_string(pop_n + 1) + std::to_string(pop_l) + ".dat",
              std::ios::out);
 
   f_pop << "#time (a.u.), population\n";
@@ -193,14 +176,13 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
 
     auto ctnrm = cblas_dznrm2(ct_sz, &ct[0], 1);
 
-    for (auto &n : ct) {
+    for (auto& n : ct) {
       n /= ctnrm;
     }
 
     f_pop << std::setprecision(16) << t << " "
-          << std::norm(
-                 std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
-                                      ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
+          << std::norm(std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
+                                            ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
           << "\n";
 
     if (st % print == 0) {
@@ -226,10 +208,9 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps,
   return 0;
 }
 
-int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
-                int pop_n, int pop_l, fieldFcn field, pulse::params &pars,
-                int ct_sz, std::vector<int> &offs, std::vector<int> &state_sz,
-                stvupt &eig, stvupt &dipoles, std::vector<double> &ct) {
+int tdse::propL(std::string output, int L_max, double t, double dt, int steps, int pop_n, int pop_l,
+                fieldFcn field, pulse::params& pars, int ct_sz, std::vector<int>& offs,
+                std::vector<int>& state_sz, stvupt& eig, stvupt& dipoles, std::vector<double>& ct) {
   int print = steps / 10;
 
   std::fstream f_ct, field_fl, f_pop;
@@ -256,8 +237,7 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
   field_fl.open(output + "_field.dat", std::ios::out);
   field_fl << "#time (a.u.), field (A(t) or E(t)) (a.u.)\n";
 
-  f_pop.open(output + "_pop" + std::to_string(pop_n + 1) +
-                 std::to_string(pop_l) + ".dat",
+  f_pop.open(output + "_pop" + std::to_string(pop_n + 1) + std::to_string(pop_l) + ".dat",
              std::ios::out);
 
   f_pop << "#time (a.u.), population\n";
@@ -276,14 +256,13 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps,
 
     auto ctnrm = cblas_dznrm2(ct_sz, &ct[0], 1);
 
-    for (auto &n : ct) {
+    for (auto& n : ct) {
       n /= ctnrm;
     }
 
     f_pop << std::setprecision(16) << t << " "
-          << std::norm(
-                 std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
-                                      ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
+          << std::norm(std::complex<double>(ct[offs[pop_l] * 2 + pop_n * 2],
+                                            ct[offs[pop_l] * 2 + pop_n * 2 + 1]))
           << "\n";
 
     if (st % print == 0) {

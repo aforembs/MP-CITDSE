@@ -1,8 +1,7 @@
 #include "pes.hpp"
 
-int pes::readConfig(std::string file, std::string &pot, std::string set_base,
-                    std::string option, int &L_max,
-                    std::vector<int> &state_sz) {
+int pes::readConfig(std::string file, std::string& pot, std::string set_base, std::string option,
+                    int& L_max, std::vector<int>& state_sz) {
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
   pot = settings["Global_Settings"]["potential"].as<std::string>();
@@ -11,8 +10,7 @@ int pes::readConfig(std::string file, std::string &pot, std::string set_base,
   std::cout << "  max l/L:                              " << L_max << std::endl;
 
   std::cout << "Propagator Settings:" << std::endl;
-  std::vector<int> loc_sz =
-      settings["Propagator_Settings"]["states_in_l"].as<std::vector<int>>();
+  std::vector<int> loc_sz = settings["Propagator_Settings"]["states_in_l"].as<std::vector<int>>();
   assert(static_cast<int>(loc_sz.size()) == L_max + 1);
   std::cout << "  states per l/L:          ";
   for (auto i = 0; i < static_cast<int>(loc_sz.size()); ++i) {
@@ -25,7 +23,7 @@ int pes::readConfig(std::string file, std::string &pot, std::string set_base,
   return 0;
 }
 
-int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
+int pes::readCt(std::string file, std::vector<std::complex<double>>& ct) {
   std::ifstream fl(file);
   std::string temp;
   while (std::getline(fl, temp)) {
@@ -45,21 +43,18 @@ int pes::readCt(std::string file, std::vector<std::complex<double>> &ct) {
   return 0;
 }
 
-int pes::genPES1e(std::string pot, bool s_flag, int l_max,
-                  std::vector<int> &state_sz,
-                  std::vector<std::complex<double>> &ct, std::string output) {
+int pes::genPES1e(std::string pot, bool s_flag, int l_max, std::vector<int>& state_sz,
+                  std::vector<std::complex<double>>& ct, std::string output) {
   int n, l_sz = state_sz[0];
   hsize_t offset[] = {0}, stride[] = {1}, block[] = {1};
   hsize_t count[] = {static_cast<hsize_t>(l_sz)};
   H5::DataSpace memspace(1, count, NULL);
   // Read the energies of l=0
   auto filename = pot + std::to_string(0) + ".h5";
-  auto file =
-      std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
+  auto file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
   file->openAttribute("N").read(H5::PredType::NATIVE_INT32, &n);
   std::vector<double> En(n * (l_max + 1));
-  auto E_set =
-      std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
+  auto E_set = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
   auto espace = E_set->getSpace();
   espace.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
   E_set->read(&En[0], H5::PredType::NATIVE_DOUBLE, memspace, espace);
@@ -109,8 +104,7 @@ int pes::genPES1e(std::string pot, bool s_flag, int l_max,
         }
       }
     }
-    std::fstream lfile(output + "_pes" + std::to_string(l) + ".dat",
-                       std::ios::out);
+    std::fstream lfile(output + "_pes" + std::to_string(l) + ".dat", std::ios::out);
     for (auto i = 0; i < state_sz[0] - 1; ++i) {
       if (PES_En[i] > 0.0) {
         lfile << PES_En[i] << " " << PES_l[i] << "\n";
@@ -137,7 +131,7 @@ int pes::genPES1e(std::string pot, bool s_flag, int l_max,
 
   // Get the norm of c(t)
   double nrm = 0;
-  for (auto &v : ct) {
+  for (auto& v : ct) {
     nrm += std::norm(v);
   }
 
@@ -148,9 +142,8 @@ int pes::genPES1e(std::string pot, bool s_flag, int l_max,
   return 0;
 }
 
-int pes::genPES2e(std::string pot, bool s_flag, int L_max,
-                  std::vector<int> &state_sz,
-                  std::vector<std::complex<double>> &ct, std::string output) {
+int pes::genPES2e(std::string pot, bool s_flag, int L_max, std::vector<int>& state_sz,
+                  std::vector<std::complex<double>>& ct, std::string output) {
   int L_sz;
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
@@ -171,8 +164,7 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
   edata = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En")));
   auto set1 = edata->getSpace();
   set1.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-  edata->read(&threshold, H5::PredType::NATIVE_DOUBLE,
-              H5::DataSpace(1, count, NULL), set1);
+  edata->read(&threshold, H5::PredType::NATIVE_DOUBLE, H5::DataSpace(1, count, NULL), set1);
   file->close();
 
   // read sum energies
@@ -181,8 +173,7 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
     L_sz = state_sz[L];
     filename = pot + "CI" + std::to_string(L) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    edata =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En_CI")));
+    edata = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet("En_CI")));
     L_full_sz = edata->getSpace().getSimpleExtentNpoints();
     eig.resize(L_full_sz);
     edata->read(eig.data(), H5::PredType::NATIVE_DOUBLE);
@@ -194,13 +185,12 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
       offs.push_back(sum);
     }
 
-    std::ofstream outfile(output + "_pes" + std::to_string(L) + ".dat",
-                          std::ios::out);
+    std::ofstream outfile(output + "_pes" + std::to_string(L) + ".dat", std::ios::out);
     for (auto i = 1; i < L_sz - 1; ++i) {
       auto en_1e = eig[i] - threshold;
       if (en_1e > 0.0) {
         outfile << std::setprecision(16) << en_1e << " "
-                << std::norm(ct[off + i]) * 2.0 / (eig[i+1] - eig[i-1]) << "\n";
+                << std::norm(ct[off + i]) * 2.0 / (eig[i + 1] - eig[i - 1]) << "\n";
         ion_yield += std::norm(ct[off + i]);
       }
       if (off + i > 0) {
@@ -209,8 +199,7 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
     }
 
     if (L == 0) {
-      std::cout << std::setprecision(16)
-                << "\nground state pop: " << std::norm(ct[0]) << "\n";
+      std::cout << std::setprecision(16) << "\nground state pop: " << std::norm(ct[0]) << "\n";
     }
     outfile.close();
     off += L_sz;
@@ -221,15 +210,11 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
     for (auto L = 0; L <= L_max; ++L) {
       for (auto i = 1; i < state_sz[L]; ++i) {
         for (auto k = 1; k < state_sz[1]; ++k) {
-          auto ndiff = std::abs(eig_full[offs[1] + k] -
-                                eig_full[offs[1] + k - 1]);
-          auto pdiff = std::abs(eig_full[offs[1] + k + 1] -
-                                eig_full[offs[1] + k]);
+          auto ndiff = std::abs(eig_full[offs[1] + k] - eig_full[offs[1] + k - 1]);
+          auto pdiff = std::abs(eig_full[offs[1] + k + 1] - eig_full[offs[1] + k]);
 
-          bool cond =
-              (eig_full[offs[L] + i] >
-               eig_full[offs[1] + k] - 0.5 * ndiff) &&
-              (eig_full[offs[L] + i] < eig_full[offs[1] + k] + 0.5 * pdiff);
+          bool cond = (eig_full[offs[L] + i] > eig_full[offs[1] + k] - 0.5 * ndiff) &&
+                      (eig_full[offs[L] + i] < eig_full[offs[1] + k] + 0.5 * pdiff);
           if (cond) {
             PES[k] += std::norm(ct[offs[L] + i]) * 2.0 / (ndiff + pdiff);
             break;
@@ -249,14 +234,13 @@ int pes::genPES2e(std::string pot, bool s_flag, int L_max,
 
   // Get the norm of c(t)
   double nrm = 0;
-  for (auto &v : ct) {
+  for (auto& v : ct) {
     nrm += std::norm(v);
   }
 
   // Print the ground population and the norm of c(t)
-  std::cout << std::setprecision(16) << "norm: " << nrm
-            << "\nyield: " << ion_yield << "\nexcited population: " << exitation
-            << "\n";
+  std::cout << std::setprecision(16) << "norm: " << nrm << "\nyield: " << ion_yield
+            << "\nexcited population: " << exitation << "\n";
 
   return 0;
 }

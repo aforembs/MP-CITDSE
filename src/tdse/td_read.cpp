@@ -1,10 +1,8 @@
 #include "td_read.hpp"
 
-int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
-                     std::string option, int &L_max, char &gauge,
-                     std::vector<int> &state_sz, double &timestep,
-                     std::string &shape, double &w, double &Io, double &cepd,
-                     int &cycles) {
+int tdrd::readConfig(std::string file, std::string& pot, std::string set_base, std::string option,
+                     int& L_max, char& gauge, std::vector<int>& state_sz, double& timestep,
+                     std::string& shape, double& w, double& Io, double& cepd, int& cycles) {
 
   YAML::Node settings = YAML::LoadFile(file);
   std::cout << "Global Settings:" << std::endl;
@@ -16,8 +14,7 @@ int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
   std::cout << "  Gauge type ('l' length/'v' velocity): " << gauge << std::endl;
 
   std::cout << "Propagator Settings:" << std::endl;
-  std::vector<int> loc_sz =
-      settings["Propagator_Settings"]["states_in_l"].as<std::vector<int>>();
+  std::vector<int> loc_sz = settings["Propagator_Settings"]["states_in_l"].as<std::vector<int>>();
   assert(static_cast<int>(loc_sz.size()) == L_max + 1);
   std::cout << "  states per l/L:          ";
   for (auto i = 0; i < static_cast<int>(loc_sz.size()); ++i) {
@@ -28,8 +25,7 @@ int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
 
   std::cout << std::endl;
   timestep = settings["Propagator_Settings"]["dt"].as<double>();
-  std::cout << "  timestep dt:                          " << timestep
-            << std::endl;
+  std::cout << "  timestep dt:                          " << timestep << std::endl;
 
   std::cout << "Field Parameters:" << std::endl;
   shape = settings["Field_Parameters"]["shape"].as<std::string>();
@@ -41,15 +37,13 @@ int tdrd::readConfig(std::string file, std::string &pot, std::string set_base,
   cepd = settings["Field_Parameters"]["cepd"].as<double>();
   std::cout << "  phase shift:                          " << cepd << std::endl;
   cycles = settings["Field_Parameters"]["cycles"].as<int>();
-  std::cout << "  number of cycles:                     " << cycles
-            << std::endl;
+  std::cout << "  number of cycles:                     " << cycles << std::endl;
 
   return 0;
 }
 
-int tdrd::readEnergies(std::string pot, std::string setname, int L_max,
-                       int &ct_sz, std::vector<int> &state_sz,
-                       std::vector<int> &offs, stvupt &eig) {
+int tdrd::readEnergies(std::string pot, std::string setname, int L_max, int& ct_sz,
+                       std::vector<int>& state_sz, std::vector<int>& offs, stvupt& eig) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> edata = nullptr;
@@ -74,8 +68,7 @@ int tdrd::readEnergies(std::string pot, std::string setname, int L_max,
 
     filename = pot + std::to_string(L) + ".h5";
     file = std::make_unique<H5::H5File>(H5::H5File(filename, H5F_ACC_RDONLY));
-    edata =
-        std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet(setname)));
+    edata = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet(setname)));
     e_space = edata->getSpace();
     e_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
     edata->read(eig[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace, e_space);
@@ -85,8 +78,8 @@ int tdrd::readEnergies(std::string pot, std::string setname, int L_max,
   return 0;
 }
 
-int tdrd::readDipoles(std::string pot, std::string setname, char gauge,
-                      int L_max, std::vector<int> &state_sz, stvupt &dipoles) {
+int tdrd::readDipoles(std::string pot, std::string setname, char gauge, int L_max,
+                      std::vector<int>& state_sz, stvupt& dipoles) {
   std::string filename;
   std::unique_ptr<H5::H5File> file = nullptr;
   std::unique_ptr<H5::DataSet> dl = nullptr;
@@ -111,15 +104,14 @@ int tdrd::readDipoles(std::string pot, std::string setname, char gauge,
     dl = std::make_unique<H5::DataSet>(H5::DataSet(file->openDataSet(setname)));
     dl_space = dl->getSpace();
     dl_space.selectHyperslab(H5S_SELECT_SET, count, offset, stride, block);
-    dl->read(dipoles[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace,
-             dl_space);
+    dl->read(dipoles[L]->data(), H5::PredType::NATIVE_DOUBLE, memspace, dl_space);
     file->close();
   }
 
   return 0;
 }
 
-int tdrd::readInitCt(std::string file, int ct_sz, std::vector<double> &ct) {
+int tdrd::readInitCt(std::string file, int ct_sz, std::vector<double>& ct) {
   std::ifstream fl(file);
   std::string temp;
   int i = 0;

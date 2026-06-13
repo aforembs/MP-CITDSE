@@ -1,12 +1,13 @@
 #include "td_read.hpp"
 #include "tdse.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <string>
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file;
   std::string out_dir;
   int L_max, cycles, e_num = 0;
@@ -84,8 +85,7 @@ int main(int argc, char *argv[]) {
       cpopt = std::filesystem::copy_options::update_existing;
       break;
     case 'n':
-      std::cout << out_dir
-                << " contians old data, please choose a different output"
+      std::cout << out_dir << " contians old data, please choose a different output"
                 << " directory!\n";
       return -1;
     }
@@ -104,8 +104,8 @@ int main(int argc, char *argv[]) {
     break;
   }
 
-  tdrd::readConfig(opt_file, pot, base, option, L_max, gauge, state_sz, dt,
-                   shape, w, Io, cepd, cycles);
+  tdrd::readConfig(opt_file, pot, base, option, L_max, gauge, state_sz, dt, shape, w, Io, cepd,
+                   cycles);
 
   switch (e_num) {
   case 1:
@@ -121,8 +121,7 @@ int main(int argc, char *argv[]) {
     dip_set = "CI_dip";
     for (int L = 0; L <= L_max; ++L) {
       std::filesystem::copy_file("dat/cfg-" + std::to_string(L) + ".inp",
-                                 out_dir + "/cfg-" + std::to_string(L) + ".inp",
-                                 cpopt);
+                                 out_dir + "/cfg-" + std::to_string(L) + ".inp", cpopt);
     }
     break;
   }
@@ -137,8 +136,7 @@ int main(int argc, char *argv[]) {
   eig.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
   for (auto i = 0; i < L_max; ++i) {
     eig.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
-    dipoles.push_back(
-        std::make_unique<std::vector<double>>(std::vector<double>()));
+    dipoles.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
   tdrd::readEnergies(en_pot, en_set, L_max, ct_sz, state_sz, offs, eig);
@@ -170,26 +168,26 @@ int main(int argc, char *argv[]) {
     switch (gauge) {
     case 'v':
       pulse::sineASetup(auIo, auw, 0.0, cycles, pars);
-      tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
-                  pulse::sineAA, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::sineAA, pars, ct_sz,
+                  offs, state_sz, eig, dipoles, ct);
       break;
     case 'l':
       pulse::sineESetup(auIo, auw, 0.0, cycles, pars);
-      tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
-                  pulse::sineEE, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::sineEE, pars, ct_sz,
+                  offs, state_sz, eig, dipoles, ct);
       break;
     }
   } else if (shape.compare("gaussian") == 0) {
     switch (gauge) {
     case 'v':
       pulse::gaussASetup(auIo, auw, tau, cycles, 0.0, pars);
-      tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
-                  pulse::gauss, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      tdse::propV(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::gauss, pars, ct_sz, offs,
+                  state_sz, eig, dipoles, ct);
       break;
     case 'l':
       pulse::gaussESetup(auIo, auw, tau, cycles, 0.0, pars);
-      tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l,
-                  pulse::gauss, pars, ct_sz, offs, state_sz, eig, dipoles, ct);
+      tdse::propL(o_file_prefix, L_max, t, dt, steps, pop_n, pop_l, pulse::gauss, pars, ct_sz, offs,
+                  state_sz, eig, dipoles, ct);
       break;
     }
   } else {

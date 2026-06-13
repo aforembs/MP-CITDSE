@@ -14,6 +14,7 @@
 #include "fastgl.hpp"
 #include "integrator.hpp"
 #include "wigxjpf.h"
+
 #include <H5Cpp.h>
 #include <algorithm>
 #include <iomanip>
@@ -39,8 +40,8 @@ namespace r_12 {
  * defined by the Wigner 6j sybol
  * @return int default '0' error otherwise
  */
-int readConfig(std::string file, int &qsz, std::string &pot, int &L_max,
-               std::string &k_limit, bool &lim_flag);
+int readConfig(std::string file, int& qsz, std::string& pot, int& L_max, std::string& k_limit,
+               bool& lim_flag);
 
 /**
  * @brief Generate and save the <12|r_{12}|1'2'> two electron correlations for

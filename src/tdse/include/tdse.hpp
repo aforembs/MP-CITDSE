@@ -9,6 +9,7 @@
  */
 
 #include "pulse.hpp"
+
 #include <boost/numeric/odeint.hpp>
 #include <complex>
 #include <fstream>
@@ -29,7 +30,7 @@ extern "C" {
  *
  */
 using stvupt = std::vector<std::unique_ptr<std::vector<double>>>;
-using fieldFcn = std::function<double(pulse::params &, double)>;
+using fieldFcn = std::function<double(pulse::params&, double)>;
 
 /**
  * @brief Namespace for functions used in the propagation of the 2-electron TDSE
@@ -63,10 +64,9 @@ namespace tdse {
  * t
  * @return int default '0' error otherwise
  */
-int propV(std::string output, int L_max, double t, double dt, int steps,
-          int pop_n, int pop_l, fieldFcn field, pulse::params &pars, int ct_sz,
-          std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
-          stvupt &dipoles, std::vector<double> &ct);
+int propV(std::string output, int L_max, double t, double dt, int steps, int pop_n, int pop_l,
+          fieldFcn field, pulse::params& pars, int ct_sz, std::vector<int>& offs,
+          std::vector<int>& state_sz, stvupt& eig, stvupt& dipoles, std::vector<double>& ct);
 
 /**
  * @brief Function for propagating the 2-electron TDSE in the length gauge
@@ -95,10 +95,9 @@ int propV(std::string output, int L_max, double t, double dt, int steps,
  * t
  * @return int default '0' error otherwise
  */
-int propL(std::string output, int L_max, double t, double dt, int steps,
-          int pop_n, int pop_l, fieldFcn field, pulse::params &pars, int ct_sz,
-          std::vector<int> &offs, std::vector<int> &state_sz, stvupt &eig,
-          stvupt &dipoles, std::vector<double> &ct);
+int propL(std::string output, int L_max, double t, double dt, int steps, int pop_n, int pop_l,
+          fieldFcn field, pulse::params& pars, int ct_sz, std::vector<int>& offs,
+          std::vector<int>& state_sz, stvupt& eig, stvupt& dipoles, std::vector<double>& ct);
 } // namespace tdse
 
 #endif // TDSE_HPP_

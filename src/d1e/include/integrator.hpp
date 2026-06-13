@@ -35,9 +35,8 @@ namespace dmx_int {
  * functions on the quadrature points 'qx'
  * @return double the value of the overlap integral 't_{ab}^v'
  */
-double tvelGL(int qsz, int lc_sz, int n1, int l1, int n2, int l2,
-              std::vector<double> &qx, std::vector<double> &qw,
-              std::vector<double> &wfn, std::vector<double> &wfnp);
+double tvelGL(int qsz, int lc_sz, int n1, int l1, int n2, int l2, std::vector<double>& qx,
+              std::vector<double>& qw, std::vector<double>& wfn, std::vector<double>& wfnp);
 
 /**
  * @brief Funciton for calulating the 't_{ab}' overlap integral between 2
@@ -57,9 +56,8 @@ double tvelGL(int qsz, int lc_sz, int n1, int l1, int n2, int l2,
  * points 'qx'
  * @return double the value of the overlap integral 't_{ab}^l'
  */
-double tlenGL(int qsz, int lc_sz, int n1, int l1, int n2, int l2,
-              std::vector<double> &qx, std::vector<double> &qw,
-              std::vector<double> &wfn);
+double tlenGL(int qsz, int lc_sz, int n1, int l1, int n2, int l2, std::vector<double>& qx,
+              std::vector<double>& qw, std::vector<double>& wfn);
 } // namespace dmx_int
 
 #endif // INTEGRATOR_H_

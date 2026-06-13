@@ -1,9 +1,10 @@
 #include "dmx2e.hpp"
+
 #include <cstdlib>
 #include <iostream>
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file;
   std::string inp_dir;
   int L_max, l_max;

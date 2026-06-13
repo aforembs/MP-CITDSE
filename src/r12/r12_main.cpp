@@ -1,11 +1,12 @@
 #include "r12.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <unistd.h>
 
 namespace fs = std::filesystem;
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file;
   std::string inp_dir;
   int qsz, L_max;

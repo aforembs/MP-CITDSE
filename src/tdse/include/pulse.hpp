@@ -9,6 +9,7 @@
  */
 
 #include "au.hpp"
+
 #include <cmath>
 
 namespace pulse {
@@ -33,7 +34,7 @@ struct params {
  * @param IoAU peak intensity in atomic units
  * @param wAU photon energy in atomic units
  */
-void toAU(double IoW, double weV, double &IoAU, double &wAU);
+void toAU(double IoW, double weV, double& IoAU, double& wAU);
 
 /**
  * @brief Convert cycles to pulse duration
@@ -55,8 +56,7 @@ double period(double w, int cycles);
  * @param cepd phase offset
  * @param pars structure containing the remaining static pulse parameters
  */
-void gaussESetup(double Io, double w, double tau, int cycles, double cepd,
-                 pulse::params &pars);
+void gaussESetup(double Io, double w, double tau, int cycles, double cepd, pulse::params& pars);
 
 /**
  * @brief Function setting up the parameters for a gaussian pulse defined by a
@@ -69,8 +69,7 @@ void gaussESetup(double Io, double w, double tau, int cycles, double cepd,
  * @param cepd phase offset
  * @param pars structure containing the remaining static pulse parameters
  */
-void gaussASetup(double Io, double w, double tau, int cycles, double cepd,
-                 pulse::params &pars);
+void gaussASetup(double Io, double w, double tau, int cycles, double cepd, pulse::params& pars);
 
 /**
  * @brief
@@ -79,7 +78,7 @@ void gaussASetup(double Io, double w, double tau, int cycles, double cepd,
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the pulse E(t) or A(t)
  */
-double gauss(pulse::params &pars, double t);
+double gauss(pulse::params& pars, double t);
 
 /**
  * @brief Function setting up the parameters for a pulse defined by a vector
@@ -91,8 +90,7 @@ double gauss(pulse::params &pars, double t);
  * @param cycles number of cycles
  * @param pars structure containing the remaining static pulse parameters
  */
-void sineASetup(double Io, double w, double cepd, int cycles,
-                pulse::params &pars);
+void sineASetup(double Io, double w, double cepd, int cycles, pulse::params& pars);
 
 /**
  * @brief Function returning the vector potential of the pulse at time 't' since
@@ -102,7 +100,7 @@ void sineASetup(double Io, double w, double cepd, int cycles,
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the vector potential at time t
  */
-double sineAA(pulse::params &pars, double t);
+double sineAA(pulse::params& pars, double t);
 
 /**
  * @brief Function returning the electric field of a pulse defined using a
@@ -112,7 +110,7 @@ double sineAA(pulse::params &pars, double t);
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the electric field at time t
  */
-double sineAE(pulse::params &pars, double t);
+double sineAE(pulse::params& pars, double t);
 
 /**
  * @brief Setup of a pulse defined by an electric field
@@ -123,8 +121,7 @@ double sineAE(pulse::params &pars, double t);
  * @param cycles number of cycles
  * @param pars structure containing the remaining static pulse parameters
  */
-void sineESetup(double Io, double w, double cepd, int cycles,
-                pulse::params &pars);
+void sineESetup(double Io, double w, double cepd, int cycles, pulse::params& pars);
 
 /**
  * @brief Function returning the vector potential of a pulse defined using an
@@ -134,7 +131,7 @@ void sineESetup(double Io, double w, double cepd, int cycles,
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the vector potential at time t
  */
-double sineEA(pulse::params &pars, double t);
+double sineEA(pulse::params& pars, double t);
 
 /**
  * @brief Function returning electric field of the pulse at time 't' since it's
@@ -144,7 +141,7 @@ double sineEA(pulse::params &pars, double t);
  * @param t time in a.u. since the start of the pulse
  * @return double the value of the electric field at time t
  */
-double sineEE(pulse::params &pars, double t);
+double sineEE(pulse::params& pars, double t);
 } // namespace pulse
 
 #endif // PULSE_H_

@@ -1,7 +1,6 @@
 #include "cfg_in.hpp"
 
-int cfg::readCfg(std::string dir, int L, int &sym, int &ncf,
-                 std::vector<cfg::line> &cfgs) {
+int cfg::readCfg(std::string dir, int L, int& sym, int& ncf, std::vector<cfg::line>& cfgs) {
   std::string filename = dir + "/cfg-" + std::to_string(L) + ".inp";
   std::ifstream cfgfile(filename);
   std::string line;

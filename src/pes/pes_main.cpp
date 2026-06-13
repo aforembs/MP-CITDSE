@@ -1,10 +1,11 @@
 #include "pes.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file, in_file = "dat/ct.dat";
   int L_max, e_num = 0;
   std::string pot;
@@ -43,8 +44,7 @@ int main(int argc, char *argv[]) {
   }
 
   std::filesystem::path inpath(in_file);
-  if (!std::filesystem::exists(inpath) ||
-      !std::filesystem::is_regular_file(in_file)) {
+  if (!std::filesystem::exists(inpath) || !std::filesystem::is_regular_file(in_file)) {
     std::cout << "Invalid coefficient file path, -i <path>!!\n";
     return -1;
   }

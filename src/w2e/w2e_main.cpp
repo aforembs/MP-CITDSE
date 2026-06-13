@@ -1,10 +1,11 @@
 #include "w2e.hpp"
+
 #include <cstdlib>
 #include <fenv.h>
 #include <iostream>
 #include <unistd.h>
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   std::string opt_file;
   std::string pot;
   std::string file_prefix;
@@ -29,8 +30,7 @@ int main(int argc, char *argv[]) {
 
   stvupt vecs;
   for (auto i = 0; i <= L_max; ++i) {
-    vecs.push_back(
-        std::make_unique<std::vector<double>>(std::vector<double>()));
+    vecs.push_back(std::make_unique<std::vector<double>>(std::vector<double>()));
   }
 
   w2e::formCIh0(file_prefix, L_max, vecs);
