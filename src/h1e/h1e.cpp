@@ -78,7 +78,7 @@ int h1e::readConfig(std::string file, int& n, int& k, int& glq_pt, int& r_max, s
   grid = settings["Basis_Settings"]["grid"].as<std::string>();
   std::cout << "Type of knot spacing:                      " << grid << std::endl;
   if (grid.compare("user-defined") == 0) {
-    k_file = settings["Basis_Settings"]["grid"].as<std::string>();
+    k_file = settings["Basis_Settings"]["knot_file"].as<std::string>();
     std::cout << "Custom knot sequence file:     " << k_file << std::endl;
   }
   l_max = settings["Basis_Settings"]["l_max"].as<int>();

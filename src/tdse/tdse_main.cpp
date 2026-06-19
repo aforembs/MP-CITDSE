@@ -151,8 +151,7 @@ int main(int argc, char* argv[]) {
     std::string fln = std::filesystem::path(init_ct).filename();
     auto t_start = fln.find_first_of("0123456789");
     auto t_end = fln.find_last_of("123456789");
-    auto t_sz = t_end - t_start + 1;
-    t = std::stod(&fln[t_start], &t_sz);
+    t = std::stod(fln.substr(t_start, t_end - t_start + 1));
     std::cout << "Start time (a.u.): " << t << "\n";
     tdrd::readInitCt(init_ct, ct_sz, ct);
   }

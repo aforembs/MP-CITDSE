@@ -27,9 +27,10 @@ int pes::readCt(std::string file, std::vector<std::complex<double>>& ct) {
   std::ifstream fl(file);
   std::string temp;
   while (std::getline(fl, temp)) {
-    temp = std::regex_replace(temp, std::regex("^ +"), "");
+    static const auto leading_space = std::regex("^ +");
+    temp = std::regex_replace(temp, leading_space, "");
 
-    if (temp[0] == '#') {
+    if (temp.empty() || temp[0] == '#') {
       continue;
     }
 

@@ -175,9 +175,10 @@ int tdse::propV(std::string output, int L_max, double t, double dt, int steps, i
     t += dt;
 
     auto ctnrm = cblas_dznrm2(ct_sz, &ct[0], 1);
+    auto inv_nrm = 1.0 / ctnrm;
 
     for (auto& n : ct) {
-      n /= ctnrm;
+      n *= inv_nrm;
     }
 
     f_pop << std::setprecision(16) << t << " "
@@ -255,9 +256,10 @@ int tdse::propL(std::string output, int L_max, double t, double dt, int steps, i
     t += dt;
 
     auto ctnrm = cblas_dznrm2(ct_sz, &ct[0], 1);
+    auto inv_nrm = 1.0 / ctnrm;
 
     for (auto& n : ct) {
-      n /= ctnrm;
+      n *= inv_nrm;
     }
 
     f_pop << std::setprecision(16) << t << " "

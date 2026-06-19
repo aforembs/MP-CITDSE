@@ -117,9 +117,10 @@ int tdrd::readInitCt(std::string file, int ct_sz, std::vector<double>& ct) {
   int i = 0;
   while (i < ct_sz * 2) {
     std::getline(fl, temp);
-    temp = std::regex_replace(temp, std::regex("^ +"), "");
+    static const auto leading_space = std::regex("^ +");
+    temp = std::regex_replace(temp, leading_space, "");
 
-    if (temp[0] == '#') {
+    if (temp.empty() || temp[0] == '#') {
       continue;
     }
 
