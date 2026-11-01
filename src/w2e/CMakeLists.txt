@@ -27,7 +27,7 @@ find_package(BLAS REQUIRED HINT ${BLA_HINT})
 
 target_link_libraries(${PROJECT_NAME} 
     PRIVATE 
-        yaml-cpp ${YAML_CPP_LIBRARIES} ${BLAS_LIBRARIES} 
+        yaml-cpp ${YAML_CPP_LIBRARIES} ${AOCL_LAPACK_LIB} ${BLAS_LIBRARIES} 
         hdf5 hdf5_cpp ${HDF5_LIBRARIES}
 )
 target_link_options(${PROJECT_NAME} PRIVATE ${OpenMP_CXX_FLAGS})

@@ -38,6 +38,12 @@ if(DEFINED BLA_HINT)
     set(BLAS_INC ${BLA_INC})
 endif()
 
+# AOCL (FLAME/LAPACKK) provides the LAPACKE symbols needed by h1e and w2e
+# inside libflame; pick it up when present next to the BLAS library.
+if(DEFINED BLA_HINT AND EXISTS "${BLA_HINT}/libflame.so")
+    set(AOCL_LAPACK_LIB "${BLA_HINT}/libflame.so")
+endif()
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "^(Apple)?Clang$")     
     set(Clang_W_FLAG -Wno-c99-extensions) 
 endif()
